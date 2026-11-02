@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "O#O",
+    "#1#",
+    "O#O"
+  ],
+  "key": {
+    "O": { "item": "minecraft:gold_nugget" },
+    "#": { "item": "minecraft:gold_ingot" },
+    "1": { "item": "minecraft:rotten_flesh" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:ankh_amulet"
+  }
+}

@@ -1,0 +1,60 @@
+buildscript {
+    repositories {
+        maven { url = "https://files.minecraftforge.net/maven" }
+        maven { url = "https://repo.maven.apache.org/maven2" }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+    }
+}
+
+apply plugin: "net.minecraftforge.gradle.forge"
+
+version = "1.0.0"
+group = "aaaa0ggmc"
+archivesBaseName = "aaaa0ggmc_ul_modpack"
+
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava.options.encoding = "UTF-8"
+
+minecraft {
+    // 与 morphext 系一致：开发用 2847（只有它在 Forge maven 上发布了 userdev 产物）。
+    // 编译产物在 2860 运行时通用（1.12.2 Forge API 稳定）。
+    version = "1.12.2-14.23.5.2847"
+    mappings = "stable_39"
+    runDir = "run"
+}
+
+repositories {
+    maven { url = "https://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    // Baubles —— 安卡护符的 AMULET（脖子）槽位
+    compile files("libs/Baubles-1.12-1.5.2.jar")
+    // Metamorph —— 感染变身的形态引擎（MorphAPI/MorphManager）
+    compile files("libs/metamorph-1.4-1.12.2.jar")
+    // morphext —— 整合包能力/玩家数据层（感染状态记录）
+    compile files("libs/morph-extension-1.0.0.jar")
+    compile files("libs/mclib-2.4.3-1.12.2.jar")
+    // FTB Quests（1202 fork）+ FTBLib —— 形态检测任务注入
+    compile files("libs/FTBQuests-1202.9.0.15.jar")
+    compile files("libs/FTBLib-5.4.7.2.jar")
+}
+
+jar {
+    finalizedBy 'reobfJar'
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", "1.12.2"
+
+    from(sourceSets.main.resources.srcDirs) {
+        include "mcmod.info"
+        expand "version": project.version, "mcversion": "1.12.2"
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "mcmod.info"
+    }
+}

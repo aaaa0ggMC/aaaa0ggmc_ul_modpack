@@ -1,0 +1,14 @@
+{
+  "display": {
+    "icon": { "item": "aaaa0ggmc_ul_modpack:ankh_amulet" },
+    "title": { "translate": "advancements.aaaa0ggmc_ul_modpack.infected.title" },
+    "description": { "translate": "advancements.aaaa0ggmc_ul_modpack.infected.description" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png"
+  },
+  "criteria": {
+    "infected": { "trigger": "aaaa0ggmc_ul_modpack:infected" }
+  }
+}

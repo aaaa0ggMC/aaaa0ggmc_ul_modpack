@@ -1,0 +1,21 @@
+# UL Modpack Core Lang (zh_CN)
+itemGroup.aaaa0ggmc_ul_modpack=UL 整合包
+
+# 安卡护符
+item.aaaa0ggmc_ul_modpack.ankh_amulet.name=安卡护符
+aaaa0ggmc_ul_modpack.ankh.lore1=§6以生者之金，缚亡者之肉。
+aaaa0ggmc_ul_modpack.ankh.lore2=§7佩戴时护甲 +2。
+aaaa0ggmc_ul_modpack.ankh.lore3=§c若命丧尸族之手，死亡将被推迟——
+aaaa0ggmc_ul_modpack.ankh.lore4=§7你将化身为击杀你的怪物，护符应声碎裂。
+aaaa0ggmc_ul_modpack.ankh.lore5=§8仅对僵尸一族生效 · 一次性
+
+# 进度
+advancements.aaaa0ggmc_ul_modpack.infected.title=被感染
+advancements.aaaa0ggmc_ul_modpack.infected.description=尸毒顺着齿痕蔓延全身。高烧退去之后，你已经不再是你。
+
+# 事件文案
+aaaa0ggmc_ul_modpack.msg.shatter=§6[安卡]§r护符§c应声碎裂§r，金色尘屑漫天飘散！
+aaaa0ggmc_ul_modpack.msg.infected=§8尸毒入骨……§r 你化身为 §7%s§r！
+
+# FTBQuests 形态检测任务
+ftbquests.task.aaaa0ggmc_ul_modpack.morph=变身检测

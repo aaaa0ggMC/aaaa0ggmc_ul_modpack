@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "aaaa0ggmc_ul_modpack",
+    "name": "UL Modpack Core",
+    "description": "shaping_the_world 整合包深度定制主模组：安卡护符、感染变身、FTBQuests 形态检测任务等整合包级联动。Deep customization core for the shaping_the_world modpack (ankh amulet, infection morphing, FTBQuests morph tasks).",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["aaaa0ggmc"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": ["baubles", "metamorph", "aaaa0ggmc_morph_extension", "ftbquests"]
+  }
+]
