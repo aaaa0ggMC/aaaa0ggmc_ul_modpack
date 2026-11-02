@@ -83,10 +83,19 @@ public final class ZombieConversion {
         return morph != null && morph.name != null && normalize(formName).equals(normalize(morph.name));
     }
 
+    /**
+     * 取位置的真实群系：读区块存储的群系数组。
+     * 本整合包里 World.getBiome（生成层缓存路径）被群系模组改写后恒报错误值，
+     * 区块实存数据才是与地形一致的真值。
+     */
+    public static Biome biomeAt(net.minecraft.world.World world, BlockPos pos) {
+        return world.getChunk(pos).getBiome(pos, world.getBiomeProvider());
+    }
+
     /** 仪式条件诊断（排障用）：把各条件的实际取值拼成一行。 */
     public static String diagnose(EntityPlayerMP player, DamageSource source) {
         BlockPos pos = new BlockPos(player);
-        Biome biome = player.world.getBiome(pos);
+        Biome biome = biomeAt(player.world, pos);
         return "form=" + isZombieForm(player)
                 + " src=" + (source == null ? "?" : source.getDamageType())
                 + " waterBiome=" + isWaterBiome(biome)
@@ -102,7 +111,7 @@ public final class ZombieConversion {
             return null;
         }
         BlockPos pos = new BlockPos(player);
-        Biome biome = player.world.getBiome(pos);
+        Biome biome = biomeAt(player.world, pos);
 
         // 沙葬 → 尸壳：沙漠里被沙子埋到窒息
         if (source == DamageSource.IN_WALL

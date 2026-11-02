@@ -149,7 +149,7 @@ public class CommandUlPack extends CommandBase {
                     : "<human>")));
             player.sendMessage(new TextComponentString("Acquired morphs: " + morphing.getAcquiredMorphs().size()));
         }
-        net.minecraft.world.biome.Biome biome = player.world.getBiome(new net.minecraft.util.math.BlockPos(player));
+        net.minecraft.world.biome.Biome biome = aaaa0ggmc.ulmodpack.convert.ZombieConversion.biomeAt(player.world, new net.minecraft.util.math.BlockPos(player));
         StringBuilder types = new StringBuilder();
         for (net.minecraftforge.common.BiomeDictionary.Type t
                 : net.minecraftforge.common.BiomeDictionary.getTypes(biome)) {
