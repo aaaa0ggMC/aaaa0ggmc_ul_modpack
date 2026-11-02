@@ -1,6 +1,7 @@
 package aaaa0ggmc.ulmodpack.command;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.convert.ZombieConversion;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
@@ -50,7 +51,7 @@ public class CommandUlPack extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/ulpack <status|equip|infect|killby> [entity]";
+        return "/ulpack <status|equip|infect|killby|convert|death> [参数]";
     }
 
     @Override
@@ -79,6 +80,46 @@ public class CommandUlPack extends CommandBase {
                 EntityLivingBase killer = resolveForm(player, args, 1);
                 player.attackEntityFrom(net.minecraft.util.DamageSource.causeMobDamage(killer), 10000.0F);
                 break;
+            case "convert": {
+                ResourceLocation id = args.length > 1
+                        ? new ResourceLocation(args[1])
+                        : new ResourceLocation("minecraft", "husk");
+                Entity temp = EntityList.createEntityByIDFromName(id, player.world);
+                if (!(temp instanceof EntityLivingBase)) {
+                    throw new CommandException("Unknown entity id: " + id);
+                }
+                if (ZombieConversion.convertPlayerTo(player, (Class<? extends EntityLivingBase>) temp.getClass())) {
+                    player.sendMessage(new TextComponentString("Converted to " + id));
+                } else {
+                    throw new CommandException("Conversion failed for " + id);
+                }
+                break;
+            }
+            case "death": {
+                String cause = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "in_wall";
+                net.minecraft.util.DamageSource src;
+                switch (cause) {
+                    case "in_wall":
+                        src = net.minecraft.util.DamageSource.IN_WALL;
+                        break;
+                    case "drown":
+                        src = net.minecraft.util.DamageSource.DROWN;
+                        break;
+                    case "fire":
+                        src = net.minecraft.util.DamageSource.IN_FIRE;
+                        break;
+                    case "lava":
+                        src = net.minecraft.util.DamageSource.LAVA;
+                        break;
+                    case "cactus":
+                        src = net.minecraft.util.DamageSource.CACTUS;
+                        break;
+                    default:
+                        throw new WrongUsageException("/ulpack death <in_wall|drown|fire|lava|cactus>");
+                }
+                player.attackEntityFrom(src, 10000.0F);
+                break;
+            }
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
@@ -108,6 +149,17 @@ public class CommandUlPack extends CommandBase {
                     : "<human>")));
             player.sendMessage(new TextComponentString("Acquired morphs: " + morphing.getAcquiredMorphs().size()));
         }
+        net.minecraft.world.biome.Biome biome = player.world.getBiome(new net.minecraft.util.math.BlockPos(player));
+        StringBuilder types = new StringBuilder();
+        for (net.minecraftforge.common.BiomeDictionary.Type t
+                : net.minecraftforge.common.BiomeDictionary.getTypes(biome)) {
+            if (types.length() > 0) {
+                types.append(",");
+            }
+            types.append(t.getName());
+        }
+        player.sendMessage(new TextComponentString("Biome: " + biome.getBiomeName()
+                + " [" + types + "] dim=" + player.dimension));
         if (handler != null) {
             player.sendMessage(new TextComponentString("Baubles slots: " + handler.getSlots()));
         }

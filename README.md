@@ -33,6 +33,22 @@ morphext 核心保持通用。下面是当前已装的内容模块。
   5. 解锁进度「被感染」（`aaaa0ggmc_ul_modpack:infected`，challenge 弹窗）；
   6. 在 morphext 玩家数据记录感染状态（`aaaa0ggmc_ul_modpack:infection`，失败不影响主流程）。
 
+### 僵尸转化仪式（convert/）
+
+僵尸族形态（僵尸/尸壳/僵尸猪人/僵尸村民）之间的转化靠**仪式**：用特定物品、在特定
+群系、以特定方式死一次，死亡会被转化取代（无死亡界面、不掉落）。不限起始形态，
+仪式决定目标形态：
+
+| 仪式 | 变成 | 物品 | 群系 | 死法 |
+| --- | --- | --- | --- | --- |
+| 沙葬 | 尸壳 | 沙子（埋进去） | 沙漠 | 窒息而死 |
+| 水祭 | 僵尸 | 水瓶（手持） | 水域（河流/海洋/沼泽） | 溺水而死 |
+| 火祭 | 僵尸猪人 | 金锭（手持） | 下界 | 被烧死 |
+
+- 沙葬成功后破沙而出（清掉身边沙子，防止继续窒息）。
+- **尸壳特性**：免疫窒息伤害（对尸壳实体与尸壳形态的玩家都生效）。
+- 仪式未达成时服务端日志打 `ritual miss: form=… src=… waterBiome=… bottle=… …`（条件排障）。
+
 ### FTBQuests 形态检测任务注入
 
 任务类型 `aaaa0ggmc_ul_modpack:morph`：检测玩家「变成了什么」，每 10 tick 自动判定。
@@ -59,10 +75,12 @@ Metamorph 公共 API，不依赖本模组其它部分）。
 ## 调试指令（OP）
 
 ```
-/ulpack status            查看护符槽位、当前形态、已获形态数
+/ulpack status            查看护符槽位、当前/已获形态、群系与 BiomeDictionary 标签
 /ulpack equip             把安卡护符放进 AMULET 槽（测试免 GUI）
 /ulpack infect [entity]   立刻走一次感染变身（默认 minecraft:zombie）
-/ulpack killby [entity]   让指定实体“杀死”自己（完整死亡流程，验收死亡取消）
+/ulpack killby [entity]   让指定实体"杀死"自己（完整死亡流程，验收死亡取消）
+/ulpack convert [entity]  直接变成指定形态（默认 minecraft:husk，仪式验收用）
+/ulpack death <cause>     让自己死于指定伤害（in_wall|drown|fire|lava|cactus，仪式验收用）
 ```
 
 ## 构建与安装
