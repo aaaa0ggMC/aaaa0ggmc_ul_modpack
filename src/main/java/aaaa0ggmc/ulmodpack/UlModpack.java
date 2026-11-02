@@ -14,15 +14,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * shaping_the_world 整合包深度定制主模组。
+ * Unlimited Life（UL）整合包的内容主模组。
+ *
+ * 定位：整合包额外内容的容器——道具、机制、玩法系统、第三方联动等整合包级
+ * 定制都放在本模组里，按包（package）分区组织，随整合包持续扩充。
  *
  * 当前内容：
- *  - 安卡护符（Baubles AMULET 槽，佩戴 +2 护甲）；
- *  - 佩戴时被僵尸一族杀死：免去死亡（无死亡界面），化身为击杀者的形态，护符碎裂，
- *    解锁进度「被感染」；
- *  - FTBQuests 形态检测任务注入（type: aaaa0ggmc_ul_modpack:morph）。
+ *  - item/      安卡护符（Baubles AMULET 槽，佩戴 +2 护甲）；
+ *  - infection/ 感染变身：佩戴护符被僵尸一族杀死时免死并化身为击杀者形态，
+ *               护符碎裂，解锁进度「被感染」；
+ *  - ftbq/      FTBQuests 形态检测任务（type: aaaa0ggmc_ul_modpack:morph）；
+ *  - command/   /ulpack 调试指令。
  *
- * 后续整合包级联动（与 morphext 及各内容模组的适配）都挂在本模组下。
+ * 新内容直接加新包并在代理/注册器里挂上即可；本类只保留启动骨架。
  */
 @Mod(
         modid = UlModpack.MODID,
@@ -33,7 +37,7 @@ import org.apache.logging.log4j.Logger;
 )
 public class UlModpack {
     public static final String MODID = "aaaa0ggmc_ul_modpack";
-    public static final String NAME = "UL Modpack Core";
+    public static final String NAME = "Unlimited Life - Modpack Content";
     public static final String VERSION = "1.0.0";
     public static final Logger LOGGER = LogManager.getLogger(NAME);
 
@@ -51,7 +55,7 @@ public class UlModpack {
         LOGGER.info("[ul-modpack] Initializing {} v{}...", NAME, VERSION);
         proxy.preInit(event);
         InfectionHandler.register();
-        LOGGER.info("[ul-modpack] Ankh amulet online. The infected shall rise again.");
+        LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/ftbq-morph).");
     }
 
     @Mod.EventHandler

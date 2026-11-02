@@ -1,5 +1,5 @@
-# UL Modpack Core Lang (en_US)
-itemGroup.aaaa0ggmc_ul_modpack=UL Modpack
+# UL Modpack Content Lang (en_US)
+itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # Ankh Amulet
 item.aaaa0ggmc_ul_modpack.ankh_amulet.name=Ankh Amulet

@@ -1,5 +1,5 @@
-# UL Modpack Core Lang (zh_CN)
-itemGroup.aaaa0ggmc_ul_modpack=UL 整合包
+# UL Modpack Content Lang (zh_CN)
+itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # 安卡护符
 item.aaaa0ggmc_ul_modpack.ankh_amulet.name=安卡护符

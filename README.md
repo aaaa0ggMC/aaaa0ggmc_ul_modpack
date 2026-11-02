@@ -1,9 +1,16 @@
-# aaaa0ggmc_ul_modpack —— UL 整合包深度定制主模组
+# aaaa0ggmc_ul_modpack —— Unlimited Life 整合包内容主模组
 
-shaping_the_world（双实例：Forge+OptiFine / Cleanroom+Actinium）的整合包级定制与联动主模组。
+**UL = Unlimited Life。** 本模组是整合包的“内容大箱子”：整合包的**额外内容**——
+物品、机制、玩法系统、第三方联动——全部收在这里，按包（package）分区组织，
+随整合包持续扩充。双实例（Forge+OptiFine / Cleanroom+Actinium）同一 jar；
 1.12.2 Forge API（开发 2847 userdev，运行 2860 通用）· Java 8 字节码。
 
-## 内容
+**往里加内容**：在 `src/main/java/aaaa0ggmc/ulmodpack/` 下按主题开新包；
+物品注册挂进 `ItemRegistryHandler`，事件在 `CommonProxy.preInit`、
+指令在 `UlModpack.serverStarting` 挂上；第三方模组适配只放本模组，
+morphext 核心保持通用。下面是当前已装的内容模块。
+
+## 当前内容
 
 ### 安卡护符（`aaaa0ggmc_ul_modpack:ankh_amulet`）
 
