@@ -1,7 +1,8 @@
 package aaaa0ggmc.ulmodpack.ftbq;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
-import com.feed_the_beast.ftblib.lib.icon.Icon;
+import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
+import com.feed_the_beast.ftblib.lib.icon.ItemIcon;
 import com.feed_the_beast.ftbquests.quest.task.TaskType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -27,7 +28,8 @@ public class FtbqTaskRegistry {
     public static void onRegisterTasks(RegistryEvent.Register<TaskType> event) {
         MORPH = new TaskType(MorphTask::new);
         MORPH.setRegistryName(UlModpack.MODID, "morph");
-        MORPH.setIcon(Icon.getIcon(UlModpack.MODID + ":ankh_amulet"));
+        // 任务图标 = 物品图标（Icon.getIcon(String) 会把裸字符串当图片路径解析成 missing texture）
+        MORPH.setIcon(ItemIcon.getItemIcon(CommonProxy.ANKH_AMULET));
         event.getRegistry().register(MORPH);
         UlModpack.LOGGER.info("[ul-modpack] FTBQuests task type registered: {}", MORPH.getRegistryName());
     }

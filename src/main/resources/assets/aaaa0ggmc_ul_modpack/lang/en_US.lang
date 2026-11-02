@@ -3,19 +3,18 @@ itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # Ankh Amulet
 item.aaaa0ggmc_ul_modpack.ankh_amulet.name=Ankh Amulet
-aaaa0ggmc_ul_modpack.ankh.lore1=§6Gold of the living, binding flesh of the dead.
-aaaa0ggmc_ul_modpack.ankh.lore2=§7Grants +2 armor while worn.
-aaaa0ggmc_ul_modpack.ankh.lore3=§cShould the undead strike you down,
-aaaa0ggmc_ul_modpack.ankh.lore4=§7you rise as the thing that killed you — and the amulet shatters.
-aaaa0ggmc_ul_modpack.ankh.lore5=§8Zombie-kin only · single use
+aaaa0ggmc_ul_modpack.ankh.lore1=§7Grants +2 armor while worn.
+aaaa0ggmc_ul_modpack.ankh.lore2=§7If killed by a zombie-type mob, you don't die —
+aaaa0ggmc_ul_modpack.ankh.lore3=§7you turn into that mob and the amulet breaks.
+aaaa0ggmc_ul_modpack.ankh.lore4=§8Zombie-type mobs only. Single use.
 
 # Advancement
 advancements.aaaa0ggmc_ul_modpack.infected.title=Infected
-advancements.aaaa0ggmc_ul_modpack.infected.description=The plague spreads through the bite. When the fever breaks, you are no longer you.
+advancements.aaaa0ggmc_ul_modpack.infected.description=You were killed by a zombie-type mob and turned into it.
 
 # Event messages
-aaaa0ggmc_ul_modpack.msg.shatter=§6[Ankh]§r The amulet §cshatters§r, golden dust drifting in the air!
-aaaa0ggmc_ul_modpack.msg.infected=§8The plague sinks in...§r You rise as §7%s§r!
+aaaa0ggmc_ul_modpack.msg.shatter=The ankh amulet broke.
+aaaa0ggmc_ul_modpack.msg.infected=You turned into %s.
 
 # FTBQuests morph task
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=Morph Check

@@ -3,19 +3,18 @@ itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # 安卡护符
 item.aaaa0ggmc_ul_modpack.ankh_amulet.name=安卡护符
-aaaa0ggmc_ul_modpack.ankh.lore1=§6以生者之金，缚亡者之肉。
-aaaa0ggmc_ul_modpack.ankh.lore2=§7佩戴时护甲 +2。
-aaaa0ggmc_ul_modpack.ankh.lore3=§c若命丧尸族之手，死亡将被推迟——
-aaaa0ggmc_ul_modpack.ankh.lore4=§7你将化身为击杀你的怪物，护符应声碎裂。
-aaaa0ggmc_ul_modpack.ankh.lore5=§8仅对僵尸一族生效 · 一次性
+aaaa0ggmc_ul_modpack.ankh.lore1=§7佩戴时护甲 +2。
+aaaa0ggmc_ul_modpack.ankh.lore2=§7被僵尸类生物杀死时不会死亡，
+aaaa0ggmc_ul_modpack.ankh.lore3=§7而是变成击杀你的生物，护符损毁。
+aaaa0ggmc_ul_modpack.ankh.lore4=§8只对僵尸类生物生效，一次性。
 
 # 进度
 advancements.aaaa0ggmc_ul_modpack.infected.title=被感染
-advancements.aaaa0ggmc_ul_modpack.infected.description=尸毒顺着齿痕蔓延全身。高烧退去之后，你已经不再是你。
+advancements.aaaa0ggmc_ul_modpack.infected.description=被僵尸类生物杀死后，你变成了它。
 
 # 事件文案
-aaaa0ggmc_ul_modpack.msg.shatter=§6[安卡]§r护符§c应声碎裂§r，金色尘屑漫天飘散！
-aaaa0ggmc_ul_modpack.msg.infected=§8尸毒入骨……§r 你化身为 §7%s§r！
+aaaa0ggmc_ul_modpack.msg.shatter=安卡护符碎了。
+aaaa0ggmc_ul_modpack.msg.infected=你变成了 %s。
 
 # FTBQuests 形态检测任务
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=变身检测
