@@ -103,6 +103,5 @@ public class ItemAnkhAmulet extends Item implements IBauble {
         tooltip.add(I18n.format("aaaa0ggmc_ul_modpack.ankh.lore2"));
         tooltip.add(I18n.format("aaaa0ggmc_ul_modpack.ankh.lore3"));
         tooltip.add(I18n.format("aaaa0ggmc_ul_modpack.ankh.lore4"));
-        tooltip.add(I18n.format("aaaa0ggmc_ul_modpack.ankh.lore5"));
     }
 }
