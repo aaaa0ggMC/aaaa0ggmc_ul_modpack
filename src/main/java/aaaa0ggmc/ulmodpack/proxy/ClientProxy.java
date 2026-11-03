@@ -10,6 +10,7 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 /**
  * 客户端代理：模型注册 + 队伍快照缓存 + B 键状态页分节注册。
@@ -45,5 +46,14 @@ public class ClientProxy extends CommonProxy {
     public void onHordeSnapshot(String json) {
         // 网络线程 → 主线程；客户端类只在本覆写里出现（专用服务器静态检查红线）
         Minecraft.getMinecraft().addScheduledTask(() -> HordeTeamCache.replace(json));
+    }
+
+    /**
+     * 断线/换服/退出世界时清空队伍缓存（否则 B 键状态页会显示上一个服务器的旧队伍）。
+     * 事件在 netty 线程派发，和快照一样调度回主线程执行，保证与 replace() 的先后顺序。
+     */
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        Minecraft.getMinecraft().addScheduledTask(HordeTeamCache::clear);
     }
 }

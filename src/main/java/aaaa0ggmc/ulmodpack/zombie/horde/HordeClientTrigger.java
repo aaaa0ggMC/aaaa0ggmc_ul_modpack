@@ -2,7 +2,6 @@ package aaaa0ggmc.ulmodpack.zombie.horde;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityZombie;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -81,8 +80,10 @@ public final class HordeClientTrigger {
                 || !mc.player.getHeldItemOffhand().isEmpty()) {
             return;
         }
-        if (!(target instanceof EntityZombie)) {
-            return; // 只有僵尸族才走招募；其它实体保持原版交互
+        // 僵尸族（含僵尸猪人——EntityPigZombie 不是 EntityZombie 子类）才走招募；
+        // 判定与服务端 HordeManager.isZombieFamily 同一套，其它实体保持原版交互
+        if (!HordeManager.isZombieFamily(target)) {
+            return;
         }
         if (dedupe()) {
             return;

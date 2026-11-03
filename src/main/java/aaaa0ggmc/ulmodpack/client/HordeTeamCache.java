@@ -95,7 +95,7 @@ public final class HordeTeamCache {
         }
     }
 
-    /** 连接切换/登出时清空（未显式调用也安全：换服首包即整体替换）。 */
+    /** 连接切换/登出时清空（{@code ClientProxy.onClientDisconnect} 断线事件调用；换服首包也会整体替换）。 */
     public static void clear() {
         current = EMPTY;
     }

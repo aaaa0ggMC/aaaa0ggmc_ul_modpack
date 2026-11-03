@@ -35,10 +35,20 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 public final class HordeNetwork {
 
+    /**
+     * 通道名 = {@code ul:ability}。**不得超过 20 字符**：1.12.2 原版
+     * {@code CPacketCustomPayload/SPacketCustomPayload} 以 {@code readString(20)} 解码
+     * 通道名，超长直接 DecoderException 断线（已用 forgeBin 实测验证）。故不带
+     * {@code <modid>:} 前缀，与各类 javadoc 里的 {@code ul:ability} 一致。
+     */
     public static final SimpleNetworkWrapper CHANNEL =
-            NetworkRegistry.INSTANCE.newSimpleChannel(UlModpack.MODID + ":ul_ability");
+            NetworkRegistry.INSTANCE.newSimpleChannel("ul:ability");
 
-    /** S2C 队伍快照负载上限（随从 ≤ followCap 20 条，16KB 极宽松）。 */
+    /**
+     * S2C 队伍快照负载上限。原版单包 payload 上限 32767 字节（超限走 FML|MP 分片），
+     * 16KB 一步到位不触发分片；生产侧 {@code HordeManager.teamJson} 对随从名截断 +
+     * 列表封顶，保证实际 JSON 远小于此值（32 条 × ≈300B ≈ 9.6KB）。
+     */
     public static final int MAX_TEAM_BYTES = 16384;
 
     private HordeNetwork() {
@@ -81,10 +91,10 @@ public final class HordeNetwork {
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            targetId = buf.readInt();
-            if (targetId < 0 || targetId > 1 << 24) {
-                throw new IllegalArgumentException("Invalid target entity id");
-            }
+            // 不抛异常：非法 targetId 规范化为 0（=对空气），避免恶意/异常客户端一个坏包
+            // 就在 netty 解码线程炸掉连接；服务端 Handler 仍做全部权威校验。
+            int id = buf.readInt();
+            targetId = (id < 0 || id > 1 << 24) ? 0 : id;
         }
 
         @Override
@@ -140,7 +150,11 @@ public final class HordeNetwork {
         public void fromBytes(ByteBuf buf) {
             int size = buf.readInt();
             if (size < 0 || size > MAX_TEAM_BYTES || size > buf.readableBytes()) {
-                throw new IllegalArgumentException("Invalid team snapshot size");
+                // 负长度 / 超上限 / 超剩余：丢弃本包内容，不在解码线程抛异常；
+                // 空串会被 HordeTeamCache.replace 当坏数据丢弃、保留旧缓存
+                buf.skipBytes(buf.readableBytes());
+                json = "";
+                return;
             }
             byte[] bytes = new byte[size];
             buf.readBytes(bytes);

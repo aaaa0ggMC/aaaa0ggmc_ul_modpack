@@ -103,7 +103,7 @@ public final class HordeManager {
             return; // 8 秒冷却，静默限流
         }
         double reach = recruitReach();
-        if (target == null || target.isDead || !(target instanceof EntityZombie)) {
+        if (target == null || target.isDead || !isZombieFamily(target)) {
             action(player, "ul.horde.recruit.fail.target");
             return;
         }
@@ -234,7 +234,7 @@ public final class HordeManager {
         EntityLiving best = null;
         for (Entity e : player.world.getEntitiesWithinAABBExcludingEntity(player,
                 player.getEntityBoundingBox().grow(reach))) {
-            if (!(e instanceof EntityZombie) || e.isDead) {
+            if (!isZombieFamily(e) || e.isDead) {
                 continue;
             }
             AxisAlignedBB bounds = e.getEntityBoundingBox();
@@ -424,8 +424,8 @@ public final class HordeManager {
         }
         for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
                 owner.getEntityBoundingBox().grow(64.0D))) {
-            if (entity instanceof EntityZombie && Followers.isFollower(entity)) {
-                EntityZombie z = (EntityZombie) entity;
+            if (isZombieFamily(entity) && Followers.isFollower(entity)) {
+                EntityLiving z = (EntityLiving) entity;
                 if (z.getAttackTarget() == null || z.getAttackTarget().isDead) {
                     z.setAttackTarget(target);
                 }
@@ -702,13 +702,24 @@ public final class HordeManager {
 
     // ============================================================ 招募候选
 
-    /** recruit_radius 内的僵尸族（instanceof EntityZombie 覆盖僵尸/尸壳/僵尸村民/僵尸猪人），近者优先。 */
+    /**
+     * 僵尸族判定（README 语义）：{@link EntityZombie} 及其子类（僵尸、尸壳、僵尸村民、
+     * 巨人）+ 僵尸猪人。注意 {@code EntityPigZombie} 继承自 {@code EntityMonster}，
+     * <b>不是</b> {@code EntityZombie} 子类，必须显式并入，否则火祭产出的僵尸猪人
+     * 既招不了也带不动（历史 bug：instanceof EntityZombie 漏掉猪人）。
+     */
+    public static boolean isZombieFamily(Entity e) {
+        return e instanceof EntityZombie
+                || e instanceof net.minecraft.entity.monster.EntityPigZombie;
+    }
+
+    /** recruit_radius 内的僵尸族（含僵尸猪人，见 {@link #isZombieFamily}），近者优先。 */
     private static List<EntityLiving> zombiesNear(EntityPlayerMP player) {
         double r = UlStrength.num("zombie_tide.horde.recruit_radius", 16.0D);
         List<EntityLiving> out = new ArrayList<>();
         for (EntityLiving e : player.world.getEntitiesWithinAABB(EntityLiving.class,
                 player.getEntityBoundingBox().grow(r))) {
-            if (e instanceof EntityZombie && !e.isDead) {
+            if (isZombieFamily(e) && !e.isDead) {
                 out.add(e);
             }
         }
@@ -720,6 +731,12 @@ public final class HordeManager {
 
     /** 队伍快照节流间隔（tick）：随从血量变化频繁，5 秒一拍足够状态页展示。 */
     private static final long TEAM_SYNC_INTERVAL_TICKS = 100L;
+
+    /** 快照里随从列表封顶：followCap 最大 20，但 countFollowers 按半径统计可短时超编。 */
+    private static final int TEAM_SNAPSHOT_MAX_FOLLOWERS = 32;
+
+    /** 随从名截断长度（码点）：防超长自命名把 JSON 顶穿 MAX_TEAM_BYTES。 */
+    private static final int TEAM_SNAPSHOT_NAME_LIMIT = 64;
 
     /** 上次推给各玩家的快照与时间戳（仅服务端主线程访问）。 */
     private static final java.util.Map<UUID, String> LAST_TEAM_JSON = new java.util.WeakHashMap<>();
@@ -744,6 +761,8 @@ public final class HordeManager {
         if (last != null && now - last < TEAM_SYNC_INTERVAL_TICKS) {
             return;
         }
+        // 每拍最多构建一次 teamJson；没变化也要推进时间戳，否则 idle 后每个 tick 都重建 JSON
+        LAST_TEAM_TICK.put(player.getUniqueID(), now);
         if (teamJson(player).equals(LAST_TEAM_JSON.get(player.getUniqueID()))) {
             return;
         }
@@ -761,18 +780,35 @@ public final class HordeManager {
         // 状态页分节显隐：有尸群领导或有随从才展示（避免无关玩家被刷屏）
         root.addProperty("hasHorde", ZombieForms.hasLeadership(player) || !members.isEmpty());
         JsonArray followers = new JsonArray();
+        int listed = 0;
         for (EntityLiving f : members) {
+            if (listed >= TEAM_SNAPSHOT_MAX_FOLLOWERS) {
+                break; // 防御性封顶：JSON 大小可控（32 条 × ≈300B ≈ 9.6KB < MAX_TEAM_BYTES）
+            }
             JsonObject e = new JsonObject();
             net.minecraft.util.ResourceLocation type = net.minecraft.entity.EntityList.getKey(f);
             e.addProperty("type", type == null ? "" : type.toString());
-            e.addProperty("name", f.getName());
+            e.addProperty("name", truncate(f.getName(), TEAM_SNAPSHOT_NAME_LIMIT));
             e.addProperty("custom", f.hasCustomName());
             e.addProperty("health", Math.round(f.getHealth() * 10.0D) / 10.0D);
             e.addProperty("maxHealth", Math.round(f.getMaxHealth() * 10.0D) / 10.0D);
             followers.add(e);
+            listed++;
         }
         root.add("followers", followers);
         return root.toString();
+    }
+
+    /** 按码点截断（不劈开代理对）；超长加省略号提示。 */
+    private static String truncate(String s, int maxCodePoints) {
+        if (s == null) {
+            return "";
+        }
+        if (s.codePointCount(0, s.length()) <= maxCodePoints) {
+            return s;
+        }
+        int end = s.offsetByCodePoints(0, maxCodePoints);
+        return s.substring(0, end) + "…";
     }
 
     // ============================================================ 工具
