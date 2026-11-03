@@ -72,11 +72,11 @@ ul.titan.slam.cooldown=震地还在冷却。
 
 # 主动能力（morphext 能力轮盘 / 状态页）
 morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=招募
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=对着僵尸族使用技能，把它喊进队伍（说服度低时先打残、搭腐肉）。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=空手右键僵尸族，把它喊进队伍（说服度低时先打残、搭腐肉）。
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=发动尸潮
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=把队伍指向有村民的村庄。
 morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=解放队伍
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=让随从散开恢复野生（对空气潜行使用技能=解散队伍）。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=让随从散开恢复野生（空手+潜行+右键空气=解散队伍）。
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=潜行右键空手，震击周围敌人。
 

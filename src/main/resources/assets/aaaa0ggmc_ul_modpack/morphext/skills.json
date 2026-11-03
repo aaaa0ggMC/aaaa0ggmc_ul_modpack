@@ -5,7 +5,7 @@
       "id": "ul:horde_leadership",
       "line": "zombie_tide",
       "grant": {
-        "type": "forms_seen_all",
+        "type": "forms_seen_any",
         "forms": [
           "minecraft:zombie",
           "minecraft:husk",

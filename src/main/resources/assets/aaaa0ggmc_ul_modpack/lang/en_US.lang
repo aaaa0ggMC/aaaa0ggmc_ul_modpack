@@ -72,11 +72,11 @@ ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 
 # Active abilities (morphext ability wheel / status)
 morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=Recruit
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Use on a zombie to call it into your horde (at low Persuasion, weaken it first and pay rotten flesh).
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Right-click a zombie empty-handed to call it into your horde (at low Persuasion, weaken it first and pay rotten flesh).
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=Launch Tide
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=Point your horde at a village with villagers.
 morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=Release Horde
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Scatter your followers back to the wild (sneak-use on air = disband the horde).
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Scatter your followers back to the wild (empty-hand + sneak + right-click air = disband the horde).
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Sneak-right-click empty-handed to slam nearby enemies.
 
