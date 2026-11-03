@@ -16,6 +16,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -105,6 +106,8 @@ public final class HordeManager {
         }
 
         List<EntityLiving> candidates = zombiesNear(player);
+        org.apache.logging.log4j.LogManager.getLogger("ulmodpack")
+                .info("[horde] recruit: candidates=" + candidates.size() + " room=" + room + " needHurt=" + needHurt);
         double multiplier = Persuasion.multiplier(persuasion);
         int recruited = 0;
         for (EntityLiving zombie : candidates) {
@@ -158,7 +161,7 @@ public final class HordeManager {
         }
         boolean titan = ZombieForms.isTitan(player);
         int followers = countFollowers(player);
-        Village village = nearestValidVillage(player);
+        BlockPos village = findVillageCenter(player);
         // 有随从 + 有效村庄 → 发动屠村（泰坦也能带队）
         if (followers > 0 && village != null) {
             launch(player, entry, state, village);
@@ -180,9 +183,9 @@ public final class HordeManager {
     }
 
     /** 进入屠村：锁定村庄中心、初始化会话。 */
-    private static void launch(EntityPlayerMP player, HordeState.Entry entry, HordeState state, Village village) {
+    private static void launch(EntityPlayerMP player, HordeState.Entry entry, HordeState state, BlockPos center) {
         entry.active = true;
-        entry.villageCenter = village.getCenter();
+        entry.villageCenter = center;
         entry.startTick = player.world.getTotalWorldTime();
         entry.lastGolemSpawnTick = 0L;
         entry.abortSinceTick = 0L;
@@ -225,6 +228,7 @@ public final class HordeManager {
             EntityPlayerMP owner = (EntityPlayerMP) player;
 
             maybeSpawnGolem(world, entry);
+            commandFollowers(owner, entry);
 
             // 成功：活村民清零
             if (countVillagers(world, entry.villageCenter) <= 0) {
@@ -251,6 +255,40 @@ public final class HordeManager {
     }
 
     /** 尸潮期间每 golem_interval tick 尝试刷 1 只铁傀儡，同时存活 ≤ golem_max_alive。 */
+    /**
+     * 尸潮作战指令：随从僵尸跟随 AI 只跟随不作战（实体 AI 优先级被跟随任务占着），
+     * 每轮给它们指派最近的活村民为攻击目标——「带队屠村」的作战语义在这里。
+     * 铁傀儡会还击随从（原版守村 AI），随从被铁傀儡打死掉热忱的腐肉。
+     */
+    private static void commandFollowers(EntityPlayerMP owner, HordeState.Entry entry) {
+        World world = owner.world;
+        EntityVillager target = null;
+        double best = Double.MAX_VALUE;
+        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
+                new AxisAlignedBB(entry.villageCenter).grow(16.0D))) {
+            if (v.isDead) {
+                continue;
+            }
+            double d = v.getDistanceSq(entry.villageCenter);
+            if (d < best) {
+                best = d;
+                target = v;
+            }
+        }
+        if (target == null) {
+            return;
+        }
+        for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
+                owner.getEntityBoundingBox().grow(64.0D))) {
+            if (entity instanceof EntityZombie && Followers.isFollower(entity)) {
+                EntityZombie z = (EntityZombie) entity;
+                if (z.getAttackTarget() == null || z.getAttackTarget().isDead) {
+                    z.setAttackTarget(target);
+                }
+            }
+        }
+    }
+
     private static void maybeSpawnGolem(World world, HordeState.Entry entry) {
         long now = world.getTotalWorldTime();
         long interval = (long) UlStrength.num("zombie_tide.horde.golem_interval_ticks", 100.0D);
@@ -309,20 +347,37 @@ public final class HordeManager {
 
     // ============================================================ 调试 / 状态（命令用）
 
-    /** 调试：强制在最近村庄发动屠村（忽略队伍/村民数检查）。 */
+    /** 调试：强制在村民聚集地发动屠村（忽略队伍/村民数检查）。 */
     public static void forceStart(EntityPlayerMP player) {
-        VillageCollection collection = player.world.getVillageCollection();
         double radius = UlStrength.num("zombie_tide.horde.village_radius", 32.0D);
-        Village village = collection == null ? null
-                : collection.getNearestVillage(new BlockPos(player), (int) radius);
-        if (village == null) {
+        // 与正式发动同一套「村民聚集即村庄」判定；调试版把人数下限压到 1
+        List<EntityVillager> villagers = player.world.getEntitiesWithinAABB(
+                EntityVillager.class, player.getEntityBoundingBox().grow(radius));
+        BlockPos center = null;
+        if (!villagers.isEmpty()) {
+            double sx = 0, sy = 0, sz = 0;
+            int n = 0;
+            for (EntityVillager v : villagers) {
+                if (v.isDead) {
+                    continue;
+                }
+                n++;
+                sx += v.posX;
+                sy += v.posY;
+                sz += v.posZ;
+            }
+            if (n > 0) {
+                center = new BlockPos(sx / n, sy / n, sz / n);
+            }
+        }
+        if (center == null) {
             action(player, "ul.horde.launch.fail.place");
             return;
         }
         HordeState state = HordeState.get(player.world);
         HordeState.Entry entry = state.getOrCreate(player.getUniqueID());
         entry.active = true;
-        entry.villageCenter = village.getCenter();
+        entry.villageCenter = center;
         entry.startTick = player.world.getTotalWorldTime();
         entry.lastGolemSpawnTick = 0L;
         entry.abortSinceTick = 0L;
@@ -443,31 +498,31 @@ public final class HordeManager {
     // ============================================================ 村庄 / 铁傀儡
 
     /** 32 格内最近的「有效」村庄（活村民 ≥ village_min_villagers）。 */
-    private static Village nearestValidVillage(EntityPlayerMP player) {
-        VillageCollection collection = player.world.getVillageCollection();
-        if (collection == null) {
+    /**
+     * 找「村庄」= 村民聚集地（设计修订：不查原版村庄结构/门认领——村民聚在一起就算村庄，
+     * 对玩家反而利好刷铁机）。统计玩家 village_radius 内活村民，够 minVillagers 就以
+     * 质心为村庄中心；不足返回 null。
+     */
+    private static BlockPos findVillageCenter(EntityPlayerMP player) {
+        double radius = UlStrength.num("zombie_tide.horde.village_radius", 32.0D);
+        int minVillagers = UlStrength.integer("zombie_tide.horde.village_min_villagers", 4);
+        List<EntityVillager> villagers = player.world.getEntitiesWithinAABB(
+                EntityVillager.class, player.getEntityBoundingBox().grow(radius));
+        int n = 0;
+        double sx = 0, sy = 0, sz = 0;
+        for (EntityVillager v : villagers) {
+            if (v.isDead) {
+                continue;
+            }
+            n++;
+            sx += v.posX;
+            sy += v.posY;
+            sz += v.posZ;
+        }
+        if (n < minVillagers) {
             return null;
         }
-        double radius = UlStrength.num("zombie_tide.horde.village_radius", 32.0D);
-        double radiusSq = radius * radius;
-        int minVillagers = UlStrength.integer("zombie_tide.horde.village_min_villagers", 4);
-        Village best = null;
-        double bestDist = Double.MAX_VALUE;
-        for (Village village : collection.getVillageList()) {
-            BlockPos center = village.getCenter();
-            double distSq = center.distanceSq(player.posX, player.posY, player.posZ);
-            if (distSq > radiusSq) {
-                continue;
-            }
-            if (countVillagers(player.world, center) < minVillagers) {
-                continue;
-            }
-            if (distSq < bestDist) {
-                bestDist = distSq;
-                best = village;
-            }
-        }
-        return best;
+        return new BlockPos(sx / n, sy / n, sz / n);
     }
 
     private static int countVillagers(World world, BlockPos center) {
@@ -542,7 +597,9 @@ public final class HordeManager {
     }
 
     private static boolean isMoving(EntityPlayerMP player) {
-        return player.moveForward != 0.0F || player.moveStrafing != 0.0F;
+        // 宽容语义：最近窗口内移动过即算（服务端判移动的三种常见信号都不可靠，
+        // 见 HordeMotionTracker 注释；宽容对玩家手感也更好）。
+        return HordeMotionTracker.movedRecently(player);
     }
 
     private static boolean onCooldown(EntityPlayerMP player, String abilityId) {
@@ -585,6 +642,8 @@ public final class HordeManager {
     }
 
     private static void action(EntityPlayerMP player, String key, Object... args) {
+        org.apache.logging.log4j.LogManager.getLogger("ulmodpack")
+                .info("[horde] action: " + key + (args.length > 0 ? " " + java.util.Arrays.toString(args) : ""));
         player.sendStatusMessage(new TextComponentTranslation(key, args), true);
     }
 
