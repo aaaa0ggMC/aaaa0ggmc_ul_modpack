@@ -21,10 +21,17 @@ import org.apache.logging.log4j.Logger;
  *
  * 当前内容：
  *  - item/      安卡护符（Baubles AMULET 槽，佩戴 +2 护甲）；
- *  - infection/ 感染变身：佩戴护符被僵尸一族杀死时免死并化身为击杀者形态，
- *               护符碎裂，解锁进度「被感染」；
+ *  - infection/ 感染变身：佩戴护符被不死者阵营（ul:undead，数据驱动）杀死时
+ *               免死并化身为击杀者形态，护符碎裂，解锁进度「被感染」；
+ *               以死亡转化管线（morphext conversion）第 10 级阶段接入；
+ *  - zombie/    僵尸线实体侧特性（尸壳实体免疫窒息；玩家形态侧同款免疫
+ *               走 morphext 数据，见 assets/.../morphext/morph_abilities.json）；
  *  - ftbq/      FTBQuests 形态检测任务（type: aaaa0ggmc_ul_modpack:morph）；
- *  - command/   /ulpack 调试指令。
+ *  - command/   /ulpack 调试指令（含 /ulpack ritual 查看转化规则）。
+ *
+ * 转化规则（沙葬/水祭/火祭/村祭）与形态类别（ul:undead）是纯数据：
+ * assets/aaaa0ggmc_ul_modpack/morphext/*.json，由 morphext 核心的通用
+ * 注册表加载——本模组不实现仪式机制，只提供内容。
  *
  * 新内容直接加新包并在代理/注册器里挂上即可；本类只保留启动骨架。
  */

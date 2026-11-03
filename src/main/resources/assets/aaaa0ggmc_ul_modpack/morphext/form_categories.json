@@ -1,0 +1,9 @@
+{
+  "ul:undead": [
+    "minecraft:zombie",
+    "minecraft:husk",
+    "minecraft:zombie_pigman",
+    "minecraft:zombie_villager",
+    "minecraft:giant"
+  ]
+}

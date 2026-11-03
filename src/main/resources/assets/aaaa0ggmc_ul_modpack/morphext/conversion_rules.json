@@ -1,0 +1,118 @@
+{
+  "rules": [
+    {
+      "id": "sand_burial",
+      "line": "zombie_tide",
+      "target": "minecraft:husk",
+      "variant": null,
+      "priority": 100,
+      "selfCaused": false,
+      "item": null,
+      "place": {
+        "dimension": 0,
+        "biomeTypes": ["SANDY"],
+        "structure": null,
+        "structureRadius": 32,
+        "nearBlocks": ["minecraft:sand"],
+        "nearRadius": 2,
+        "y": { "min": 0, "max": 255 }
+      },
+      "death": { "types": ["inWall"], "source": null, "sourceEntity": null },
+      "state": { "formCategory": ["ul:undead"], "effects": [], "time": "any", "weather": "any" },
+      "consume": [],
+      "title": "aaaa0ggmc_ul_modpack.ritual.sand_burial.title",
+      "subtitle": "aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle",
+      "particle": "minecraft:blockcrack",
+      "sound": "minecraft:block.sand.break",
+      "advancement": "ul:ritual/sand_burial",
+      "debug": true
+    },
+    {
+      "id": "water_ritual",
+      "line": "zombie_tide",
+      "target": "minecraft:zombie",
+      "variant": null,
+      "priority": 100,
+      "selfCaused": false,
+      "item": {
+        "id": "minecraft:potion",
+        "nbt": { "Potion": "minecraft:water" },
+        "hand": "main",
+        "consume": true,
+        "leave": "minecraft:glass_bottle"
+      },
+      "place": {
+        "dimension": 0,
+        "biomeTypes": ["WATER", "RIVER", "OCEAN", "SWAMP"],
+        "structure": null,
+        "structureRadius": 32,
+        "nearBlocks": [],
+        "nearRadius": 0,
+        "y": { "min": 0, "max": 255 }
+      },
+      "death": { "types": ["drown"], "source": null, "sourceEntity": null },
+      "state": { "formCategory": ["ul:undead"], "effects": [], "time": "any", "weather": "any" },
+      "consume": [],
+      "title": "aaaa0ggmc_ul_modpack.ritual.water_ritual.title",
+      "subtitle": "aaaa0ggmc_ul_modpack.ritual.water_ritual.subtitle",
+      "particle": "minecraft:splash",
+      "sound": "minecraft:entity.generic.splash",
+      "advancement": "ul:ritual/water_ritual",
+      "debug": true
+    },
+    {
+      "id": "fire_ritual",
+      "line": "zombie_tide",
+      "target": "minecraft:zombie_pigman",
+      "variant": null,
+      "priority": 100,
+      "selfCaused": false,
+      "item": { "id": "minecraft:gold_ingot", "hand": "main", "consume": true },
+      "place": {
+        "dimension": -1,
+        "biomeTypes": [],
+        "structure": null,
+        "structureRadius": 32,
+        "nearBlocks": [],
+        "nearRadius": 0,
+        "y": { "min": 0, "max": 255 }
+      },
+      "death": { "types": ["onFire", "inFire", "lava"], "source": null, "sourceEntity": null },
+      "state": { "formCategory": ["ul:undead"], "effects": [], "time": "any", "weather": "any" },
+      "consume": [],
+      "title": "aaaa0ggmc_ul_modpack.ritual.fire_ritual.title",
+      "subtitle": "aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle",
+      "particle": "minecraft:flame",
+      "sound": "minecraft:block.fire.extinguish",
+      "advancement": "ul:ritual/fire_ritual",
+      "debug": true
+    },
+    {
+      "id": "village_emerald",
+      "line": "zombie_tide",
+      "target": "minecraft:zombie_villager",
+      "variant": null,
+      "priority": 120,
+      "selfCaused": false,
+      "item": { "id": "minecraft:emerald", "hand": "main", "consume": true },
+      "place": {
+        "dimension": 0,
+        "biomeTypes": [],
+        "structure": "village",
+        "structureRadius": 32,
+        "nearBlocks": [],
+        "nearRadius": 0,
+        "y": { "min": 0, "max": 255 }
+      },
+      "death": { "types": ["mob"], "source": null, "sourceEntity": ["minecraft:iron_golem"] },
+      "state": { "formCategory": ["ul:undead"], "effects": [], "time": "any", "weather": "any" },
+      "consume": [],
+      "title": "aaaa0ggmc_ul_modpack.ritual.village_emerald.title",
+      "subtitle": "aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle",
+      "particle": "minecraft:happy_villager",
+      "sound": "minecraft:entity.villager.yes",
+      "advancement": "ul:ritual/village_emerald",
+      "debug": true
+    }
+  ]
+}

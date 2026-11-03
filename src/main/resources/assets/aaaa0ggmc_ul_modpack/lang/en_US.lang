@@ -18,3 +18,13 @@ aaaa0ggmc_ul_modpack.msg.infected=You turned into %s.
 
 # FTBQuests morph task
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=Morph Check
+
+# Conversion rituals (data: assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json)
+aaaa0ggmc_ul_modpack.ritual.sand_burial.title=Sand Burial
+aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=You break out of the sand as a husk.
+aaaa0ggmc_ul_modpack.ritual.water_ritual.title=Water Ritual
+aaaa0ggmc_ul_modpack.ritual.water_ritual.subtitle=You surface as a zombie.
+aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=Fire Ritual
+aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=You rise as a zombie pigman.
+aaaa0ggmc_ul_modpack.ritual.village_emerald.title=Village Rite
+aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=The village files you as a zombie villager.

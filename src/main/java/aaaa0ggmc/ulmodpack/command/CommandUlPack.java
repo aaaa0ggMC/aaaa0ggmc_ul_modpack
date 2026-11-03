@@ -1,7 +1,14 @@
 package aaaa0ggmc.ulmodpack.command;
 
+import aaaa0ggmc.morphext.conversion.DeathContext;
+import aaaa0ggmc.morphext.conversion.MorphFactory;
+import aaaa0ggmc.morphext.conversion.WorldQuery;
+import aaaa0ggmc.morphext.conversion.rule.ConversionRule;
+import aaaa0ggmc.morphext.conversion.rule.ConversionRuleRegistry;
+import aaaa0ggmc.morphext.conversion.rule.RuleExecutor;
+import aaaa0ggmc.morphext.conversion.rule.RuleMatcher;
+import aaaa0ggmc.morphext.form.FormCategories;
 import aaaa0ggmc.ulmodpack.UlModpack;
-import aaaa0ggmc.ulmodpack.convert.ZombieConversion;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
@@ -9,7 +16,9 @@ import baubles.api.BaubleType;
 import baubles.api.BaublesApi;
 import baubles.api.IBauble;
 import baubles.api.cap.IBaublesItemHandler;
+import mchorse.metamorph.api.MorphAPI;
 import mchorse.metamorph.api.MorphManager;
+import mchorse.metamorph.api.morphs.AbstractMorph;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
 import net.minecraft.command.CommandBase;
@@ -25,6 +34,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +46,8 @@ import java.util.Locale;
  *   /ulpack equip               —— 把安卡护符放进 AMULET 槽（测试免 GUI）
  *   /ulpack infect [entity]     —— 立刻走一次感染变身（默认 minecraft:zombie）
  *   /ulpack killby [entity]     —— 让指定实体“杀死”自己（走完整死亡流程，测死亡取消）
+ *   /ulpack ritual <list|test|debug|reload> [id]
+ *                               —— 转化规则（morphext 数据驱动仪式）查看/试触发/排障/重载
  */
 public class CommandUlPack extends CommandBase {
 
@@ -51,7 +63,7 @@ public class CommandUlPack extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/ulpack <status|equip|infect|killby|convert|death> [参数]";
+        return "/ulpack <status|equip|infect|killby|convert|death|ritual> [参数]";
     }
 
     @Override
@@ -81,18 +93,15 @@ public class CommandUlPack extends CommandBase {
                 player.attackEntityFrom(net.minecraft.util.DamageSource.causeMobDamage(killer), 10000.0F);
                 break;
             case "convert": {
-                ResourceLocation id = args.length > 1
-                        ? new ResourceLocation(args[1])
-                        : new ResourceLocation("minecraft", "husk");
-                Entity temp = EntityList.createEntityByIDFromName(id, player.world);
-                if (!(temp instanceof EntityLivingBase)) {
-                    throw new CommandException("Unknown entity id: " + id);
+                String formId = args.length > 1 ? args[1] : "minecraft:husk";
+                AbstractMorph morph = MorphFactory.buildFromFormId(formId, player.world);
+                if (morph == null) {
+                    throw new CommandException("No morph available for form id: " + formId);
                 }
-                if (ZombieConversion.convertPlayerTo(player, (Class<? extends EntityLivingBase>) temp.getClass())) {
-                    player.sendMessage(new TextComponentString("Converted to " + id));
-                } else {
-                    throw new CommandException("Conversion failed for " + id);
-                }
+                MorphAPI.acquire(player, morph);
+                MorphAPI.morph(player, morph, true);
+                player.setHealth(player.getMaxHealth());
+                player.sendMessage(new TextComponentString("Converted to " + formId));
                 break;
             }
             case "death": {
@@ -120,9 +129,75 @@ public class CommandUlPack extends CommandBase {
                 player.attackEntityFrom(src, 10000.0F);
                 break;
             }
+            case "ritual":
+                ritual(player, args);
+                break;
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
+    }
+
+    /** 转化规则（morphext 数据驱动仪式）查看/试触发/排障/重载。 */
+    private static void ritual(EntityPlayerMP player, String[] args) throws CommandException {
+        if (args.length < 2) {
+            throw new WrongUsageException("/ulpack ritual <list|test|debug|reload> [id]");
+        }
+        String op = args[1].toLowerCase(Locale.ROOT);
+        switch (op) {
+            case "list": {
+                List<ConversionRule> rules = ConversionRuleRegistry.all();
+                player.sendMessage(new TextComponentString("Conversion rules: " + rules.size()));
+                for (ConversionRule rule : rules) {
+                    player.sendMessage(new TextComponentString(" - " + rule.id + " [line=" + rule.line
+                            + " prio=" + rule.priority + "] -> " + rule.target
+                            + " death=" + String.join("/", rule.death.types)));
+                }
+                break;
+            }
+            case "test": {
+                if (args.length < 3) {
+                    throw new WrongUsageException("/ulpack ritual test <id>");
+                }
+                ConversionRule rule = ConversionRuleRegistry.byId(args[2]);
+                if (rule == null) {
+                    throw new CommandException("Unknown conversion rule: " + args[2]);
+                }
+                DeathContext ctx = new DeathContext(player, net.minecraft.util.DamageSource.GENERIC, null);
+                boolean ok = RuleExecutor.execute(rule, ctx);
+                player.sendMessage(new TextComponentString("Rule " + rule.id + " -> " + (ok ? "converted" : "failed")));
+                break;
+            }
+            case "debug": {
+                DeathContext ctx = new DeathContext(player, net.minecraft.util.DamageSource.GENERIC, null);
+                player.sendMessage(new TextComponentString("Form: " + ctx.formId()
+                        + " categories=[" + String.join(",", ctx.categories()) + "]"));
+                for (ConversionRule rule : ConversionRuleRegistry.all()) {
+                    List<String> missing = new ArrayList<>();
+                    RuleMatcher.evaluate(rule, ctx, missing);
+                    player.sendMessage(new TextComponentString(" - " + rule.id + ": "
+                            + (missing.isEmpty() ? "READY" : "missing " + String.join(",", missing))));
+                }
+                break;
+            }
+            case "reload": {
+                ConversionRuleRegistry.reload();
+                aaaa0ggmc.morphext.form.FormCategories.reload();
+                player.sendMessage(new TextComponentString("Reloaded conversion rules ("
+                        + ConversionRuleRegistry.all().size() + ") and form categories ("
+                        + aaaa0ggmc.morphext.form.FormCategories.snapshot().size() + ")."));
+                break;
+            }
+            default:
+                throw new WrongUsageException("/ulpack ritual <list|test|debug|reload> [id]");
+        }
+    }
+
+    private static String currentFormId(EntityPlayerMP player) {
+        IMorphing morphing = Morphing.get(player);
+        if (morphing == null || !morphing.isMorphed() || morphing.getCurrentMorph() == null) {
+            return "";
+        }
+        return String.valueOf(morphing.getCurrentMorph().name);
     }
 
     private static EntityLivingBase resolveForm(EntityPlayerMP player, String[] args, int index) throws CommandException {
@@ -149,7 +224,7 @@ public class CommandUlPack extends CommandBase {
                     : "<human>")));
             player.sendMessage(new TextComponentString("Acquired morphs: " + morphing.getAcquiredMorphs().size()));
         }
-        net.minecraft.world.biome.Biome biome = aaaa0ggmc.ulmodpack.convert.ZombieConversion.biomeAt(player.world, new net.minecraft.util.math.BlockPos(player));
+        net.minecraft.world.biome.Biome biome = WorldQuery.biomeAt(player.world, new net.minecraft.util.math.BlockPos(player));
         StringBuilder types = new StringBuilder();
         for (net.minecraftforge.common.BiomeDictionary.Type t
                 : net.minecraftforge.common.BiomeDictionary.getTypes(biome)) {
@@ -160,6 +235,8 @@ public class CommandUlPack extends CommandBase {
         }
         player.sendMessage(new TextComponentString("Biome: " + biome.getBiomeName()
                 + " [" + types + "] dim=" + player.dimension));
+        player.sendMessage(new TextComponentString("Form categories: ["
+                + String.join(",", FormCategories.categoriesOf(currentFormId(player))) + "]"));
         if (handler != null) {
             player.sendMessage(new TextComponentString("Baubles slots: " + handler.getSlots()));
         }

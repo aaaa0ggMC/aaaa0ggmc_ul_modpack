@@ -18,3 +18,13 @@ aaaa0ggmc_ul_modpack.msg.infected=你变成了 %s。
 
 # FTBQuests 形态检测任务
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=变身检测
+
+# 转化仪式（数据来自 assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json）
+aaaa0ggmc_ul_modpack.ritual.sand_burial.title=沙葬
+aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=你作为尸壳破沙而出。
+aaaa0ggmc_ul_modpack.ritual.water_ritual.title=水祭
+aaaa0ggmc_ul_modpack.ritual.water_ritual.subtitle=你作为僵尸浮上水面。
+aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=火祭
+aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=你作为僵尸猪人站起。
+aaaa0ggmc_ul_modpack.ritual.village_emerald.title=村祭
+aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=村庄把你归成了僵尸村民。

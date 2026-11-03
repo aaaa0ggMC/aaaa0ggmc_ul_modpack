@@ -33,7 +33,7 @@ morphext 核心保持通用。下面是当前已装的内容模块。
   5. 解锁进度「被感染」（`aaaa0ggmc_ul_modpack:infected`，challenge 弹窗）；
   6. 在 morphext 玩家数据记录感染状态（`aaaa0ggmc_ul_modpack:infection`，失败不影响主流程）。
 
-### 僵尸转化仪式（convert/）
+### 僵尸转化仪式（纯数据，机制在 morphext）
 
 僵尸族形态（僵尸/尸壳/僵尸猪人/僵尸村民）之间的转化靠**仪式**：用特定物品、在特定
 群系、以特定方式死一次，死亡会被转化取代（无死亡界面、不掉落）。不限起始形态，
@@ -42,12 +42,19 @@ morphext 核心保持通用。下面是当前已装的内容模块。
 | 仪式 | 变成 | 物品 | 群系 | 死法 |
 | --- | --- | --- | --- | --- |
 | 沙葬 | 尸壳 | 沙子（埋进去） | 沙漠 | 窒息而死 |
-| 水祭 | 僵尸 | 水瓶（手持） | 水域（河流/海洋/沼泽） | 溺水而死 |
+| 水祭 | 僵尸 | 水瓶（手持，消耗剩空瓶） | 水域（河流/海洋/沼泽） | 溺水而死 |
 | 火祭 | 僵尸猪人 | 金锭（手持） | 下界 | 被烧死 |
+| 村祭 | 僵尸村民 | 绿宝石（主手） | 村庄 32 格内 | 被铁傀儡打死 |
 
-- 沙葬成功后破沙而出（清掉身边沙子，防止继续窒息）。
-- **尸壳特性**：免疫窒息伤害（对尸壳实体与尸壳形态的玩家都生效）。
-- 仪式未达成时服务端日志打 `ritual miss: form=… src=… waterBiome=… bottle=… …`（条件排障）。
+- **本模组不含仪式机制**：判定与执行是 morphext 核心的通用「死亡转化管线 + 数据驱动
+  规则引擎」（扫全模组 `assets/<modid>/morphext/conversion_rules.json` + config 覆盖）。
+  本模组只提供内容：四条规则的配置见 `assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json`，
+  形态类别（`ul:undead`）见同目录 `form_categories.json`。
+- 沙葬成功后破沙而出（清掉规则自己声明的掩埋方块 + 确保头顶净空）。
+- **尸壳特性**：免疫窒息伤害。玩家形态侧走 morphext 已有的 `damageImmunities` 数据通道
+  （`morphext/morph_abilities.json`），实体侧是线内容 `zombie/ZombieLineTraits`。
+- 仪式未达成且玩家是不死者形态时，服务端日志打
+  `ritual miss: src=… form=… categories=[…] best=<规则id> missing=[…]`（条件排障）。
 
 ### FTBQuests 形态检测任务注入
 
@@ -81,6 +88,10 @@ Metamorph 公共 API，不依赖本模组其它部分）。
 /ulpack killby [entity]   让指定实体"杀死"自己（完整死亡流程，验收死亡取消）
 /ulpack convert [entity]  直接变成指定形态（默认 minecraft:husk，仪式验收用）
 /ulpack death <cause>     让自己死于指定伤害（in_wall|drown|fire|lava|cactus，仪式验收用）
+/ulpack ritual list       列出全部转化规则（morphext 注册表，数据驱动）
+/ulpack ritual test <id>  忽略条件直接触发某条规则（调试）
+/ulpack ritual debug      打印当前形态/类别与每条规则缺失的条件
+/ulpack ritual reload     重载规则/类别配置
 ```
 
 ## 构建与安装

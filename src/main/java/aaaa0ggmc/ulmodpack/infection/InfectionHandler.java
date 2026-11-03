@@ -1,24 +1,25 @@
 package aaaa0ggmc.ulmodpack.infection;
 
+import aaaa0ggmc.morphext.conversion.ConversionPipeline;
+import aaaa0ggmc.morphext.conversion.ConversionStage;
+import aaaa0ggmc.morphext.conversion.DeathContext;
+import aaaa0ggmc.morphext.conversion.MorphFactory;
+import aaaa0ggmc.morphext.form.FormCategories;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import baubles.api.BaublesApi;
 import baubles.api.cap.IBaublesItemHandler;
 import com.google.gson.JsonObject;
-import mchorse.metamorph.api.EntityUtils;
 import mchorse.metamorph.api.MorphAPI;
-import mchorse.metamorph.api.MorphManager;
 import mchorse.metamorph.api.morphs.AbstractMorph;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
@@ -26,7 +27,6 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import aaaa0ggmc.morphext.ability.PlayerAbilityData;
@@ -34,43 +34,55 @@ import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
 import aaaa0ggmc.morphext.network.AbilityNetwork;
 
 /**
- * 感染变身：佩戴安卡护符的玩家被僵尸一族（EntityZombie 及其子类：僵尸、尸壳、
- * 僵尸村民、僵尸猪人、巨人）杀死时——
+ * 感染变身（死亡转化管线的第 10 级阶段）。
+ *
+ * 佩戴安卡护符的玩家被不死者阵营（{@code ul:undead} 类别，数据见
+ * assets/aaaa0ggmc_ul_modpack/morphext/form_categories.json：僵尸、尸壳、
+ * 僵尸猪人、僵尸村民、巨人）杀死时——
  *
  *  1. 取消死亡（无死亡界面、无掉落、无死亡消息）；
  *  2. 化身为击杀者的形态（Metamorph，获得 + 强制变身）；
  *  3. 回满生命（形态会改写最大生命，故在变身之后回血）；
  *  4. 安卡护符碎裂，粒子/音效/文案齐发；
  *  5. 解锁进度「被感染」，并在 morphext 玩家数据里记录一条感染状态。
+ *
+ * 阵营判定走 morphext 的通用类别注册表，不在本类维护任何实体名单。
  */
-public class InfectionHandler {
+public class InfectionHandler implements ConversionStage {
 
     public static void register() {
-        MinecraftForge.EVENT_BUS.register(new InfectionHandler());
+        ConversionPipeline.register(new InfectionHandler());
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onLivingDeath(LivingDeathEvent event) {
-        if (event.getEntityLiving().world.isRemote) {
-            return;
+    @Override
+    public int priority() {
+        return 10;
+    }
+
+    @Override
+    public boolean handle(DeathContext ctx) {
+        if (ctx.source == null) {
+            return false;
         }
-        if (!(event.getEntityLiving() instanceof EntityPlayerMP)) {
-            return;
+        EntityPlayerMP player = ctx.player;
+        Entity killer = resolveKiller(ctx.source);
+        if (killer == null) {
+            return false;
         }
-        EntityPlayerMP player = (EntityPlayerMP) event.getEntityLiving();
-        Entity killer = resolveKiller(event.getSource());
-        if (!(killer instanceof EntityZombie)) {
-            return;
+        net.minecraft.util.ResourceLocation killerId = EntityList.getKey(killer);
+        if (killerId == null || !FormCategories.has(killerId.toString(), "ul:undead")) {
+            return false;
         }
         if (!consumeAnkh(player)) {
-            return;
+            return false;
         }
         // 取消死亡：EntityPlayerMP.onDeath 整个包在 ForgeHooks.onLivingDeath 里，
         // 取消即无死亡界面/无掉落/无死亡消息（1.12.2 Forge 语义）。
-        event.setCanceled(true);
+        ctx.cancelDeath();
         UlModpack.LOGGER.info("[ul-modpack] Ankh triggered for {} (slain by {})",
-                player.getName(), EntityList.getKey(killer));
+                player.getName(), killerId);
         infect(player, killer, true);
+        return true;
     }
 
     /**
@@ -84,7 +96,7 @@ public class InfectionHandler {
             player.fallDistance = 0.0F;
         }
 
-        AbstractMorph morph = buildMorph(formSource);
+        AbstractMorph morph = MorphFactory.buildFromEntity(formSource);
         if (morph != null) {
             // 先拿到形态再变身：acquire 让玩家永久拥有该形态，morph 强制切换
             MorphAPI.acquire(player, morph);
@@ -126,24 +138,6 @@ public class InfectionHandler {
             }
         }
         return false;
-    }
-
-    /** 从击杀者实体构建 Metamorph 形态（与 Metamorph 自身击杀获取形态同一套路径）。 */
-    public static AbstractMorph buildMorph(Entity formSource) {
-        try {
-            String name = MorphManager.INSTANCE.morphNameFromEntity(formSource);
-            if (name == null || !MorphManager.INSTANCE.hasMorph(name)) {
-                return null;
-            }
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setString("Name", name);
-            tag.setTag("EntityData", EntityUtils.stripEntityNBT(formSource.serializeNBT()));
-            return MorphManager.INSTANCE.morphFromNBT(tag);
-        } catch (Throwable t) {
-            UlModpack.LOGGER.warn("[ul-modpack] Failed to build morph from {}: {}",
-                    EntityList.getKey(formSource), t.toString());
-            return null;
-        }
     }
 
     /** 感染记录写进 morphext 玩家数据（失败不影响主流程）。 */
