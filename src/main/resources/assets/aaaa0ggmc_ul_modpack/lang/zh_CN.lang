@@ -19,6 +19,9 @@ aaaa0ggmc_ul_modpack.msg.infected=你变成了 %s。
 # FTBQuests 形态检测任务
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=变身检测
 
+# FTBQuests 通用进度数值任务
+ftbquests.task.aaaa0ggmc_ul_modpack.progress=进度检测
+
 # 转化仪式（数据来自 assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json）
 aaaa0ggmc_ul_modpack.ritual.sand_burial.title=沙葬
 aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=你作为尸壳破沙而出。
@@ -28,3 +31,49 @@ aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=火祭
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=你作为僵尸猪人站起。
 aaaa0ggmc_ul_modpack.ritual.village_emerald.title=村祭
 aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=村庄把你归成了僵尸村民。
+
+# 热忱的腐肉（泰坦入口）
+item.aaaa0ggmc_ul_modpack.zealous_flesh.name=热忱的腐肉
+aaaa0ggmc_ul_modpack.zealous_flesh.lore1=§7在一次次潮水中总是那么随波逐流。
+aaaa0ggmc_ul_modpack.zealous_flesh.lore2=§7随从被铁傀儡打死时掉落。
+aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7吃下它，需要尸群领导，
+aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7并且至少屠过一次村。
+
+# 尸群领导 / 尸潮
+ul.horde.fail.skill=死者还不想听你的。
+ul.horde.fail.form=你现在不是不死者。
+ul.horde.persuasion=说服度：%s
+ul.horde.recruit.ok=跟上来 %s 只。
+ul.horde.recruit.fail.day=天亮了。它们不会跟你走。
+ul.horde.recruit.fail.move=站着不动，它们不知道你要去哪。
+ul.horde.recruit.fail.cap=队伍满了。
+ul.horde.recruit.fail.persuasion=它不服你。先打残再试。
+ul.horde.recruit.fail.none=附近没有僵尸。
+ul.horde.recruit.fail.flesh=你手里没有腐肉。
+ul.horde.launch=它们闻到村民了。
+ul.horde.launch.fail.empty=队伍是空的。先去招募。
+ul.horde.launch.fail.place=这里没有值得淹的地方。
+ul.horde.launch.fail.active=潮水还没退。
+ul.horde.release=队伍散了。
+ul.horde.win=村庄安静了。
+ul.horde.fail=你死了。潮水退了。
+ul.horde.abort=你走得太远了。潮水散了。
+
+# 泰坦
+ul.titan.feast.fail.skill=死者还不想听你的。
+ul.titan.feast.fail.tide=先带它们屠一次村。
+ul.titan.feast.fail.room=这里放不下泰坦。
+ul.titan.feast.fail.form=你现在不是不死者。
+ul.titan.feast.ok=你长高了。
+ul.titan.bed=床太小了。
+ul.titan.slam.cooldown=震地还在冷却。
+
+# 主动能力（morphext 能力轮盘 / 状态页）
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=招募
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=夜晚移动中潜行右键，把僵尸族喊进队伍。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=发动尸潮
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=对空气使用，把队伍指向有村民的村庄。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=解放队伍
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=对空气使用，让随从散开恢复野生。
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=潜行右键空手，震击周围敌人。

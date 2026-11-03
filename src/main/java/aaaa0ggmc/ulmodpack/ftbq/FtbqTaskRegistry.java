@@ -4,6 +4,7 @@ import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import com.feed_the_beast.ftblib.lib.icon.ItemIcon;
 import com.feed_the_beast.ftbquests.quest.task.TaskType;
+import net.minecraft.init.Items;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -20,6 +21,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class FtbqTaskRegistry {
 
     public static TaskType MORPH;
+    public static TaskType PROGRESS;
 
     private FtbqTaskRegistry() {
     }
@@ -31,6 +33,14 @@ public class FtbqTaskRegistry {
         // 任务图标 = 物品图标（Icon.getIcon(String) 会把裸字符串当图片路径解析成 missing texture）
         MORPH.setIcon(ItemIcon.getItemIcon(CommonProxy.ANKH_AMULET));
         event.getRegistry().register(MORPH);
+
+        // 通用进度数值任务：读玩家 morphext 数据的状态键比大小，与具体模组无关
+        PROGRESS = new TaskType(ProgressTask::new);
+        PROGRESS.setRegistryName(UlModpack.MODID, "progress");
+        PROGRESS.setIcon(ItemIcon.getItemIcon(Items.BOOK));
+        event.getRegistry().register(PROGRESS);
+
         UlModpack.LOGGER.info("[ul-modpack] FTBQuests task type registered: {}", MORPH.getRegistryName());
+        UlModpack.LOGGER.info("[ul-modpack] FTBQuests task type registered: {}", PROGRESS.getRegistryName());
     }
 }

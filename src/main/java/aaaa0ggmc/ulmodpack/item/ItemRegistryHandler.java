@@ -17,5 +17,6 @@ public class ItemRegistryHandler {
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(CommonProxy.ANKH_AMULET);
+        event.getRegistry().register(CommonProxy.ZEALOUS_FLESH);
     }
 }

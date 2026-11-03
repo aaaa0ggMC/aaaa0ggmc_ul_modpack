@@ -132,6 +132,12 @@ public class CommandUlPack extends CommandBase {
             case "ritual":
                 ritual(player, args);
                 break;
+            case "tide":
+                aaaa0ggmc.ulmodpack.zombie.horde.HordeCommands.tide(player, args);
+                break;
+            case "skill":
+                aaaa0ggmc.ulmodpack.zombie.horde.HordeCommands.skill(player, args, server);
+                break;
             default:
                 throw new WrongUsageException(getUsage(sender));
         }

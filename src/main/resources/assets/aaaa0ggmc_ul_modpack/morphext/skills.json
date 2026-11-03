@@ -1,0 +1,27 @@
+{
+  "_doc": "不死者线技能定义（由 morphext 核心 SkillRegistry 扫描加载）。核心不认识任何具体技能：授予条件、形态类别、附带能力、进度键全部在这里以数据声明。id 约定 ul:<skill>；附带能力 id 用内容模组命名空间 aaaa0ggmc_ul_modpack:<ability>。",
+  "skills": [
+    {
+      "id": "ul:horde_leadership",
+      "line": "zombie_tide",
+      "grant": {
+        "type": "forms_seen_all",
+        "forms": [
+          "minecraft:zombie",
+          "minecraft:husk",
+          "minecraft:zombie_pigman",
+          "minecraft:zombie_villager"
+        ]
+      },
+      "requiresFormCategory": [
+        "ul:undead"
+      ],
+      "abilities": [
+        "aaaa0ggmc_ul_modpack:horde_recruit",
+        "aaaa0ggmc_ul_modpack:horde_launch",
+        "aaaa0ggmc_ul_modpack:horde_release"
+      ],
+      "advancement": "ul:line/zombie_tide/horde_leadership"
+    }
+  ]
+}

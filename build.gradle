@@ -30,6 +30,8 @@ repositories {
 }
 
 dependencies {
+    // UL 强度设计层 —— 全包可调数值统一入口（UlStrength）
+    compile files("libs/ul-strength-design-1.0.0.jar")
     // Baubles —— 安卡护符的 AMULET（脖子）槽位
     compile files("libs/Baubles-1.12-1.5.2.jar")
     // Metamorph —— 感染变身的形态引擎（MorphAPI/MorphManager）

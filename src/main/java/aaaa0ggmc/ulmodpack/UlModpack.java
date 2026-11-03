@@ -3,6 +3,7 @@ package aaaa0ggmc.ulmodpack;
 import aaaa0ggmc.ulmodpack.command.CommandUlPack;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.infection.UlTriggers;
+import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -68,6 +69,7 @@ public class UlModpack {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.init(event);
+        ZombieLine.register();
     }
 
     @Mod.EventHandler

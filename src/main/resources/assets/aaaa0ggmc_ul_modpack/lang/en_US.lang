@@ -19,6 +19,9 @@ aaaa0ggmc_ul_modpack.msg.infected=You turned into %s.
 # FTBQuests morph task
 ftbquests.task.aaaa0ggmc_ul_modpack.morph=Morph Check
 
+# FTBQuests generic progress task
+ftbquests.task.aaaa0ggmc_ul_modpack.progress=Progress Check
+
 # Conversion rituals (data: assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json)
 aaaa0ggmc_ul_modpack.ritual.sand_burial.title=Sand Burial
 aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=You break out of the sand as a husk.
@@ -28,3 +31,49 @@ aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=Fire Ritual
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=You rise as a zombie pigman.
 aaaa0ggmc_ul_modpack.ritual.village_emerald.title=Village Rite
 aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=The village files you as a zombie villager.
+
+# Zealous Flesh (titan entry)
+item.aaaa0ggmc_ul_modpack.zealous_flesh.name=Zealous Flesh
+aaaa0ggmc_ul_modpack.zealous_flesh.lore1=§7Always drifting along in tide after tide.
+aaaa0ggmc_ul_modpack.zealous_flesh.lore2=§7Dropped when a follower is killed by an iron golem.
+aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7Eating it needs Horde Leadership,
+aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7and at least one cleared tide.
+
+# Horde Leadership / Village Tide
+ul.horde.fail.skill=The dead don't listen to you yet.
+ul.horde.fail.form=You are not one of the undead.
+ul.horde.persuasion=Persuasion: %s
+ul.horde.recruit.ok=%s followed you.
+ul.horde.recruit.fail.day=It's daylight. They won't follow you now.
+ul.horde.recruit.fail.move=Standing still, they don't know where you're going.
+ul.horde.recruit.fail.cap=The horde is full.
+ul.horde.recruit.fail.persuasion=It doesn't obey you. Wear it down first.
+ul.horde.recruit.fail.none=No zombies nearby.
+ul.horde.recruit.fail.flesh=You have no rotten flesh.
+ul.horde.launch=They smell the villagers.
+ul.horde.launch.fail.empty=The horde is empty. Recruit first.
+ul.horde.launch.fail.place=Nothing here worth drowning.
+ul.horde.launch.fail.active=The tide hasn't receded yet.
+ul.horde.release=The horde scattered.
+ul.horde.win=The village is quiet.
+ul.horde.fail=You died. The tide receded.
+ul.horde.abort=You went too far. The tide scattered.
+
+# Titan
+ul.titan.feast.fail.skill=The dead don't listen to you yet.
+ul.titan.feast.fail.tide=Lead them through a village first.
+ul.titan.feast.fail.room=There's no room for a titan here.
+ul.titan.feast.fail.form=You are not one of the undead.
+ul.titan.feast.ok=You grew tall.
+ul.titan.bed=The bed is too small.
+ul.titan.slam.cooldown=Ground Slam is still on cooldown.
+
+# Active abilities (morphext ability wheel / status)
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=Recruit
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Sneak-right-click at night while moving to call zombies into your horde.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=Launch Tide
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=Use on air to point your horde at a village with villagers.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=Release Horde
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Use on air to scatter your followers back to the wild.
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Sneak-right-click empty-handed to slam nearby enemies.
