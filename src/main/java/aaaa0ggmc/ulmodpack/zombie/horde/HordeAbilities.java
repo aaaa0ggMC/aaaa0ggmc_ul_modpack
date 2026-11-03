@@ -46,7 +46,7 @@ public final class HordeAbilities {
         }
     }
 
-    /** 招募：夜晚 + 移动中 + 潜行右键方块/实体。 */
+    /** 招募：对着僵尸族实体使用技能（手势路径上报目标实体 id；本入口做视线内目标解析）。 */
     private static final class RecruitAbility extends AbstractActiveAbility {
         private RecruitAbility() {
             super(ZombieLine.ABILITY_RECRUIT);
@@ -61,7 +61,7 @@ public final class HordeAbilities {
         }
     }
 
-    /** 发动尸潮：对空气使用，32 格内活村民 ≥4 的村庄。 */
+    /** 发动尸潮：把队伍指向 32 格内活村民 ≥4 的村庄（发动/解放/震地的框架兜底分派）。 */
     private static final class LaunchAbility extends AbstractActiveAbility {
         private LaunchAbility() {
             super(ZombieLine.ABILITY_LAUNCH);
@@ -76,7 +76,7 @@ public final class HordeAbilities {
         }
     }
 
-    /** 解放队伍：对空气使用，附近没有有效村庄。 */
+    /** 解放队伍：让随从散开恢复野生（明确的解散动作走手势：对空气潜行使用技能）。 */
     private static final class ReleaseAbility extends AbstractActiveAbility {
         private ReleaseAbility() {
             super(ZombieLine.ABILITY_RELEASE);

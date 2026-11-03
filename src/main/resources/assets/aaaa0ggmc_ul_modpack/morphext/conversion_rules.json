@@ -69,7 +69,6 @@
       "selfCaused": false,
       "item": { "id": "minecraft:gold_ingot", "hand": "main", "consume": true },
       "place": {
-        "dimension": -1,
         "biomeTypes": [],
         "structure": null,
         "structureRadius": 32,

@@ -34,4 +34,12 @@ public class CommonProxy {
 
     public void postInit(FMLPostInitializationEvent event) {
     }
+
+    /**
+     * S2C 尸群队伍快照（{@code HordeNetwork.TeamHandler} 中转）。服务端代理空实现；
+     * 客户端覆写写入 {@code HordeTeamCache}（B 键状态页数据源）。
+     * 专用服务器侧不得在此引用任何客户端类。
+     */
+    public void onHordeSnapshot(String json) {
+    }
 }

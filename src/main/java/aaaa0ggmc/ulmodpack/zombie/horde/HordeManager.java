@@ -9,6 +9,7 @@ import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -42,16 +43,19 @@ import java.util.UUID;
 /**
  * 尸潮系统（尸群领导 + 屠村）核心逻辑。
  *
- * 触发由 {@link HordeEvents}（潜行右键方块/实体）与 {@link HordeNetwork}（对空气使用，
- * 客户端 ul:ability 包）分发进来；本类只做服务端权威判定与状态推进，不含事件订阅。
+ * 触发由 {@link HordeEvents}（潜行右键方块/实体）与 {@link HordeNetwork}（手势客户端上报，
+ * ul:ability 包）分发进来；本类只做服务端权威判定与状态推进，不含事件订阅。
  *
- * 流程：招募（夜晚+移动+潜行右键，说服度决定条件/上限/随从倍率）→ 发动（对空气，32 格内
- * 活村民 ≥4 的村庄进入屠村）→ tick（每 20 tick：刷铁傀儡、判成功/中止）→ 收尾（成功
- * count+1、说服度 ±、随从散开）。玩家死亡=失败（见 onLivingDeath，即使被仪式接住）。
+ * 流程（用户设计 2026-11-03 重做）：招募（对着僵尸使用技能，说服度决定条件/上限/随从
+ * 倍率；不再要求夜晚与移动）→ 解散（对着空气潜行使用技能，明确动作）→ 发动（能力轮盘 /
+ * 命令，32 格内活村民 ≥4 的村庄进入屠村）→ tick（每 20 tick：刷铁傀儡、判成功/中止）
+ * → 收尾（成功 count+1、说服度 ±、随从散开）。玩家死亡=失败（见 onLivingDeath，
+ * 即使被仪式接住）。
  *
  * 全部数值经 {@link UlStrength}（键 zombie_tide.horde.*），兜底默认与 defaults.json /
  * 模组 ul_strength/zombie_tide.json 一致。只存 UUID 与坐标（{@link HordeState}），
- * 随从关系随 {@link Followers} 的 NBT 持久化。
+ * 随从关系随 {@link Followers} 的 NBT 持久化。队伍快照经 {@link HordeNetwork} S2C
+ * 推送到客户端缓存，供 B 键状态页展示。
  */
 public final class HordeManager {
 
@@ -64,8 +68,29 @@ public final class HordeManager {
 
     // ============================================================ 招募
 
-    /** 潜行右键方块/实体：招募 16 格内僵尸族。夜晚 + 移动中才响应。 */
+    /**
+     * 招募入口（能力框架兜底 / 演示脚本）：优先招募视线内的僵尸族目标，
+     * 没有目标时退回就近批量招募（旧语义，兼容 {@code demo-zombie-tide.sh} 的
+     * {@code invoke tryRecruit}）。手势路径带目标实体 id，直接走
+     * {@link #tryRecruitAt(EntityPlayerMP, EntityLiving)}。
+     */
     public static void tryRecruit(EntityPlayerMP player) {
+        EntityLiving target = findLookedZombie(player);
+        if (target != null) {
+            tryRecruitAt(player, target);
+        } else {
+            tryRecruitNearby(player);
+        }
+    }
+
+    /**
+     * 招募指定僵尸族目标（新触发：对着僵尸使用技能，客户端上报目标实体 id）。
+     *
+     * 规则（用户设计）：去掉旧的「必须夜晚」「必须移动」两个门槛，保留冷却与说服度匹配——
+     * 说服度 &lt; thresholdMid 时目标须残血到 hurtBelow 比例以下才能招；
+     * &lt; thresholdLow 时还要消耗腐肉；人数上限 followCap。
+     */
+    public static void tryRecruitAt(EntityPlayerMP player, EntityLiving target) {
         if (!ZombieForms.hasLeadership(player)) {
             action(player, "ul.horde.fail.skill");
             return;
@@ -77,13 +102,63 @@ public final class HordeManager {
         if (onCooldown(player, ZombieLine.ABILITY_RECRUIT)) {
             return; // 8 秒冷却，静默限流
         }
-        if (isDay(player.world)) {
-            action(player, "ul.horde.recruit.fail.day");
+        double reach = recruitReach();
+        if (target == null || target.isDead || !(target instanceof EntityZombie)) {
+            action(player, "ul.horde.recruit.fail.target");
             return;
         }
-        if (!isMoving(player)) {
-            action(player, "ul.horde.recruit.fail.move");
+        if (player.getDistanceSq(target) > reach * reach) {
+            action(player, "ul.horde.recruit.fail.target"); // 服务端距离校验，不信客户端
             return;
+        }
+        if (Followers.isFollower(target)) {
+            action(player, "ul.horde.recruit.fail.own");
+            return;
+        }
+        int persuasion = Persuasion.get(player);
+        int cap = Persuasion.followCap(persuasion);
+        if (cap - countFollowers(player) <= 0) {
+            action(player, "ul.horde.recruit.fail.cap");
+            return;
+        }
+        boolean needHurt = persuasion < Persuasion.thresholdMid();
+        boolean needFlesh = persuasion < Persuasion.thresholdLow();
+        double hurtBelow = UlStrength.num("zombie_tide.horde.persuasion_hurt_below", 0.5D);
+        int fleshCost = UlStrength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
+        if (needFlesh && countItem(player, Items.ROTTEN_FLESH) < fleshCost) {
+            action(player, "ul.horde.recruit.fail.flesh");
+            return;
+        }
+        // 说服度 <50：目标须先打残（生命 < hurtBelow 比例）
+        if (needHurt && target.getHealth() >= target.getMaxHealth() * hurtBelow) {
+            action(player, "ul.horde.recruit.fail.persuasion");
+            return;
+        }
+        Followers.setOwner(target, player.getUniqueID(), player.world.getTotalWorldTime());
+        applyFollowerMultiplier(target, Persuasion.multiplier(persuasion));
+        if (needFlesh) {
+            consumeItem(player, Items.ROTTEN_FLESH, fleshCost);
+        }
+        setCooldown(player, ZombieLine.ABILITY_RECRUIT, recruitCooldownTicks());
+        action(player, "ul.horde.recruit.ok", 1);
+        syncTeam(player);
+    }
+
+    /**
+     * 就近批量招募（旧语义保留：能力框架对空气释放 / 演示脚本兼容）。
+     * 门槛与 {@link #tryRecruitAt} 一致：无夜晚/移动要求，按说服度匹配。
+     */
+    private static void tryRecruitNearby(EntityPlayerMP player) {
+        if (!ZombieForms.hasLeadership(player)) {
+            action(player, "ul.horde.fail.skill");
+            return;
+        }
+        if (!ZombieForms.isUndead(player)) {
+            action(player, "ul.horde.fail.form");
+            return;
+        }
+        if (onCooldown(player, ZombieLine.ABILITY_RECRUIT)) {
+            return; // 8 秒冷却，静默限流
         }
 
         int persuasion = Persuasion.get(player);
@@ -135,14 +210,59 @@ public final class HordeManager {
         }
         setCooldown(player, ZombieLine.ABILITY_RECRUIT, recruitCooldownTicks());
         action(player, "ul.horde.recruit.ok", recruited);
+        syncTeam(player);
     }
 
-    // ============================================================ 发动 / 解放（对空气使用）
+    /** 招募射程（服务端权威距离校验）。 */
+    private static double recruitReach() {
+        return UlStrength.num("zombie_tide.horde.recruit_reach", 4.5D);
+    }
 
     /**
-     * 对空气使用（客户端 ul:ability 包上报，服务端判「对空气」后分派）。
-     * 泰坦形态 → 震地；否则走尸群领导的发动/解放分支（有随从且有有效村庄=发动，
-     * 有随从无村庄=解放，无随从有村庄=提示招募，都无=解散）。
+     * 视线内（recruit_reach）最近的僵尸族实体——能力框架兜底入口的目标解析
+     * （手势路径客户端 ray trace 后直接上报目标 id，不走这里）。
+     */
+    private static EntityLiving findLookedZombie(EntityPlayerMP player) {
+        double reach = recruitReach();
+        net.minecraft.util.math.Vec3d eye = player.getPositionEyes(1.0F);
+        net.minecraft.util.math.Vec3d look = player.getLook(1.0F);
+        net.minecraft.util.math.Vec3d end = eye.add(look.x * reach, look.y * reach, look.z * reach);
+        // 方块遮挡：取方块命中距离为上限，不隔墙招募
+        net.minecraft.util.math.RayTraceResult blockHit = player.rayTrace(reach, 1.0F);
+        double bestDist = blockHit == null || blockHit.hitVec == null
+                ? reach * reach : blockHit.hitVec.squareDistanceTo(eye);
+        EntityLiving best = null;
+        for (Entity e : player.world.getEntitiesWithinAABBExcludingEntity(player,
+                player.getEntityBoundingBox().grow(reach))) {
+            if (!(e instanceof EntityZombie) || e.isDead) {
+                continue;
+            }
+            AxisAlignedBB bounds = e.getEntityBoundingBox();
+            if (bounds == null) {
+                continue;
+            }
+            net.minecraft.util.math.RayTraceResult hit = bounds.calculateIntercept(eye, end);
+            if (hit == null || hit.hitVec == null) {
+                continue;
+            }
+            double d = hit.hitVec.squareDistanceTo(eye);
+            if (d <= bestDist) {
+                bestDist = d;
+                best = (EntityLiving) e;
+            }
+        }
+        return best;
+    }
+
+    // ============================================================ 发动 / 解放（能力框架入口）
+
+    /**
+     * 能力框架兜底入口（轮盘「发动尸潮」/「震地」与 {@code demo-zombie-tide.sh} 的
+     * {@code invoke onAirUse} 共用）：泰坦形态 → 震地；否则走尸群领导的发动/解放分支
+     * （有随从且有有效村庄=发动，有随从无村庄=解放，无随从有村庄=提示招募，都无=解散）。
+     *
+     * <p>手势语义已重做（用户设计）：「对着空气潜行使用技能」不再进本方法，而是明确的
+     * {@link #disband}（解散队伍）；招募见 {@link #tryRecruitAt}。
      */
     public static void onAirUse(EntityPlayerMP player) {
         if (!ZombieForms.hasLeadership(player)) {
@@ -197,6 +317,30 @@ public final class HordeManager {
     public static void release(EntityPlayerMP player) {
         releaseFollowers(player);
         action(player, "ul.horde.release");
+        syncTeam(player);
+    }
+
+    /**
+     * 解散当前队伍（明确的解散动作：对着空气潜行使用技能，用户设计 2026-11-03）。
+     * 复用原「无随从无村庄=解散」分支的散开语义；进行中的尸潮一并收尾
+     * （同「中止」不扣说服度）。
+     */
+    public static void disband(EntityPlayerMP player) {
+        HordeState state = HordeState.get(player.world);
+        HordeState.Entry entry = state.get(player.getUniqueID());
+        int before = countFollowers(player);
+        boolean endedTide = entry != null && entry.active;
+        if (endedTide) {
+            endTide(player, entry, state); // 收尾含散开随从
+        } else {
+            releaseFollowers(player);
+        }
+        if (endedTide || before > 0) {
+            action(player, "ul.horde.disband");
+        } else {
+            action(player, "ul.horde.disband.none");
+        }
+        syncTeam(player);
     }
 
     // ============================================================ tick（每 20 tick 推进）
@@ -343,6 +487,7 @@ public final class HordeManager {
         entry.abortSinceTick = 0L;
         state.put(player.getUniqueID(), entry);
         releaseFollowers(player);
+        syncTeam(player);
     }
 
     // ============================================================ 调试 / 状态（命令用）
@@ -571,6 +716,65 @@ public final class HordeManager {
         return out;
     }
 
+    // ============================================================ 队伍快照（S2C 同步，B 键状态页数据源）
+
+    /** 队伍快照节流间隔（tick）：随从血量变化频繁，5 秒一拍足够状态页展示。 */
+    private static final long TEAM_SYNC_INTERVAL_TICKS = 100L;
+
+    /** 上次推给各玩家的快照与时间戳（仅服务端主线程访问）。 */
+    private static final java.util.Map<UUID, String> LAST_TEAM_JSON = new java.util.WeakHashMap<>();
+    private static final java.util.Map<UUID, Long> LAST_TEAM_TICK = new java.util.WeakHashMap<>();
+
+    /** 立即推送队伍快照（招募/解散/收尾等变化点调用）。 */
+    public static void syncTeam(EntityPlayerMP player) {
+        String json = teamJson(player);
+        LAST_TEAM_JSON.put(player.getUniqueID(), json);
+        LAST_TEAM_TICK.put(player.getUniqueID(), player.world.getTotalWorldTime());
+        try {
+            HordeNetwork.sendTeam(player, json);
+        } catch (Throwable t) {
+            UlModpack.LOGGER.warn("[ul-modpack] horde team sync failed: {}", t.toString());
+        }
+    }
+
+    /** 节流同步（PlayerTickEvent 调用）：快照有变化才推，且不超过每 5 秒一拍。 */
+    public static void syncTeamIfChanged(EntityPlayerMP player) {
+        long now = player.world.getTotalWorldTime();
+        Long last = LAST_TEAM_TICK.get(player.getUniqueID());
+        if (last != null && now - last < TEAM_SYNC_INTERVAL_TICKS) {
+            return;
+        }
+        if (teamJson(player).equals(LAST_TEAM_JSON.get(player.getUniqueID()))) {
+            return;
+        }
+        syncTeam(player);
+    }
+
+    /** 队伍快照 JSON：说服度 / 队伍上限 / 尸潮状态 / 随从列表（名称、形态 id、血量）。 */
+    private static String teamJson(EntityPlayerMP player) {
+        List<EntityLiving> members = followersOf(player);
+        JsonObject root = new JsonObject();
+        int persuasion = Persuasion.get(player);
+        root.addProperty("persuasion", persuasion);
+        root.addProperty("cap", Persuasion.followCap(persuasion));
+        root.addProperty("tideActive", isTideActive(player));
+        // 状态页分节显隐：有尸群领导或有随从才展示（避免无关玩家被刷屏）
+        root.addProperty("hasHorde", ZombieForms.hasLeadership(player) || !members.isEmpty());
+        JsonArray followers = new JsonArray();
+        for (EntityLiving f : members) {
+            JsonObject e = new JsonObject();
+            net.minecraft.util.ResourceLocation type = net.minecraft.entity.EntityList.getKey(f);
+            e.addProperty("type", type == null ? "" : type.toString());
+            e.addProperty("name", f.getName());
+            e.addProperty("custom", f.hasCustomName());
+            e.addProperty("health", Math.round(f.getHealth() * 10.0D) / 10.0D);
+            e.addProperty("maxHealth", Math.round(f.getMaxHealth() * 10.0D) / 10.0D);
+            followers.add(e);
+        }
+        root.add("followers", followers);
+        return root.toString();
+    }
+
     // ============================================================ 工具
 
     public static void incrementTideCleared(EntityPlayerMP player) {
@@ -590,16 +794,6 @@ public final class HordeManager {
     public static int tidesCleared(EntityPlayerMP player) {
         JsonObject state = PlayerAbilityStore.get(player).getState(ZombieLine.STATE_TIDE_CLEARED);
         return state.has("count") ? state.get("count").getAsInt() : 0;
-    }
-
-    public static boolean isDay(World world) {
-        return world.isDaytime();
-    }
-
-    private static boolean isMoving(EntityPlayerMP player) {
-        // 宽容语义：最近窗口内移动过即算（服务端判移动的三种常见信号都不可靠，
-        // 见 HordeMotionTracker 注释；宽容对玩家手感也更好）。
-        return HordeMotionTracker.movedRecently(player);
     }
 
     private static boolean onCooldown(EntityPlayerMP player, String abilityId) {

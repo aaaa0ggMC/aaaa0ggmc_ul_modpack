@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:items/rotten_flesh"
+    "layer0": "aaaa0ggmc_ul_modpack:items/zealous_flesh"
   }
 }

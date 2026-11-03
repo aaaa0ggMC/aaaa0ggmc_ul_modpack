@@ -1,8 +1,16 @@
 {
-  "_doc": "形态能力/免疫（morphext 数据驱动）。husk 免疫窒息；giant=泰坦形态：近战 +6（attackDamage 7.0 = 玩家空手 1.0 + 6，用便捷字段覆盖巨人原生 50 攻击，避免 attributes map 与原生叠加双算）、击退抗性 0.8、移速 ×0.75（speed 0.075 = 玩家基础 0.1 × 0.75，绝对基础值覆盖巨人原生 0.5）。饥饿/挖掘/睡床/摔落/震地不走本文件，见代码事件。",
+  "_doc": "形态能力/免疫（morphext 数据驱动）。husk 免疫窒息；zombie_pigman 免疫火焰环境（火祭烧成猪人后不怕火，形态适配转化环境）；giant=泰坦形态：近战 +6（attackDamage 7.0 = 玩家空手 1.0 + 6，用便捷字段覆盖巨人原生 50 攻击，避免 attributes map 与原生叠加双算）、击退抗性 0.8、移速 ×0.75（speed 0.075 = 玩家基础 0.1 × 0.75，绝对基础值覆盖巨人原生 0.5）。饥饿/挖掘/睡床/摔落/震地不走本文件，见代码事件。",
   "husk": {
     "damageImmunities": [
       "inWall"
+    ]
+  },
+  "zombie_pigman": {
+    "damageImmunities": [
+      "inFire",
+      "onFire",
+      "lava",
+      "hotFloor"
     ]
   },
   "giant": {

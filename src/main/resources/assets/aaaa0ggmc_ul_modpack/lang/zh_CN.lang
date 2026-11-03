@@ -44,8 +44,8 @@ ul.horde.fail.skill=死者还不想听你的。
 ul.horde.fail.form=你现在不是不死者。
 ul.horde.persuasion=说服度：%s
 ul.horde.recruit.ok=跟上来 %s 只。
-ul.horde.recruit.fail.day=天亮了。它们不会跟你走。
-ul.horde.recruit.fail.move=站着不动，它们不知道你要去哪。
+ul.horde.recruit.fail.target=要对着一只僵尸。
+ul.horde.recruit.fail.own=它已经跟着你了。
 ul.horde.recruit.fail.cap=队伍满了。
 ul.horde.recruit.fail.persuasion=它不服你。先打残再试。
 ul.horde.recruit.fail.none=附近没有僵尸。
@@ -55,6 +55,8 @@ ul.horde.launch.fail.empty=队伍是空的。先去招募。
 ul.horde.launch.fail.place=这里没有值得淹的地方。
 ul.horde.launch.fail.active=潮水还没退。
 ul.horde.release=队伍散了。
+ul.horde.disband=队伍解散了。
+ul.horde.disband.none=你没有队伍。
 ul.horde.win=村庄安静了。
 ul.horde.fail=你死了。潮水退了。
 ul.horde.abort=你走得太远了。潮水散了。
@@ -70,10 +72,19 @@ ul.titan.slam.cooldown=震地还在冷却。
 
 # 主动能力（morphext 能力轮盘 / 状态页）
 morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=招募
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=夜晚移动中潜行右键，把僵尸族喊进队伍。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=对着僵尸族使用技能，把它喊进队伍（说服度低时先打残、搭腐肉）。
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=发动尸潮
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=对空气使用，把队伍指向有村民的村庄。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=把队伍指向有村民的村庄。
 morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=解放队伍
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=对空气使用，让随从散开恢复野生。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=让随从散开恢复野生（对空气潜行使用技能=解散队伍）。
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=潜行右键空手，震击周围敌人。
+
+# B 键状态页（morphext GuiAbilityStatus）的尸群队伍分节
+aaaa0ggmc_ul_modpack.status.horde.title=尸群队伍
+aaaa0ggmc_ul_modpack.status.horde.followers=随从：%s/%s
+aaaa0ggmc_ul_modpack.status.horde.persuasion=说服度：%s
+aaaa0ggmc_ul_modpack.status.horde.tide.active=尸潮：进行中
+aaaa0ggmc_ul_modpack.status.horde.tide.idle=尸潮：未发动
+aaaa0ggmc_ul_modpack.status.horde.empty=（队伍是空的）
+aaaa0ggmc_ul_modpack.status.horde.follower=%s（%s/%s）

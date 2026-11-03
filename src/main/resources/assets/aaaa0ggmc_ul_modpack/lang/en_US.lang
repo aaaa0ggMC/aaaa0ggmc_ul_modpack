@@ -44,8 +44,8 @@ ul.horde.fail.skill=The dead don't listen to you yet.
 ul.horde.fail.form=You are not one of the undead.
 ul.horde.persuasion=Persuasion: %s
 ul.horde.recruit.ok=%s followed you.
-ul.horde.recruit.fail.day=It's daylight. They won't follow you now.
-ul.horde.recruit.fail.move=Standing still, they don't know where you're going.
+ul.horde.recruit.fail.target=Aim at a zombie first.
+ul.horde.recruit.fail.own=It already follows you.
 ul.horde.recruit.fail.cap=The horde is full.
 ul.horde.recruit.fail.persuasion=It doesn't obey you. Wear it down first.
 ul.horde.recruit.fail.none=No zombies nearby.
@@ -55,6 +55,8 @@ ul.horde.launch.fail.empty=The horde is empty. Recruit first.
 ul.horde.launch.fail.place=Nothing here worth drowning.
 ul.horde.launch.fail.active=The tide hasn't receded yet.
 ul.horde.release=The horde scattered.
+ul.horde.disband=The horde disbanded.
+ul.horde.disband.none=You have no horde to disband.
 ul.horde.win=The village is quiet.
 ul.horde.fail=You died. The tide receded.
 ul.horde.abort=You went too far. The tide scattered.
@@ -70,10 +72,19 @@ ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 
 # Active abilities (morphext ability wheel / status)
 morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=Recruit
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Sneak-right-click at night while moving to call zombies into your horde.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Use on a zombie to call it into your horde (at low Persuasion, weaken it first and pay rotten flesh).
 morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=Launch Tide
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=Use on air to point your horde at a village with villagers.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=Point your horde at a village with villagers.
 morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=Release Horde
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Use on air to scatter your followers back to the wild.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Scatter your followers back to the wild (sneak-use on air = disband the horde).
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Sneak-right-click empty-handed to slam nearby enemies.
+
+# Horde team section (morphext GuiAbilityStatus, B key)
+aaaa0ggmc_ul_modpack.status.horde.title=Horde Team
+aaaa0ggmc_ul_modpack.status.horde.followers=Followers: %s/%s
+aaaa0ggmc_ul_modpack.status.horde.persuasion=Persuasion: %s
+aaaa0ggmc_ul_modpack.status.horde.tide.active=Tide: active
+aaaa0ggmc_ul_modpack.status.horde.tide.idle=Tide: inactive
+aaaa0ggmc_ul_modpack.status.horde.empty=(the horde is empty)
+aaaa0ggmc_ul_modpack.status.horde.follower=%s (%s/%s)
