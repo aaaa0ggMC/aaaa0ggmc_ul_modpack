@@ -77,9 +77,15 @@ public final class HordeEvents {
             return;
         }
         UUID owner = Followers.getOwnerUuid(attacker);
-        if (owner != null && owner.equals(victim.getUniqueID())
-                && FactionManager.isProtectionApplicable(attacker, victim, event.getSource())) {
-            event.setCanceled(true);
+        if (owner != null && owner.equals(victim.getUniqueID())) {
+            if (FactionManager.isProtectionApplicable(attacker, victim, event.getSource())) {
+                aaaa0ggmc.morphext.debug.DamageDebugLogger.atk("HordeEvents", victim, event.getSource(),
+                        event.getAmount(), "cancel@HordeEvents:owner-gate", "owner=follower");
+                event.setCanceled(true);
+            } else {
+                aaaa0ggmc.morphext.debug.DamageDebugLogger.atk("HordeEvents", victim, event.getSource(),
+                        event.getAmount(), "pass:owner-splash", "owner=follower");
+            }
         }
     }
 }
