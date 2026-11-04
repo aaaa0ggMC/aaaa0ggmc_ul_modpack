@@ -1,6 +1,7 @@
 package aaaa0ggmc.ulmodpack.proxy;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.config.PackConfig;
 import aaaa0ggmc.ulmodpack.infection.UlTriggers;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.item.ItemZealousFlesh;
@@ -26,6 +27,9 @@ public class CommonProxy {
     public static final ItemZealousFlesh ZEALOUS_FLESH = new ItemZealousFlesh();
 
     public void preInit(FMLPreInitializationEvent event) {
+        // 通用机制开关（input/按键状态自愈等）先加载，客户端处理器读到的才是生效值；
+        // 双端加载，PackConfig 不引用任何客户端类
+        PackConfig.init(event.getSuggestedConfigurationFile());
         UlTriggers.init();
     }
 
