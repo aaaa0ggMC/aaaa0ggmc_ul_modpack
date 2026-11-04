@@ -1,5 +1,6 @@
 package aaaa0ggmc.ulmodpack.zombie.horde;
 
+import aaaa0ggmc.morphext.faction.FactionManager;
 import aaaa0ggmc.morphext.follower.Followers;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -62,8 +63,11 @@ public final class HordeEvents {
 
     @SubscribeEvent
     public static void onLivingAttack(LivingAttackEvent event) {
-        // 随从不伤主人：1.12.2 的 LivingSetAttackTargetEvent 只读、不可取消，故在攻击入口拦伤害。
-        // 原版僵尸 AI 仍可能把主人设为目标并起手，但伤害被取消，等效「不攻击主人」。
+        // 随从不伤主人（仅定向打击）：1.12.2 的 LivingSetAttackTargetEvent 只读、不可取消，
+        // 故在攻击入口拦伤害。原版僵尸 AI 仍可能把主人设为目标并起手，但定向伤害被取消，
+        // 等效「不攻击主人」。
+        // 波及不豁免（2026-11-04 拍板）：随从自爆/爆炸、范围效果溅射到主人照常结算——
+        // 爆炸就是爆炸，波及谁谁掉血；判据与阵营门同一真值（FactionManager.isProtectionApplicable）。
         if (!(event.getEntityLiving() instanceof EntityPlayer)) {
             return;
         }
@@ -73,7 +77,8 @@ public final class HordeEvents {
             return;
         }
         UUID owner = Followers.getOwnerUuid(attacker);
-        if (owner != null && owner.equals(victim.getUniqueID())) {
+        if (owner != null && owner.equals(victim.getUniqueID())
+                && FactionManager.isProtectionApplicable(attacker, victim, event.getSource())) {
             event.setCanceled(true);
         }
     }
