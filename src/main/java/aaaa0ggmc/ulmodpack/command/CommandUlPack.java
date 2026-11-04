@@ -9,9 +9,11 @@ import aaaa0ggmc.morphext.conversion.rule.RuleExecutor;
 import aaaa0ggmc.morphext.conversion.rule.RuleMatcher;
 import aaaa0ggmc.morphext.form.FormCategories;
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.config.AnkhConfig;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
+import aaaa0ggmc.ulmodpack.race.RaceResolver;
 import baubles.api.BaubleType;
 import baubles.api.BaublesApi;
 import baubles.api.IBauble;
@@ -42,12 +44,15 @@ import java.util.Locale;
 /**
  * 调试/验收指令（OP）：
  *
- *   /ulpack status              —— 查看护符槽位、当前形态、感染状态
+ *   /ulpack status              —— 查看护符槽位、当前形态、种族、感染状态
  *   /ulpack equip               —— 把安卡护符放进 AMULET 槽（测试免 GUI）
  *   /ulpack infect [entity]     —— 立刻走一次感染变身（默认 minecraft:zombie）
  *   /ulpack killby [entity]     —— 让指定实体“杀死”自己（走完整死亡流程，测死亡取消）
  *   /ulpack ritual <list|test|debug|reload> [id]
  *                               —— 转化规则（morphext 数据驱动仪式）查看/试触发/排障/重载
+ *   /ulpack race <show|set|clear> [race]
+ *                               —— 种族判定查看 / 写 ul.race 显式记录（测村民等种族入口）
+ *   /ulpack reload              —— 重载转化规则、形态类别、ankh.json（种族/安卡配置）
  */
 public class CommandUlPack extends CommandBase {
 
@@ -63,7 +68,7 @@ public class CommandUlPack extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/ulpack <status|equip|infect|killby|convert|death|ritual> [参数]";
+        return "/ulpack <status|equip|infect|killby|convert|death|ritual|race|reload> [参数]";
     }
 
     @Override
@@ -132,6 +137,12 @@ public class CommandUlPack extends CommandBase {
             case "ritual":
                 ritual(player, args);
                 break;
+            case "race":
+                race(player, args);
+                break;
+            case "reload":
+                reloadAll(player);
+                break;
             case "tide":
                 aaaa0ggmc.ulmodpack.zombie.horde.HordeCommands.tide(player, args);
                 break;
@@ -198,6 +209,63 @@ public class CommandUlPack extends CommandBase {
         }
     }
 
+    /** 种族判定查看 / 写 ul.race 显式记录（种族白名单入口调试）。 */
+    private static void race(EntityPlayerMP player, String[] args) throws CommandException {
+        String op = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "show";
+        switch (op) {
+            case "show": {
+                String form = currentFormId(player);
+                String explicit = RaceResolver.explicitRace(player);
+                String resolved = RaceResolver.resolveRace(player);
+                player.sendMessage(new TextComponentString("Race: " + resolved
+                        + " (form=" + (form.isEmpty() ? "<human>" : form)
+                        + ", explicit=" + (explicit == null ? "-" : explicit) + ")"));
+                player.sendMessage(new TextComponentString("Source: " + describeRaceSource(form, explicit)));
+                player.sendMessage(new TextComponentString("Ankh: " + (AnkhConfig.isRaceWhitelisted(resolved)
+                        ? "would trigger (whitelist " + AnkhConfig.raceWhitelist() + ", killer categories "
+                                + AnkhConfig.killerCategories() + ")"
+                        : "would NOT trigger (race not in whitelist " + AnkhConfig.raceWhitelist() + ")")));
+                break;
+            }
+            case "set": {
+                if (args.length < 3) {
+                    throw new WrongUsageException("/ulpack race set <race>");
+                }
+                RaceResolver.setRace(player, args[2]);
+                player.sendMessage(new TextComponentString("ul.race set to " + RaceResolver.normalizeRace(args[2])));
+                break;
+            }
+            case "clear": {
+                RaceResolver.clearRace(player);
+                player.sendMessage(new TextComponentString("ul.race cleared (falls back to form/default derivation)"));
+                break;
+            }
+            default:
+                throw new WrongUsageException("/ulpack race <show|set <race>|clear>");
+        }
+    }
+
+    private static String describeRaceSource(String form, String explicit) {
+        if (!form.isEmpty() && RaceResolver.raceForForm(form) != null) {
+            return "form mapping (race_map)";
+        }
+        if (explicit != null) {
+            return "explicit ul.race record";
+        }
+        return form.isEmpty() ? "default_race (unmorphed)" : "unmapped_form_race (morphed, no mapping)";
+    }
+
+    /** 全量数据重载：转化规则 + 形态类别 + ankh.json（种族/安卡配置）。 */
+    private static void reloadAll(EntityPlayerMP player) {
+        ConversionRuleRegistry.reload();
+        FormCategories.reload();
+        AnkhConfig.reload();
+        player.sendMessage(new TextComponentString("Reloaded: rules=" + ConversionRuleRegistry.all().size()
+                + " categories=" + FormCategories.snapshot().size()
+                + " ankh whitelist=" + AnkhConfig.raceWhitelist()
+                + " killer categories=" + AnkhConfig.killerCategories()));
+    }
+
     private static String currentFormId(EntityPlayerMP player) {
         IMorphing morphing = Morphing.get(player);
         if (morphing == null || !morphing.isMorphed() || morphing.getCurrentMorph() == null) {
@@ -243,6 +311,9 @@ public class CommandUlPack extends CommandBase {
                 + " [" + types + "] dim=" + player.dimension));
         player.sendMessage(new TextComponentString("Form categories: ["
                 + String.join(",", FormCategories.categoriesOf(currentFormId(player))) + "]"));
+        String race = RaceResolver.resolveRace(player);
+        player.sendMessage(new TextComponentString("Race: " + race
+                + " (ankh " + (AnkhConfig.isRaceWhitelisted(race) ? "triggerable" : "inert") + ")"));
         if (handler != null) {
             player.sendMessage(new TextComponentString("Baubles slots: " + handler.getSlots()));
         }

@@ -1,6 +1,7 @@
 package aaaa0ggmc.ulmodpack;
 
 import aaaa0ggmc.ulmodpack.command.CommandUlPack;
+import aaaa0ggmc.ulmodpack.config.AnkhConfig;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.infection.UlTriggers;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
@@ -22,13 +23,17 @@ import org.apache.logging.log4j.Logger;
  *
  * 当前内容：
  *  - item/      安卡护符（Baubles AMULET 槽，佩戴 +2 护甲）；
- *  - infection/ 感染变身：佩戴护符被不死者阵营（ul:undead，数据驱动）杀死时
- *               免死并化身为击杀者形态，护符碎裂，解锁进度「被感染」；
- *               以死亡转化管线（morphext conversion）第 10 级阶段接入；
+ *  - infection/ 感染变身：玩家种族在安卡白名单内（默认 human/villager）且佩戴护符、
+ *               被不死者阵营（ul:undead，数据驱动）杀死时免死并感染变身，护符碎裂，
+ *               解锁进度「被感染」；以死亡转化管线（morphext conversion）第 10 级阶段接入；
+ *  - race/      种族判定（形态映射 race_map + 显式记录 ul.race + 兜底默认），
+ *               供安卡白名单等玩法按「种族」而非具体形态判定；
+ *  - config/    ankh.json：种族白名单、种族映射、击杀者类别等纯数据配置
+ *               （config/aaaa0ggmc_ul_modpack/ankh.json 覆盖 + 热重载）；
  *  - zombie/    僵尸线实体侧特性（尸壳实体免疫窒息；玩家形态侧同款免疫
  *               走 morphext 数据，见 assets/.../morphext/morph_abilities.json）；
  *  - ftbq/      FTBQuests 形态检测任务（type: aaaa0ggmc_ul_modpack:morph）；
- *  - command/   /ulpack 调试指令（含 /ulpack ritual 查看转化规则）。
+ *  - command/   /ulpack 调试指令（含 /ulpack ritual 查看转化规则、/ulpack race 查看种族）。
  *
  * 转化规则（沙葬/水祭/火祭/村祭）与形态类别（ul:undead）是纯数据：
  * assets/aaaa0ggmc_ul_modpack/morphext/*.json，由 morphext 核心的通用
@@ -62,8 +67,9 @@ public class UlModpack {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("[ul-modpack] Initializing {} v{}...", NAME, VERSION);
         proxy.preInit(event);
+        AnkhConfig.init(event.getModConfigurationDirectory());
         InfectionHandler.register();
-        LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/ftbq-morph).");
+        LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/race/ftbq-morph).");
     }
 
     @Mod.EventHandler

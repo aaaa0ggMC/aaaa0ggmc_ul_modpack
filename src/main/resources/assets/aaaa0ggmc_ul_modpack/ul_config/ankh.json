@@ -1,0 +1,20 @@
+{
+  "_doc": "安卡护符 + 种族规则配置（内置默认，随模组打包）。运行时覆盖：config/aaaa0ggmc_ul_modpack/ankh.json（首次运行自动写出本文件的完整副本，直接改那份即可）；覆盖文件里出现的顶层字段整体替换内置默认，没写的字段沿用内置默认。保存后 5 秒内自动热重载，也可 /ulpack reload。触发规则：玩家死亡且有击杀者时——① 玩家种族 ∈ race_whitelist；② 击杀者属于 killer_categories 的形态类别；③ 佩戴安卡护符——三条全部满足才取消死亡、感染变身、护符碎裂；任何一条不满足都正常死亡、护符纹丝不动。",
+  "_race_whitelist": "安卡只对该种族列表生效。默认 [human, villager]：人类/村民可被感染；其它种族（undead / unknown / …）正常死亡，护符不碎。",
+  "race_whitelist": ["human", "villager"],
+  "_default_race": "未变身且没有显式 ul.race 记录（玩家数据 states 中的 aaaa0ggmc_ul_modpack:race 条目）时的种族。默认 human。",
+  "default_race": "human",
+  "_unmapped_form_race": "已变身但 race_map 查不到该形态/类别时的种族。默认 unknown（不在白名单内 → 安卡不触发，其它种族先还原成人类的设定见世界与主线）。",
+  "unmapped_form_race": "unknown",
+  "_race_map": "种族映射（形态/类别 → 种族）：键是形态 id 或形态类别 id（morphext form_categories.json 的类别，如 ul:undead），值是种族 id。查法：先按当前形态 id 精确匹配，再按该形态所属类别匹配。默认：ul:undead 类别（minecraft:zombie / husk / zombie_pigman / zombie_villager / giant）→ undead；minecraft:villager 形态 → villager。注意：村民种族目前没有玩家侧来源（基因转化等未实现），入口 = 本表的 minecraft:villager 形态映射 + 显式种族记录 ul.race（/ulpack race set villager 写入，或后续内容系统写入）。",
+  "race_map": {
+    "ul:undead": "undead",
+    "minecraft:villager": "villager"
+  },
+  "_race_target_forms": "种族 → 感染后的固定目标形态（不看击杀者形态）；没有条目的种族变成击杀者形态。默认 villager → minecraft:zombie_villager（设定：村民种族被任何僵尸咬死都变僵尸村民）。",
+  "race_target_forms": {
+    "villager": "minecraft:zombie_villager"
+  },
+  "_killer_categories": "击杀者必须属于其中一种形态类别（morphext form_categories.json）才触发安卡。默认 [ul:undead]（僵尸族：zombie / husk / zombie_pigman / zombie_villager / giant，数据驱动、含巨人——1.12.2 里 EntityGiantZombie 不继承 EntityZombie，别改成类名判定）。",
+  "killer_categories": ["ul:undead"]
+}
