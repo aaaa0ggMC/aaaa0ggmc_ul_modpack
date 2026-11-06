@@ -17,9 +17,7 @@
         "ul:undead"
       ],
       "abilities": [
-        "aaaa0ggmc_ul_modpack:horde_recruit",
-        "aaaa0ggmc_ul_modpack:horde_launch",
-        "aaaa0ggmc_ul_modpack:horde_release"
+        "aaaa0ggmc_ul_modpack:horde_command"
       ],
       "advancement": "ul:line/zombie_tide/horde_leadership"
     }

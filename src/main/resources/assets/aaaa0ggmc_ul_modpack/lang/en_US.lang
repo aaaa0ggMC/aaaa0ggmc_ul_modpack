@@ -57,6 +57,8 @@ ul.horde.launch.fail.active=The tide hasn't receded yet.
 ul.horde.release=The horde scattered.
 ul.horde.disband=The horde disbanded.
 ul.horde.disband.none=You have no horde to disband.
+ul.horde.kick=%s was kicked out of the horde.
+ul.horde.command.fail.member=It is not in your horde.
 ul.horde.win=The village is quiet.
 ul.horde.fail=You died. The tide receded.
 ul.horde.abort=You went too far. The tide scattered.
@@ -71,14 +73,10 @@ ul.titan.bed=The bed is too small.
 ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 
 # Active abilities (morphext ability wheel / status)
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=Recruit
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=Right-click a zombie empty-handed to call it into your horde (at low Persuasion, weaken it first and pay rotten flesh).
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=Launch Tide
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=Point your horde at a village with villagers.
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=Release Horde
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=Scatter your followers back to the wild (empty-hand + sneak + right-click air = disband the horde).
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=Horde Command
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=Ability wheel: aim at a zombie = recruit (weaken it first and pay rotten flesh at low Persuasion); sneak + aim at a member = kick it out; sneak + look at nothing = launch the tide, or disband the horde if launch conditions are not met. Members glow.
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
-morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Sneak-right-click empty-handed to slam nearby enemies.
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Ability wheel: slam nearby enemies.
 
 # Horde team section (morphext GuiAbilityStatus, B key)
 aaaa0ggmc_ul_modpack.status.horde.title=Horde Team

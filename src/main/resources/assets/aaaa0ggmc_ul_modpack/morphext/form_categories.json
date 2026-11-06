@@ -5,5 +5,8 @@
     "minecraft:zombie_pigman",
     "minecraft:zombie_villager",
     "minecraft:giant"
+  ],
+  "ul:titan": [
+    "minecraft:giant"
   ]
 }

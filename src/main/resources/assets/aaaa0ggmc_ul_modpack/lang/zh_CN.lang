@@ -57,6 +57,8 @@ ul.horde.launch.fail.active=潮水还没退。
 ul.horde.release=队伍散了。
 ul.horde.disband=队伍解散了。
 ul.horde.disband.none=你没有队伍。
+ul.horde.kick=%s 被踢出了队伍。
+ul.horde.command.fail.member=它不在你的队伍里。
 ul.horde.win=村庄安静了。
 ul.horde.fail=你死了。潮水退了。
 ul.horde.abort=你走得太远了。潮水散了。
@@ -71,14 +73,10 @@ ul.titan.bed=床太小了。
 ul.titan.slam.cooldown=震地还在冷却。
 
 # 主动能力（morphext 能力轮盘 / 状态页）
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.name=招募
-morphext.ability.aaaa0ggmc_ul_modpack.horde_recruit.desc=空手右键僵尸族，把它喊进队伍（说服度低时先打残、搭腐肉）。
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.name=发动尸潮
-morphext.ability.aaaa0ggmc_ul_modpack.horde_launch.desc=把队伍指向有村民的村庄。
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.name=解放队伍
-morphext.ability.aaaa0ggmc_ul_modpack.horde_release.desc=让随从散开恢复野生（空手+潜行+右键空气=解散队伍）。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=尸群指挥
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=能力轮盘释放：对准僵尸族=招募（说服度低先打残、搭腐肉）；潜行对准队员=踢出；潜行对空=发动尸潮，条件不足则解散队伍。队员会发光描边。
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
-morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=潜行右键空手，震击周围敌人。
+morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=能力轮盘释放：震击周围敌人。
 
 # B 键状态页（morphext GuiAbilityStatus）的尸群队伍分节
 aaaa0ggmc_ul_modpack.status.horde.title=尸群队伍

@@ -17,14 +17,14 @@ import java.util.UUID;
  * 尸潮的 Forge 事件接线（由 {@link aaaa0ggmc.ulmodpack.zombie.ZombieLine#register()} 手动注册，
  * 不用 {@code @Mod.EventBusSubscriber} 以免重复注册）。
  *
- * 招募/解散的输入触发不走本类——手势由客户端经 {@link HordeNetwork} 的
- * {@code ul:ability} 包上报（对着僵尸=招募、对空气潜行=解散），
- * 服务端权威校验（避免与交互事件双重触发）。
- * 本类只接：
+ * 招募/踢出/发动等主动能力不走本类——统一经能力轮盘释放链路（{@link HordeAbilities}
+ * → ServerAbilityService）触发（2026-11-06 右键手势已移除；2026-11-07 三能力合并为
+ * {@code horde_command}）。本类只接：
  *  - 玩家死亡 → 尸潮失败（即使死亡随后被感染/仪式接住，也判失败）；
  *  - 随从被铁傀儡打死（LivingDropsEvent）→ 掉热忱的腐肉；
  *  - 世界 tick → 推进尸潮（刷铁傀儡 / 判成功 / 判中止）；
- *  - 玩家 tick → 队伍快照节流同步（B 键状态页数据源，变化才推、5 秒一拍）；
+ *  - 玩家 tick → 队伍快照节流同步（B 键状态页数据源，变化才推、5 秒一拍）
+ *    + 队员常驻描边续挂（每 20 tick 刷原版发光，见 HordeManager.refreshFollowerGlow）；
  *  - 随从把主人设为目标 → 清目标（随从不攻击主人）。
  */
 public final class HordeEvents {
@@ -38,7 +38,9 @@ public final class HordeEvents {
             return;
         }
         if (event.player instanceof EntityPlayerMP) {
-            HordeManager.syncTeamIfChanged((EntityPlayerMP) event.player);
+            EntityPlayerMP player = (EntityPlayerMP) event.player;
+            HordeManager.refreshFollowerGlow(player);
+            HordeManager.syncTeamIfChanged(player);
         }
     }
 

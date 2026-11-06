@@ -42,9 +42,20 @@ dependencies {
     // FTB Quests（1202 fork）+ FTBLib —— 形态检测任务注入
     compile files("libs/FTBQuests-1202.9.0.15.jar")
     compile files("libs/FTBLib-5.4.7.2.jar")
+    // MixinBooter —— 原版生物硬编码玩家检测的逐生物 Mixin 注入载体
+    compile files("libs/mixinbooter-12.2.jar")
 }
 
 jar {
+    manifest {
+        attributes(
+            // coremod 化：让 jar 早期进 LaunchClassLoader，manifest MixinConfigs 的
+            // 资源读取才有着落；配置加载本身由 UlModpackLoadingPlugin(IEarlyMixinLoader) 负责
+            'FMLCorePlugin': 'aaaa0ggmc.ulmodpack.loader.UlModpackLoadingPlugin',
+            'FMLCorePluginContainsFMLMod': 'true',
+            'ForceLoadAsMod': 'true'
+        )
+    }
     finalizedBy 'reobfJar'
 }
 

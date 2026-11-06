@@ -24,7 +24,7 @@ public final class PackConfig {
     /**
      * 自愈是否覆盖鼠标键位。默认关：
      * TAS 操控工具箱（ul-agent-control）会合成「按住鼠标键」，自愈会提前剪断它；
-     * 且 Wayland / 远程桌面下 Mouse.isButtonDown 不可靠（见 HordeClientTrigger 注释）。
+     * 且 Wayland / 远程桌面下 Mouse.isButtonDown 不可靠。
      */
     public static boolean keyStateHealMouse = false;
 
