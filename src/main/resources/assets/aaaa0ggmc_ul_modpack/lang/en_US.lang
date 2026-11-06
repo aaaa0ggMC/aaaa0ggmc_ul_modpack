@@ -75,7 +75,7 @@ ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 
 # Active abilities (morphext ability wheel / status)
 morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=Horde Command
-morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=Ability wheel: aim at a zombie = recruit (weaken it first and pay rotten flesh at low Persuasion); sneak + aim at a member = kick it out; sneak + look at nothing = launch the tide, or disband the horde if launch conditions are not met. Members glow.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=Ability wheel: aim at a zombie = recruit (weaken it first and pay rotten flesh at low Persuasion); sneak + aim at a member = kick it out; sneak + look at nothing = launch the tide, or disband the horde if launch conditions are not met; while a tide is running, sneak + look at nothing again = wrap it up. Members glow.
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Ability wheel: slam nearby enemies.
 

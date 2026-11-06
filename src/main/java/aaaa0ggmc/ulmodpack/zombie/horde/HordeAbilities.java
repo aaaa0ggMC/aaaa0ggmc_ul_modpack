@@ -60,7 +60,9 @@ public final class HordeAbilities {
      *   <li>潜行 + 目标是已招募队员 → 踢出队伍（{@link HordeManager#kickFollower}，
      *       原 release 的单体版）；</li>
      *   <li>潜行 + 无目标 → 尝试发动尸潮，不满足发动条件则解散当前队伍
-     *       （{@link HordeManager#launchOrDisband}，原 launch 失败则 release 的合并语义）；</li>
+     *       （{@link HordeManager#launchOrDisband}，原 launch 失败则 release 的合并语义；
+     *       「已在进行中」也算不满足——二次潜行对空 = <b>强制收尾</b>，是合并后唯一的
+     *       手动停止入口，toggle 语义的有意设计，见该方法注释 §6.4）；</li>
      *   <li>其它组合 → 明确的失败提示（Actionbar 文案）。</li>
      * </ul>
      */

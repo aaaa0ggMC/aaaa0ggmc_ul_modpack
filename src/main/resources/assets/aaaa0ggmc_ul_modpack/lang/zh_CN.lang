@@ -75,7 +75,7 @@ ul.titan.slam.cooldown=震地还在冷却。
 
 # 主动能力（morphext 能力轮盘 / 状态页）
 morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=尸群指挥
-morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=能力轮盘释放：对准僵尸族=招募（说服度低先打残、搭腐肉）；潜行对准队员=踢出；潜行对空=发动尸潮，条件不足则解散队伍。队员会发光描边。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=能力轮盘释放：对准僵尸族=招募（说服度低先打残、搭腐肉）；潜行对准队员=踢出；潜行对空=发动尸潮，条件不足则解散队伍；尸潮进行中潜行对空=强制收尾。队员会发光描边。
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=能力轮盘释放：震击周围敌人。
 

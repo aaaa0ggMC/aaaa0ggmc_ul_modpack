@@ -193,12 +193,33 @@ bus.register(new TitanSlamMigration());   // 实例方法，保持不变
    `center.getY() ± 3~6` 找「2 宽 4 高 2 深净空」的地面落点，高度图仅作兜底。
 2. `zombie_tide.horde.golem_multiplier`（`ul_strength/zombie_tide.json:19`）是死键，无代码引用；
    设计上若想要「每 N 村民一只」的语义需另行实现或删键。
+   → **2026-11-07 处理：接线为「铁傀儡数量倍率」（不删）**。worldwiki 设计文档证实设计意图存在：
+   `tideIronGolemMultiplier = 3.0` 是「铁傀儡刷新倍率」——尸潮对常规（村落线流言/恐吓：15 秒 1 只、
+   上限 3 只）正好 3 倍（5 秒 1 只、上限 9 只），见「尸潮.md」铁傀儡刷新一节、「实现契约.md」参数表；
+   上面「每 N 村民一只」的猜测**不成立**（与村民数无关）。实现 `HordeManager.golemAliveCap()`：
+   存活上限 = clamp(round(常规基线 3 × golem_multiplier), 1, golem_max_alive)，倍率读不到回退 1.0
+   （= 常规 1 倍、仅 3 只），配置值 3.0 → 9，与接线前行为一致；`golem_max_alive` 仍是 ≤9 硬上限。
+   刷怪间隔仍由 `golem_interval_ticks` 直配（100t = 设计的 3 倍速率），倍率只作用于数量上限。
+   `zombie_tide.json` 的 `_doc` 已注明该键单位（「对常规 3 只的倍率」）与回退例外。
 3. `countVillagers`（`HordeManager.java:818-822`）不过滤 `isDead`，死村民可能拖一拍再判成功（无害）。
+   → **2026-11-07 已修**：改为逐个滤 `isDead` 统计活村民，成功判定「活村民清零」口径与
+   `findVillageCenter`（同样滤 isDead）对齐；死村民不再拖一拍。
 4. 语义不一致：`launchOrDisband` 在「已在进行中」时**解散**（`HordeManager.java:313-324`），
    而演示入口 `onAirUse` 在同样情况提示 `fail.active` 并保留（`:363-366`）。已按类注释视为设计，
    但建议统一或在任务文案里写明「潜行空放=强制收尾」。
+   → **2026-11-07 复核结论：是设计取舍，非 bug，不改行为，已写清**。`launchOrDisband` 是玩家唯一
+   入口（`horde_command` 潜行对空），三能力合并后没有独立「停止」能力，「进行中二次潜行对空=
+   强制收尾」是 toggle 语义的有意设计（玩家始终有手动收尾手段）；`onAirUse` 已降级为演示脚本专用
+   （仅 `demo-zombie-tide.sh:67` 反射调用），「进行中只提示 `fail.active`、保留现场」防脚本重复
+   `invoke` 误收尾中断录像。分歧已在双方 javadoc、`HordeAbilities` 分派注释写明，并在
+   zh/en 能力文案补「尸潮进行中潜行对空=强制收尾」。
 5. Forge 实例 `shaping_the_world/config/ul_strength_design/overrides.json` 里 `golem_max_alive=4`
    为演示脚本残留（`demo-zombie-tide.sh:36-39`），非演示时建议还原，避免上限口径漂移。
+   → **2026-11-07 已核实并还原**：该文件确为 demo 脚本 heredoc 整体覆盖写入的残留
+   （`_doc` 即「演示调参：铁傀儡上限降低」），已还原为干净模板（`values` 空，与 CR 实例一致）；
+   `golem_max_alive=9` 默认恢复生效，配合 §6.2 接线后合成上限 = min(9, round(3×3.0)) = 9。
+   注意：再跑一次 `demo-zombie-tide.sh` 会重新写入该覆盖（脚本在 ul-agent-control 仓库、未改），
+   演示后需手动还原；后续可给脚本加「收尾时清理 overrides」。
 
 ## 7. 复现与验证步骤（游戏内）
 

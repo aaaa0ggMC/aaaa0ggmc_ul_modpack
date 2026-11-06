@@ -1,5 +1,5 @@
 {
-  "_doc": "尸潮与泰坦（不死者线）强度默认值，全部经 UlStrength 读取、兜底默认与这里一致。三个冷却已改为档位驱动（UlStrength.cooldownTicks：recruit=t1、slam=t2、launch=t3，见 ul_strength_design 的 cooldown_ticks 档位表 160/300/600t）；按能力单独改冷却时，在 config/ul_strength_design/overrides.json 的 values 里写对应 *_cooldown_ticks 键即可（值键优先于档位）。",
+  "_doc": "尸潮与泰坦（不死者线）强度默认值，全部经 UlStrength 读取、兜底默认与这里一致。三个冷却已改为档位驱动（UlStrength.cooldownTicks：recruit=t1、slam=t2、launch=t3，见 ul_strength_design 的 cooldown_ticks 档位表 160/300/600t）；按能力单独改冷却时，在 config/ul_strength_design/overrides.json 的 values 里写对应 *_cooldown_ticks 键即可（值键优先于档位）。例外：golem_multiplier 单位是「对常规 3 只」的倍率（3.0 = 上限 9，tideIronGolemMultiplier），缺键回退 1.0（= 常规 1 倍、仅 3 只），与其余键「兜底=本表值」不同，见 HordeManager.golemAliveCap。",
   "values": {
     "overworld.ankh.armor_bonus": 2.0,
     "zombie_tide.horde.abort_distance": 48.0,

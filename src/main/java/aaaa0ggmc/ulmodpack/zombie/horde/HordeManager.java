@@ -74,6 +74,13 @@ public final class HordeManager {
     /** M6：尸潮召唤铁傀儡的归属标记（值=主人 UUID 字符串；收尾按标记清理）。 */
     private static final String TAG_TIDE_GOLEM = "ulTideGolem";
 
+    /**
+     * 常规村庄铁傀儡存活上限（村落线流言/恐吓基线，设计文档「尸潮.md」：常规 15 秒
+     * 1 只、上限 3；尸潮 5 秒 1 只、上限 9，正好 3 倍）。{@code golem_multiplier}
+     * 以它为 1.0 基线，见 {@link #golemAliveCap()}。
+     */
+    private static final int REGULAR_GOLEM_CAP = 3;
+
     private HordeManager() {
     }
 
@@ -303,6 +310,11 @@ public final class HordeManager {
      * 发动条件 = 尸群领导 + 不死者形态 + 有随从 + 32 格内有效村庄 + 无进行中的尸潮；
      * 不满足（含已在进行中、发动不能）一律 {@link #disband}——「解散当前队伍，
      * 进行中的尸潮一并收尾」。
+     *
+     * <p>「已在进行中 → 解散」是 <b>toggle 语义的有意设计</b>（§6.4 复核结论）：
+     * 三能力合并后玩家没有独立的「停止」能力，二次「潜行对空」就是手动强制收尾的
+     * 唯一入口；与演示入口 {@link #onAirUse} 的「进行中只提示、不收尾」是<b>有意分歧</b>，
+     * 后者防演示脚本重复 {@code invoke} 误收尾中断录像（见其注释）。</p>
      */
     public static int launchOrDisband(EntityPlayerMP player) {
         HordeState state = HordeState.get(player.world);
@@ -348,6 +360,10 @@ public final class HordeManager {
      * 合并后仅剩演示脚本用）：泰坦形态 → 震地；否则走尸群领导的发动/解放分支
      * （有随从且有有效村庄=发动，有随从无村庄=解放，无随从有村庄=提示招募，都无=解散）。
      * 玩家侧语义见 {@link #launchOrDisband}。
+     *
+     * <p>「已在进行中 → 只提示 {@code fail.active}、保留现场」是<b>有意分歧</b>（§6.4
+     * 复核结论）：本入口只被演示脚本反射调用，重复 {@code invoke} 不应把录像中的尸潮
+     * 解散掉；玩家侧的 toggle「二次潜行对空=强制收尾」只在 {@link #launchOrDisband}。</p>
      */
     public static void onAirUse(EntityPlayerMP player) {
         if (!ZombieForms.hasLeadership(player)) {
@@ -493,7 +509,6 @@ public final class HordeManager {
         }
     }
 
-    /** 尸潮期间每 golem_interval tick 尝试刷 1 只铁傀儡，同时存活 ≤ golem_max_alive。 */
     /**
      * 尸潮作战指令：随从僵尸跟随 AI 只跟随不作战（实体 AI 优先级被跟随任务占着），
      * 每轮给它们指派最近的活村民为攻击目标——「带队屠村」的作战语义在这里。
@@ -529,6 +544,10 @@ public final class HordeManager {
         }
     }
 
+    /**
+     * 尸潮期间每 golem_interval tick 尝试刷 1 只铁傀儡，同时存活 ≤ {@link #golemAliveCap()}
+     * （golem_max_alive 与 golem_multiplier 合成上限）。
+     */
     private static void maybeSpawnGolem(World world, EntityPlayerMP owner, HordeState.Entry entry) {
         long now = world.getTotalWorldTime();
         long interval = (long) UlStrength.num("zombie_tide.horde.golem_interval_ticks", 100.0D);
@@ -536,8 +555,7 @@ public final class HordeManager {
             return;
         }
         entry.lastGolemSpawnTick = now;
-        int maxAlive = UlStrength.integer("zombie_tide.horde.golem_max_alive", 9);
-        if (countGolems(world, entry.villageCenter) >= maxAlive) {
+        if (countGolems(world, entry.villageCenter) >= golemAliveCap()) {
             return;
         }
         BlockPos pos = findGolemSpawn(world, entry.villageCenter);
@@ -558,6 +576,23 @@ public final class HordeManager {
     /** 尸潮召唤铁傀儡的存活上限（tick）；到期自动清理，兜底区块未加载时的收尾遗漏。 */
     private static int golemLifespanTicks() {
         return UlStrength.integer("zombie_tide.horde.golem_lifespan_ticks", 1200);
+    }
+
+    /**
+     * 尸潮傀儡存活上限 = 常规上限 {@link #REGULAR_GOLEM_CAP}（3 只）×
+     * {@code zombie_tide.horde.golem_multiplier}（设计常量 tideIronGolemMultiplier；
+     * 配置值 3.0 = 「对常规 3 只正好 3 倍」→ 9，见设计文档「尸潮.md」铁傀儡刷新一节），
+     * 再与 {@code golem_max_alive} 取小封顶（默认 ≤9）。倍率读不到回退 1.0
+     * （= 常规 1 倍、仅 3 只）；结果下限 1。
+     */
+    private static int golemAliveCap() {
+        int maxAlive = UlStrength.integer("zombie_tide.horde.golem_max_alive", 9);
+        double multiplier = UlStrength.num("zombie_tide.horde.golem_multiplier", 1.0D);
+        int cap = (int) Math.round(REGULAR_GOLEM_CAP * multiplier);
+        if (cap < 1) {
+            cap = 1;
+        }
+        return Math.min(cap, maxAlive);
     }
 
     /** M6：清理本场尸潮召唤的铁傀儡（跨维度扫描已加载区块；未加载的由 TTL 兜底）。 */
@@ -815,10 +850,18 @@ public final class HordeManager {
         return new BlockPos(sx / n, sy / n, sz / n);
     }
 
+    /** 活村民计数（成功判定口径）：滤 {@code isDead}，死村民不再拖一拍误判「未清零」。 */
     private static int countVillagers(World world, BlockPos center) {
         double r = UlStrength.num("zombie_tide.horde.villager_count_radius", 48.0D);
-        return world.getEntitiesWithinAABB(net.minecraft.entity.passive.EntityVillager.class,
-                new AxisAlignedBB(center).grow(r)).size();
+        int n = 0;
+        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
+                new AxisAlignedBB(center).grow(r))) {
+            if (v.isDead) {
+                continue;
+            }
+            n++;
+        }
+        return n;
     }
 
     private static int countGolems(World world, BlockPos center) {
