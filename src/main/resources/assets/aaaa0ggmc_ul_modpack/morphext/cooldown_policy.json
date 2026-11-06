@@ -1,5 +1,5 @@
 {
-  "_doc": "僵尸形态主动技能冷却策略（通用机制 AbilityCooldownPolicy 的数据项，核心不写死任何 id）：ul:undead 类别形态（僵尸/尸壳/僵尸猪人/僵尸村民/巨人，见 form_categories.json）的全部主动技能冷却 ×0.25；尸潮增援（zombie_reinforce，召唤僵尸增援的技能）与发动尸潮（horde_command 发动分支，冷却键沿用旧 horde_launch id）为显式例外——固定 30 秒不打折；尸潮增援的召唤物存活 25 秒（见 ZombieReinforceAction.SUMMON_LIFESPAN_TICKS），两次召唤间有 5 秒空窗。",
+  "_doc": "僵尸形态主动技能冷却策略（通用机制 AbilityCooldownPolicy 的数据项，核心不写死任何 id）：ul:undead 类别形态（僵尸/尸壳/僵尸猪人/僵尸村民/巨人，见 form_categories.json）的全部主动技能冷却 ×0.25；尸潮增援（zombie_reinforce，召唤僵尸增援的技能）与发动尸潮（horde_command 发动分支，冷却键沿用旧 horde_launch id）为显式例外——固定 30 秒不打折；尸潮增援的召唤物存活 25 秒（见 ZombieReinforceAction.SUMMON_LIFESPAN_TICKS），两次召唤间有 5 秒空窗。注意：固定钉子不受 ul-strength 档位影响——改 cooldown_ticks 档位 t3（launch）时需同步改这里的 horde_launch 钉子；zombie_reinforce 钉子同理（其基数在 ZombieReinforceAction）。",
   "formCategoryMultipliers": {
     "ul:undead": 0.25
   },

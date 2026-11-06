@@ -21,6 +21,7 @@ import java.util.UUID;
  * → ServerAbilityService）触发（2026-11-06 右键手势已移除；2026-11-07 三能力合并为
  * {@code horde_command}）。本类只接：
  *  - 玩家死亡 → 尸潮失败（即使死亡随后被感染/仪式接住，也判失败）；
+ *  - 玩家重生 → 队伍快照即推（B 键状态页重生刷新，L6）；
  *  - 随从被铁傀儡打死（LivingDropsEvent）→ 掉热忱的腐肉；
  *  - 世界 tick → 推进尸潮（刷铁傀儡 / 判成功 / 判中止）；
  *  - 玩家 tick → 队伍快照节流同步（B 键状态页数据源，变化才推、5 秒一拍）
@@ -48,6 +49,17 @@ public final class HordeEvents {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntityLiving() instanceof EntityPlayerMP) {
             HordeManager.onOwnerDeath((EntityPlayerMP) event.getEntityLiving());
+        }
+    }
+
+    /**
+     * 重生即推一次队伍快照（L6 重生刷新）：死亡期间随从/尸潮变化不必等下一拍
+     * 节流同步（syncTeamIfChanged 最多 5 秒一拍），B 键状态页零窗口刷新。
+     */
+    @SubscribeEvent
+    public static void onPlayerRespawn(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent event) {
+        if (event.player instanceof EntityPlayerMP) {
+            HordeManager.syncTeam((EntityPlayerMP) event.player);
         }
     }
 

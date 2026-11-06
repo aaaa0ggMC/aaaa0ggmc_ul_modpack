@@ -1,5 +1,5 @@
 {
-  "_doc": "尸潮与泰坦（不死者线）补充强度默认值。主数值见 ul_strength_design 的 defaults.json（zombie_tide.*）；此处只放 defaults.json 未覆盖的少量几何/结构常量，全部经 UlStrength 读取，兜底默认与这里一致。",
+  "_doc": "尸潮与泰坦（不死者线）强度默认值，全部经 UlStrength 读取、兜底默认与这里一致。三个冷却已改为档位驱动（UlStrength.cooldownTicks：recruit=t1、slam=t2、launch=t3，见 ul_strength_design 的 cooldown_ticks 档位表 160/300/600t）；按能力单独改冷却时，在 config/ul_strength_design/overrides.json 的 values 里写对应 *_cooldown_ticks 键即可（值键优先于档位）。",
   "values": {
     "overworld.ankh.armor_bonus": 2.0,
     "zombie_tide.horde.abort_distance": 48.0,
@@ -19,7 +19,6 @@
     "zombie_tide.horde.golem_multiplier": 3.0,
     "zombie_tide.horde.golem_spawn_radius": 16.0,
     "zombie_tide.horde.golem_spawn_tries": 12,
-    "zombie_tide.horde.launch_cooldown_ticks": 600,
     "zombie_tide.horde.mult_bottom": 0.55,
     "zombie_tide.horde.mult_high": 1.0,
     "zombie_tide.horde.mult_low": 0.7,
@@ -31,7 +30,6 @@
     "zombie_tide.horde.persuasion_threshold_low": 20.0,
     "zombie_tide.horde.persuasion_threshold_mid": 50.0,
     "zombie_tide.horde.persuasion_win": 10.0,
-    "zombie_tide.horde.recruit_cooldown_ticks": 160,
     "zombie_tide.horde.recruit_flesh_cost": 1,
     "zombie_tide.horde.recruit_radius": 16.0,
     "zombie_tide.horde.tick_interval": 20,
@@ -48,7 +46,6 @@
     "zombie_tide.titan.knockback_resist": 0.8,
     "zombie_tide.titan.melee_bonus": 6.0,
     "zombie_tide.titan.scale": 6.0,
-    "zombie_tide.titan.slam_cooldown_ticks": 300,
     "zombie_tide.titan.slam_damage": 6.0,
     "zombie_tide.titan.slam_hunger_cost": 4.0,
     "zombie_tide.titan.slam_knockback": 1.0,

@@ -519,7 +519,8 @@ public final class HordeManager {
         }
         for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
                 owner.getEntityBoundingBox().grow(64.0D))) {
-            if (isZombieFamily(entity) && Followers.isFollower(entity)) {
+            // 只指派自己的随从（L7 owner 过滤）：他人随从不得被拉去打村民
+            if (isZombieFamily(entity) && Followers.isFollowerOf(entity, owner.getUniqueID())) {
                 EntityLiving z = (EntityLiving) entity;
                 if (z.getAttackTarget() == null || z.getAttackTarget().isDead) {
                     z.setAttackTarget(target);
@@ -1024,14 +1025,18 @@ public final class HordeManager {
                 data.setCooldown(abilityId, PlayerAbilityStore.now(player), scaled));
     }
 
-    /** 招募冷却基数（tick）；执行分支据此回执，框架统一套形态策略缩放（H7）。 */
+    /** 招募冷却基数（tick，档位 t1=160t/8s）；执行分支据此回执，框架统一套形态策略缩放（H7）。 */
     public static int recruitCooldownTicks() {
-        return UlStrength.integer("zombie_tide.horde.recruit_cooldown_ticks", 160);
+        return UlStrength.cooldownTicks("zombie_tide.horde.recruit_cooldown_ticks", "t1", 160);
     }
 
-    /** 发动尸潮冷却基数（tick，固定 30 秒不打折）；执行分支据此回执（H7）。 */
+    /**
+     * 发动尸潮冷却基数（tick，档位 t3=600t/30s）；执行分支据此回执（H7）。
+     * 注意：cooldown_policy.json 的 {@code horde_launch} 固定钉子（30s 不打折）不受档位影响，
+     * 改档位 t3 时需同步改该钉子（显式例外，见其 _doc）。
+     */
     public static int launchCooldownTicks() {
-        return UlStrength.integer("zombie_tide.horde.launch_cooldown_ticks", 600);
+        return UlStrength.cooldownTicks("zombie_tide.horde.launch_cooldown_ticks", "t3", 600);
     }
 
     private static int countItem(EntityPlayerMP player, Item item) {

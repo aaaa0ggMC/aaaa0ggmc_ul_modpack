@@ -134,8 +134,8 @@ public final class TitanFormHandler {
         return true;
     }
 
-    /** 震地冷却基数（tick）；H7 执行分支回执用，框架统一套形态策略缩放。 */
+    /** 震地冷却基数（tick，档位 t2=300t/15s）；H7 执行分支回执用，框架统一套形态策略缩放。 */
     public static int slamCooldownTicks() {
-        return UlStrength.integer("zombie_tide.titan.slam_cooldown_ticks", 300);
+        return UlStrength.cooldownTicks("zombie_tide.titan.slam_cooldown_ticks", "t2", 300);
     }
 }

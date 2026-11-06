@@ -198,7 +198,13 @@ public class InfectionHandler implements ConversionStage {
         return false;
     }
 
-    /** 感染记录写进 morphext 玩家数据（失败不影响主流程）；感染 = 种族变更，回写 ul.race。 */
+    /**
+     * 感染记录写进 morphext 玩家数据（失败不影响主流程）；感染 = 种族变更，回写 ul.race。
+     * 生命周期（L6 复核）：感染记录与 ul.race <b>跨重生持久是设计</b>（「感染 = 种族变更」契约，
+     * 与解锁/技能同类持久数据；形态映射优先于显式记录，见 RaceResolver）；清理入口已有
+     * {@code /ulpack race clear}（RaceResolver.clearRace，只清 ul.race）。重生侧无需擦除，
+     * 仅展示缓存需刷新（HordeEvents.onPlayerRespawn）。
+     */
     private static void recordInfectionState(EntityPlayerMP player, Entity formSource, AbstractMorph morph) {
         try {
             JsonObject state = new JsonObject();
