@@ -3,6 +3,7 @@ package aaaa0ggmc.ulmodpack.zombie.horde;
 import aaaa0ggmc.morphext.ability.PlayerAbilityData;
 import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
 import aaaa0ggmc.morphext.follower.Followers;
+import aaaa0ggmc.morphext.follower.TimedSummons;
 import aaaa0ggmc.morphext.network.AbilityNetwork;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
@@ -33,7 +34,9 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.Village;
 import net.minecraft.village.VillageCollection;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.util.text.TextComponentTranslation;
 
 import java.util.ArrayList;
@@ -68,6 +71,9 @@ public final class HordeManager {
     private static final UUID FOLLOWER_HEALTH_UUID = UUID.fromString("b16ef011-0000-4000-8000-000000000001");
     private static final UUID FOLLOWER_ATTACK_UUID = UUID.fromString("b16ef011-0000-4000-8000-000000000002");
 
+    /** M6：尸潮召唤铁傀儡的归属标记（值=主人 UUID 字符串；收尾按标记清理）。 */
+    private static final String TAG_TIDE_GOLEM = "ulTideGolem";
+
     private HordeManager() {
     }
 
@@ -95,37 +101,42 @@ public final class HordeManager {
      * 规则（用户设计）：去掉旧的「必须夜晚」「必须移动」两个门槛，保留冷却与说服度匹配——
      * 说服度 &lt; thresholdMid 时目标须残血到 hurtBelow 比例以下才能招；
      * &lt; thresholdLow 时还要消耗腐肉；人数上限 followCap。
+     *
+     * @return 招募冷却中返回剩余 tick（H7：能力框架据此回执 COOLDOWN，HUD 显示冷却）；
+     *         0 = 本次已尝试（成功或条件不满足，条件提示已由 Actionbar 给出）
      */
-    public static void tryRecruitAt(EntityPlayerMP player, EntityLiving target) {
+    public static int tryRecruitAt(EntityPlayerMP player, EntityLiving target) {
         if (!ZombieForms.hasLeadership(player)) {
             action(player, "ul.horde.fail.skill");
-            return;
+            return 0;
         }
         if (!ZombieForms.isUndead(player)) {
             action(player, "ul.horde.fail.form");
-            return;
+            return 0;
         }
         if (onCooldown(player, ZombieLine.ABILITY_COMMAND)) {
-            return; // 8 秒冷却，静默限流
+            // 8 秒冷却：把剩余量回给能力框架，冷却被拒不误报 SUCCESS(0)
+            return PlayerAbilityStore.get(player)
+                    .getCooldown(ZombieLine.ABILITY_COMMAND, PlayerAbilityStore.now(player));
         }
         double reach = recruitReach();
         if (target == null || target.isDead || !isZombieFamily(target)) {
             action(player, "ul.horde.recruit.fail.target");
-            return;
+            return 0;
         }
         if (player.getDistanceSq(target) > reach * reach) {
             action(player, "ul.horde.recruit.fail.target"); // 服务端距离校验，不信客户端
-            return;
+            return 0;
         }
         if (Followers.isFollower(target)) {
             action(player, "ul.horde.recruit.fail.own");
-            return;
+            return 0;
         }
         int persuasion = Persuasion.get(player);
         int cap = Persuasion.followCap(persuasion);
         if (cap - countFollowers(player) <= 0) {
             action(player, "ul.horde.recruit.fail.cap");
-            return;
+            return 0;
         }
         boolean needHurt = persuasion < Persuasion.thresholdMid();
         boolean needFlesh = persuasion < Persuasion.thresholdLow();
@@ -133,12 +144,12 @@ public final class HordeManager {
         int fleshCost = UlStrength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
         if (needFlesh && countItem(player, Items.ROTTEN_FLESH) < fleshCost) {
             action(player, "ul.horde.recruit.fail.flesh");
-            return;
+            return 0;
         }
         // 说服度 <50：目标须先打残（生命 < hurtBelow 比例）
         if (needHurt && target.getHealth() >= target.getMaxHealth() * hurtBelow) {
             action(player, "ul.horde.recruit.fail.persuasion");
-            return;
+            return 0;
         }
         Followers.setOwner(target, player.getUniqueID(), player.world.getTotalWorldTime());
         applyFollowerMultiplier(target, Persuasion.multiplier(persuasion));
@@ -148,6 +159,7 @@ public final class HordeManager {
         setCooldown(player, ZombieLine.ABILITY_COMMAND, recruitCooldownTicks());
         action(player, "ul.horde.recruit.ok", 1);
         syncTeam(player);
+        return 0;
     }
 
     /**
@@ -292,17 +304,24 @@ public final class HordeManager {
      * 不满足（含已在进行中、发动不能）一律 {@link #disband}——「解散当前队伍，
      * 进行中的尸潮一并收尾」。
      */
-    public static void launchOrDisband(EntityPlayerMP player) {
+    public static int launchOrDisband(EntityPlayerMP player) {
         HordeState state = HordeState.get(player.world);
         HordeState.Entry entry = state.getOrCreate(player.getUniqueID());
         boolean canLead = ZombieForms.hasLeadership(player) && ZombieForms.isUndead(player);
         int followers = countFollowers(player);
         BlockPos village = canLead ? findVillageCenter(player) : null;
         if (!entry.active && canLead && followers > 0 && village != null) {
+            // 发动冷却（固定 30 秒）：是节流不是「发动条件」，冷却中不触发解散语义
+            if (onCooldown(player, ZombieLine.ABILITY_LAUNCH)) {
+                action(player, "ul.horde.launch.fail.cooldown");
+                return PlayerAbilityStore.get(player)
+                        .getCooldown(ZombieLine.ABILITY_LAUNCH, PlayerAbilityStore.now(player));
+            }
             launch(player, entry, state, village);
-            return;
+            return 0;
         }
         disband(player);
+        return 0;
     }
 
     /** 该实体是否是该玩家的在队成员（服务端判定；踢出分支的轻校验）。 */
@@ -350,6 +369,10 @@ public final class HordeManager {
         BlockPos village = findVillageCenter(player);
         // 有随从 + 有效村庄 → 发动屠村（泰坦也能带队）
         if (followers > 0 && village != null) {
+            if (onCooldown(player, ZombieLine.ABILITY_LAUNCH)) {
+                action(player, "ul.horde.launch.fail.cooldown");
+                return;
+            }
             launch(player, entry, state, village);
             return;
         }
@@ -368,7 +391,7 @@ public final class HordeManager {
         }
     }
 
-    /** 进入屠村：锁定村庄中心、初始化会话。 */
+    /** 进入屠村：锁定村庄中心、初始化会话；发动冷却固定 30 秒（cooldown_policy 固定覆盖）。 */
     private static void launch(EntityPlayerMP player, HordeState.Entry entry, HordeState state, BlockPos center) {
         entry.active = true;
         entry.villageCenter = center;
@@ -376,6 +399,7 @@ public final class HordeManager {
         entry.lastGolemSpawnTick = 0L;
         entry.abortSinceTick = 0L;
         state.put(player.getUniqueID(), entry);
+        setCooldown(player, ZombieLine.ABILITY_LAUNCH, launchCooldownTicks());
         action(player, "ul.horde.launch");
     }
 
@@ -401,6 +425,10 @@ public final class HordeManager {
             endTide(player, entry, state); // 收尾含散开随从
         } else {
             releaseFollowers(player);
+            // M10：launchOrDisband 会 getOrCreate 出空会话；解散后不留 inactive 条目
+            if (entry != null) {
+                state.remove(player.getUniqueID());
+            }
         }
         if (endedTide || before > 0) {
             action(player, "ul.horde.disband");
@@ -438,7 +466,7 @@ public final class HordeManager {
             }
             EntityPlayerMP owner = (EntityPlayerMP) player;
 
-            maybeSpawnGolem(world, entry);
+            maybeSpawnGolem(world, owner, entry);
             commandFollowers(owner, entry);
 
             // 成功：活村民清零
@@ -500,7 +528,7 @@ public final class HordeManager {
         }
     }
 
-    private static void maybeSpawnGolem(World world, HordeState.Entry entry) {
+    private static void maybeSpawnGolem(World world, EntityPlayerMP owner, HordeState.Entry entry) {
         long now = world.getTotalWorldTime();
         long interval = (long) UlStrength.num("zombie_tide.horde.golem_interval_ticks", 100.0D);
         if (entry.lastGolemSpawnTick != 0L && now - entry.lastGolemSpawnTick < interval) {
@@ -519,7 +547,35 @@ public final class HordeManager {
         golem.setLocationAndAngles(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D,
                 world.rand.nextFloat() * 360.0F, 0.0F);
         golem.setPlayerCreated(false);
+        // M6：标记尸潮召唤的傀儡并挂持久 TTL（默认 60s），尸潮收尾时按标记清理；
+        // 即使收尾时区块未加载，重载后也会因 TTL 到期消失，不再累积野生铁傀儡。
+        golem.getEntityData().setString(TAG_TIDE_GOLEM, owner.getUniqueID().toString());
+        TimedSummons.mark(golem, golemLifespanTicks());
         world.spawnEntity(golem);
+    }
+
+    /** 尸潮召唤铁傀儡的存活上限（tick）；到期自动清理，兜底区块未加载时的收尾遗漏。 */
+    private static int golemLifespanTicks() {
+        return UlStrength.integer("zombie_tide.horde.golem_lifespan_ticks", 1200);
+    }
+
+    /** M6：清理本场尸潮召唤的铁傀儡（跨维度扫描已加载区块；未加载的由 TTL 兜底）。 */
+    private static int clearTideGolems(EntityPlayerMP player) {
+        if (player == null || player.server == null) {
+            return 0;
+        }
+        String ownerId = player.getUniqueID().toString();
+        int removed = 0;
+        for (WorldServer world : player.server.worlds) {
+            for (Entity entity : new ArrayList<>(world.loadedEntityList)) {
+                if (entity instanceof EntityIronGolem
+                        && ownerId.equals(entity.getEntityData().getString(TAG_TIDE_GOLEM))) {
+                    entity.setDead();
+                    removed++;
+                }
+            }
+        }
+        return removed;
     }
 
     // ============================================================ 收尾
@@ -547,13 +603,16 @@ public final class HordeManager {
         chat(player, "ul.horde.abort"); // 中止不扣说服度
     }
 
-    /** 结束/中止收尾：清 active、散开随从。 */
+    /** 结束/中止收尾：清理本场召唤物（随从全维解散 + 铁傀儡）、删会话条目。 */
     private static void endTide(EntityPlayerMP player, HordeState.Entry entry, HordeState state) {
         entry.active = false;
         entry.villageCenter = null;
         entry.abortSinceTick = 0L;
-        state.put(player.getUniqueID(), entry);
+        // M10：收尾后删除条目（remove 此前无调用者，entries 随玩家数只增不删）；
+        // 进行中的会话仍按 active 恢复，删除只发生在结束点。
+        state.remove(player.getUniqueID());
         releaseFollowers(player);
+        clearTideGolems(player);
         syncTeam(player);
     }
 
@@ -649,12 +708,25 @@ public final class HordeManager {
 
     // ============================================================ 随从查询 / 属性
 
+    /**
+     * H9：解散/收尾时解除该玩家<b>全部</b>随从关系（不再只扫 64 格）：
+     * 先撤已加载实体的属性打折，再由核心 {@link Followers#revokeAll} 跨维度清理；
+     * 未加载区块的随从按登记表 UUID 标记撤销，实体重新加载时由 FollowerHandler 清除。
+     */
     private static int releaseFollowers(EntityPlayerMP player) {
-        List<EntityLiving> followers = followersOf(player);
-        for (EntityLiving f : followers) {
-            dismissFollower(f);
+        MinecraftServer server = player.server;
+        if (server == null) {
+            return 0;
         }
-        return followers.size();
+        for (WorldServer world : server.worlds) {
+            for (Entity entity : world.loadedEntityList) {
+                if (entity instanceof EntityLivingBase
+                        && player.getUniqueID().equals(Followers.getOwnerUuid(entity))) {
+                    removeFollowerMultiplier((EntityLivingBase) entity);
+                }
+            }
+        }
+        return Followers.revokeAll(player.getUniqueID(), server);
     }
 
     /** 单个随从离队（release/kick 共用）：撤说服度属性打折 + 清随从关系。 */
@@ -943,12 +1015,23 @@ public final class HordeManager {
         if (ticks <= 0) {
             return;
         }
+        // 形态冷却策略最外层裁决：僵尸形态乘数（ul:undead ×0.25）/固定覆盖在此统一套用
+        int scaled = aaaa0ggmc.morphext.ability.AbilityCooldownPolicy.scale(player, abilityId, ticks);
+        if (scaled <= 0) {
+            return;
+        }
         PlayerAbilityStore.update(player, data ->
-                data.setCooldown(abilityId, PlayerAbilityStore.now(player), ticks));
+                data.setCooldown(abilityId, PlayerAbilityStore.now(player), scaled));
     }
 
-    private static int recruitCooldownTicks() {
+    /** 招募冷却基数（tick）；执行分支据此回执，框架统一套形态策略缩放（H7）。 */
+    public static int recruitCooldownTicks() {
         return UlStrength.integer("zombie_tide.horde.recruit_cooldown_ticks", 160);
+    }
+
+    /** 发动尸潮冷却基数（tick，固定 30 秒不打折）；执行分支据此回执（H7）。 */
+    public static int launchCooldownTicks() {
+        return UlStrength.integer("zombie_tide.horde.launch_cooldown_ticks", 600);
     }
 
     private static int countItem(EntityPlayerMP player, Item item) {

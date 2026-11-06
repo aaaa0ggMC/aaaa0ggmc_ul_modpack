@@ -53,6 +53,7 @@ ul.horde.recruit.fail.flesh=You have no rotten flesh.
 ul.horde.launch=They smell the villagers.
 ul.horde.launch.fail.empty=The horde is empty. Recruit first.
 ul.horde.launch.fail.place=Nothing here worth drowning.
+ul.horde.launch.fail.cooldown=The tide is still rising. Wait before launching again.
 ul.horde.launch.fail.active=The tide hasn't receded yet.
 ul.horde.release=The horde scattered.
 ul.horde.disband=The horde disbanded.

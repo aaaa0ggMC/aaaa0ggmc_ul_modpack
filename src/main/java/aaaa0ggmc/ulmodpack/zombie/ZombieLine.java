@@ -42,6 +42,13 @@ public final class ZombieLine {
     public static final String ABILITY_SLAM = UlModpack.MODID + ":titan_slam";
 
     /**
+     * 发动尸潮的冷却键（沿用旧 horde_launch 能力 id 作 PlayerAbilityData 冷却键，
+     * 不再是独立能力）：horde_command「潜行 + 无目标」发动分支与 onAirUse 共用，
+     * 固定 30 秒（cooldown_policy.json 的 abilityFixedCooldowns 覆盖不打折）。
+     */
+    public static final String ABILITY_LAUNCH = UlModpack.MODID + ":horde_launch";
+
+    /**
      * 玩家数据状态键（morphext PlayerAbilityStore，扁平 states 映射）：
      *  - {@link #STATE_TIDE_CLEARED}：通关计数 {@code {"count":N}}，FTBQuests progress 任务读它；
      *  - {@link #STATE_PERSUASION}：说服度 {@code {"value":N}}。

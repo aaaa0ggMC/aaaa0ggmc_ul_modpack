@@ -78,16 +78,18 @@ public final class TitanFormHandler {
     /**
      * 震地（泰坦主动能力）：半径内敌人伤害 + 缓慢 + 击退，消耗饥饿，15 秒冷却。
      * 排除自己与自己的随从；不破坏方块。
+     *
+     * @return true = 本次已执行；false = 非泰坦形态或冷却中（H7：能力框架据此回执冷却）
      */
-    public static void slam(EntityPlayerMP player) {
+    public static boolean slam(EntityPlayerMP player) {
         if (!ZombieForms.isTitan(player)) {
-            return;
+            return false;
         }
         long now = PlayerAbilityStore.now(player);
         int cooldown = PlayerAbilityStore.get(player).getCooldown(ZombieLine.ABILITY_SLAM, now);
         if (cooldown > 0) {
             player.sendStatusMessage(new TextComponentTranslation("ul.titan.slam.cooldown"), true);
-            return;
+            return false;
         }
 
         double radius = UlStrength.num("zombie_tide.titan.slam_radius", 4.5D);
@@ -95,7 +97,7 @@ public final class TitanFormHandler {
         int slowTicks = UlStrength.integer("zombie_tide.titan.slam_slow_ticks", 60);
         int slowAmplifier = UlStrength.integer("zombie_tide.titan.slam_slow_amplifier", 1);
         float knockback = (float) UlStrength.num("zombie_tide.titan.slam_knockback", 1.0D);
-        int cooldownTicks = UlStrength.integer("zombie_tide.titan.slam_cooldown_ticks", 300);
+        int cooldownTicks = slamCooldownTicks();
 
         DamageSource source = DamageSource.causePlayerDamage(player);
         List<EntityLivingBase> targets = player.world.getEntitiesWithinAABB(EntityLivingBase.class,
@@ -116,8 +118,11 @@ public final class TitanFormHandler {
             player.getFoodStats().setFoodLevel(Math.max(0, level - cost));
         }
 
+        // 形态冷却策略最外层裁决：泰坦（ul:undead）乘数 ×0.25 在此统一套用
+        int scaledCooldown = aaaa0ggmc.morphext.ability.AbilityCooldownPolicy
+                .scale(player, ZombieLine.ABILITY_SLAM, cooldownTicks);
         PlayerAbilityStore.update(player, data ->
-                data.setCooldown(ZombieLine.ABILITY_SLAM, now, cooldownTicks));
+                data.setCooldown(ZombieLine.ABILITY_SLAM, now, scaledCooldown));
 
         // 表现：落地震击粒子 + 低音爆炸声（不破坏方块）
         if (player.world instanceof WorldServer) {
@@ -126,5 +131,11 @@ public final class TitanFormHandler {
         }
         player.world.playSound(null, player.posX, player.posY, player.posZ,
                 SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.7F, 1.1F);
+        return true;
+    }
+
+    /** 震地冷却基数（tick）；H7 执行分支回执用，框架统一套形态策略缩放。 */
+    public static int slamCooldownTicks() {
+        return UlStrength.integer("zombie_tide.titan.slam_cooldown_ticks", 300);
     }
 }

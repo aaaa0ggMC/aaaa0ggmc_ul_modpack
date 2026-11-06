@@ -6,6 +6,7 @@ import aaaa0ggmc.morphext.ability.ActivationResult;
 import aaaa0ggmc.morphext.ability.IAbility;
 import aaaa0ggmc.morphext.ability.IActiveAbility;
 import aaaa0ggmc.morphext.ability.MorphContext;
+import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
 import aaaa0ggmc.morphext.ability.ServerAbilityService;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
@@ -86,6 +87,16 @@ public final class HordeAbilities {
                 return ActivationResult.unavailable();
             }
             EntityPlayerMP mp = (EntityPlayerMP) player;
+            // M3：horde_command 技能 + 形态门控——持技能但不在不死者形态（鸡/村民等）
+            // 不得发尸潮指令（招募/踢人/发动/解散全部覆盖）。
+            if (!ZombieForms.hasLeadership(mp)) {
+                HordeManager.action(mp, "ul.horde.fail.skill");
+                return ActivationResult.locked("ul.horde.fail.skill");
+            }
+            if (!ZombieForms.isUndead(mp)) {
+                HordeManager.action(mp, "ul.horde.fail.form");
+                return ActivationResult.locked("ul.horde.fail.form");
+            }
             net.minecraft.entity.EntityLivingBase target =
                     context == null ? null : context.getTarget();
             boolean far = target != null && player.getDistanceSq(target) > WIDE_REACH_SQ;
@@ -99,8 +110,19 @@ public final class HordeAbilities {
                     HordeManager.action(mp, "ul.horde.recruit.fail.target");
                     return ActivationResult.unavailable();
                 }
-                HordeManager.tryRecruitAt(mp, (net.minecraft.entity.EntityLiving) target);
-                return ActivationResult.success(0);
+                int remaining = HordeManager.tryRecruitAt(mp,
+                        (net.minecraft.entity.EntityLiving) target);
+                if (remaining > 0) {
+                    return ActivationResult.cooldown(remaining, null);
+                }
+                // H7：招募执行分支显式回执冷却（基数，框架统一套形态策略缩放），
+                // 让 HUD/轮盘实际显示 8 秒档；条件不满足时未写冷却，回 0。
+                int cooldown = PlayerAbilityStore.get(mp).getCooldown(
+                        ZombieLine.ABILITY_COMMAND, PlayerAbilityStore.now(mp));
+                return cooldown > 0
+                        ? ActivationResult.success(HordeManager.recruitCooldownTicks(),
+                                ZombieLine.ABILITY_COMMAND)
+                        : ActivationResult.success(0);
             }
 
             if (target != null) {
@@ -114,8 +136,17 @@ public final class HordeAbilities {
             }
 
             // 潜行 + 无目标 → 尝试发动尸潮；不满足发动条件 → 解散当前队伍
-            HordeManager.launchOrDisband(mp);
-            return ActivationResult.success(0);
+            int launchBlocked = HordeManager.launchOrDisband(mp);
+            if (launchBlocked > 0) {
+                return ActivationResult.cooldown(launchBlocked, null);
+            }
+            // H7：发动成功时回执「发动冷却键」（固定 30 秒），与解散/条件不足（0）区分
+            int launchCooldown = PlayerAbilityStore.get(mp).getCooldown(
+                    ZombieLine.ABILITY_LAUNCH, PlayerAbilityStore.now(mp));
+            return launchCooldown > 0
+                    ? ActivationResult.success(HordeManager.launchCooldownTicks(),
+                            ZombieLine.ABILITY_LAUNCH)
+                    : ActivationResult.success(0);
         }
     }
 
@@ -127,10 +158,26 @@ public final class HordeAbilities {
 
         @Override
         public ActivationResult activate(EntityPlayer player, MorphContext context) {
-            if (player instanceof EntityPlayerMP) {
-                TitanFormHandler.slam((EntityPlayerMP) player);
+            if (!(player instanceof EntityPlayerMP)) {
+                return ActivationResult.unavailable();
             }
-            return ActivationResult.success(0);
+            EntityPlayerMP mp = (EntityPlayerMP) player;
+            // 框架已在 ServerAbilityService 做过请求 id 冷却预检；这里兜底直调路径（H7）
+            int remaining = PlayerAbilityStore.get(mp).getCooldown(
+                    ZombieLine.ABILITY_SLAM, PlayerAbilityStore.now(mp));
+            if (remaining > 0) {
+                return ActivationResult.cooldown(remaining, null);
+            }
+            if (!TitanFormHandler.slam(mp)) {
+                int left = PlayerAbilityStore.get(mp).getCooldown(
+                        ZombieLine.ABILITY_SLAM, PlayerAbilityStore.now(mp));
+                return left > 0
+                        ? ActivationResult.cooldown(left, null)
+                        : ActivationResult.unavailable();
+            }
+            // H7：显式回执冷却基数（框架统一套形态缩放），HUD/轮盘能看到泰坦震地冷却
+            return ActivationResult.success(TitanFormHandler.slamCooldownTicks(),
+                    ZombieLine.ABILITY_SLAM);
         }
     }
 
@@ -140,11 +187,11 @@ public final class HordeAbilities {
         public boolean isAvailable(EntityPlayerMP player, String id) {
             // titan_slam 是形态作用域能力（morph_abilities.json 的 giant.actions）：
             // 服务端只认「当前是巨人形态」，不需要也不接受 horde_leadership 授予；
-            // horde_command 仍由技能全局提供（任何僵尸形态可用）。
+            // horde_command 需尸群领导技能 + 不死者形态（M3：形态门控，非不死者不可发指令）。
             if (ZombieLine.ABILITY_SLAM.equals(id)) {
                 return ZombieForms.isTitan(player);
             }
-            return ZombieForms.hasLeadership(player);
+            return ZombieForms.hasLeadership(player) && ZombieForms.isUndead(player);
         }
 
         @Override

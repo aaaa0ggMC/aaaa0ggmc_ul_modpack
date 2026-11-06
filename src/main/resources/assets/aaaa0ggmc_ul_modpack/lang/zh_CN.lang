@@ -53,6 +53,7 @@ ul.horde.recruit.fail.flesh=你手里没有腐肉。
 ul.horde.launch=它们闻到村民了。
 ul.horde.launch.fail.empty=队伍是空的。先去招募。
 ul.horde.launch.fail.place=这里没有值得淹的地方。
+ul.horde.launch.fail.cooldown=潮水还在涨。缓一缓再发动。
 ul.horde.launch.fail.active=潮水还没退。
 ul.horde.release=队伍散了。
 ul.horde.disband=队伍解散了。
