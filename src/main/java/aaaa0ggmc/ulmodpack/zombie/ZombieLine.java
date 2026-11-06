@@ -68,8 +68,12 @@ public final class ZombieLine {
         }
         registered = true;
         EventBus bus = MinecraftForge.EVENT_BUS;
-        bus.register(new HordeEvents());
-        bus.register(new TitanFormHandler());
+        // 类注册：HordeEvents / TitanFormHandler 的 handler 全是 static，
+        // Forge EventBus.register(实例) 会静默跳过 static 方法（EventBus.java:79-86），
+        // 必须传 Class 才能把 static @SubscribeEvent 挂上总线（2026-11-07 尸潮链修复）。
+        bus.register(HordeEvents.class);
+        bus.register(TitanFormHandler.class);
+        // 实例方法 handler，保持实例注册（改类注册会反向丢掉 onLogin）。
         bus.register(new TitanSlamMigration());
         HordeAbilities.registerAll();
         HordeNetwork.init();

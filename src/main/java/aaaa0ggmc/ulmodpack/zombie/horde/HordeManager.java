@@ -827,22 +827,70 @@ public final class HordeManager {
                 new AxisAlignedBB(center).grow(r)).size();
     }
 
-    /** 村庄中心 golem_spawn_radius 内随机找合法落点（实心方块上、两格空气）。 */
+    /**
+     * 找傀儡落点：每列先做「地面优先」扫描（中心 y±6 内<b>最低</b>的「实心顶面 +
+     * 2 宽 4 高 2 深净空」落点，语义对齐原版 {@code Village.findRandomSpawnPos}），
+     * 避免刷在屋顶/树冠上玩家看不见、还可能超出 countGolems 的统计盒；
+     * 地面扫描失败的列走高度图兜底（原行为：最上层不透明方块之上、两格空气）。
+     */
     private static BlockPos findGolemSpawn(World world, BlockPos center) {
         int r = (int) UlStrength.num("zombie_tide.horde.golem_spawn_radius", 16.0D);
         int tries = UlStrength.integer("zombie_tide.horde.golem_spawn_tries", 12);
+        BlockPos fallback = null;
         for (int i = 0; i < tries; i++) {
             // 对称区间 [-r, r]：0..r 加随机方向，避免写死倍率字面量
             int spanX = world.rand.nextInt(r + 1);
             int spanZ = world.rand.nextInt(r + 1);
             int dx = world.rand.nextBoolean() ? spanX : -spanX;
             int dz = world.rand.nextBoolean() ? spanZ : -spanZ;
-            BlockPos ground = world.getHeight(center.add(dx, 0, dz));
-            if (world.isAirBlock(ground) && world.isAirBlock(ground.up())) {
+            BlockPos column = center.add(dx, 0, dz);
+            BlockPos ground = findGroundLevelSpawn(world, column, center.getY());
+            if (ground != null) {
                 return ground;
+            }
+            // 高度图兜底只记录、不立即返回：后续列的地面落点优先
+            if (fallback == null) {
+                BlockPos surface = world.getHeight(column);
+                if (world.isAirBlock(surface) && world.isAirBlock(surface.up())) {
+                    fallback = surface;
+                }
+            }
+        }
+        return fallback;
+    }
+
+    /**
+     * 柱内地面落点扫描：从 {@code baseY - 6} 向上找最低的「实心顶面 + 2×4×2 净空」
+     * 位置（原版 {@code Village.isAreaClearAround} 语义；傀儡 2.7 格高，净空取 4）。
+     * 取最低优先是为了避开屋顶/树冠；找不到返回 null。
+     */
+    private static BlockPos findGroundLevelSpawn(World world, BlockPos column, int baseY) {
+        for (int y = baseY - 6; y <= baseY + 6; y++) {
+            BlockPos pos = new BlockPos(column.getX(), y, column.getZ());
+            if (!world.getBlockState(pos.down()).isTopSolid()) {
+                continue;
+            }
+            if (isAreaClear(world, pos, 2, 4, 2)) {
+                return pos;
             }
         }
         return null;
+    }
+
+    /** 以 pos 为脚下的 w×h×d 净空检查（w/d 为偶数时向 -x/-z 偏半格，对齐原版）。 */
+    private static boolean isAreaClear(World world, BlockPos pos, int w, int h, int d) {
+        int x0 = pos.getX() - w / 2;
+        int z0 = pos.getZ() - d / 2;
+        for (int x = x0; x < x0 + w; x++) {
+            for (int y = pos.getY(); y < pos.getY() + h; y++) {
+                for (int z = z0; z < z0 + d; z++) {
+                    if (world.getBlockState(new BlockPos(x, y, z)).isNormalCube()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     // ============================================================ 招募候选
