@@ -2,6 +2,7 @@ package aaaa0ggmc.ulmodpack.zombie.horde;
 
 import aaaa0ggmc.morphext.faction.FactionManager;
 import aaaa0ggmc.morphext.follower.Followers;
+import mchorse.metamorph.api.events.MorphEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -26,6 +27,8 @@ import java.util.UUID;
  *  - 世界 tick → 推进尸潮（刷铁傀儡 / 判成功 / 判中止）；
  *  - 玩家 tick → 队伍快照节流同步（B 键状态页数据源，变化才推、5 秒一拍）
  *    + 队员常驻白色描边续挂（每 20 tick 刷核心 Outlines，见 HordeManager.refreshFollowerGlow）；
+ *  - 变形成功/解除（Metamorph {@code MorphEvent.Post}）→ 队伍快照即推：分节显隐判据是
+ *    「horde_command 能力是否被当前形态授予」，形态一变判据就变，不能等下一拍节流；
  *  - 随从把主人设为目标 → 清目标（随从不攻击主人）。
  */
 public final class HordeEvents {
@@ -60,6 +63,26 @@ public final class HordeEvents {
     public static void onPlayerRespawn(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent event) {
         if (event.player instanceof EntityPlayerMP) {
             HordeManager.syncTeam((EntityPlayerMP) event.player);
+        }
+    }
+
+    /**
+     * 变形成功 / 解除变形（Metamorph {@code MorphEvent.Post}）即推一次队伍快照：
+     * 状态页分节显隐判据 = 「{@code horde_command} 能力是否被当前形态授予」
+     * （{@code ZombieForms.canCommandHorde}），形态一变判据立刻翻转，等
+     * {@link #onPlayerTick} 的 5 秒节流会让取消变形后的面板多挂最多 5 秒。
+     * 只取服务端玩家（事件两侧都会派发；客户端侧由 S2C 快照覆盖，不发包）。
+     */
+    @SubscribeEvent
+    public static void onMorphChange(MorphEvent.Post event) {
+        if (event.player instanceof EntityPlayerMP) {
+            try {
+                HordeManager.syncTeam((EntityPlayerMP) event.player);
+            } catch (RuntimeException error) {
+                // 变身事件里抛异常会被 Forge 吞掉并打断 Metamorph 的变身流程，这里自吞并留痕
+                org.apache.logging.log4j.LogManager.getLogger("ulmodpack")
+                        .warn("[horde] team sync on morph failed: {}", error.toString());
+            }
         }
     }
 

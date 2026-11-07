@@ -14,6 +14,8 @@ import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
 import aaaa0ggmc.ulmodpack.zombie.titan.TitanFormHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 
 /**
  * 尸群指挥 / 泰坦震地的主动能力注册（morphext {@link AbilityRegistry} + {@link ServerAbilityService}）。
@@ -70,8 +72,31 @@ public final class HordeAbilities {
         /** 目标距离宽松上限（防空指针/跨维异常的粗校验，不做视线/反作弊级校验）。 */
         private static final double WIDE_REACH_SQ = 8.0D * 8.0D;
 
+        /**
+         * 能力图标（2026-11-07 补，ItemStack 形态；此前单参构造把 icon 设成 EMPTY，
+         * 轮盘/状态页/HUD 三处都只能落回通用书本）。
+         *
+         * <p>选骨头而不是书本/腐肉/僵尸头的理由：</p>
+         * <ul>
+         *   <li><b>语义</b>：原版「骨头」是牵引/带领动物（狼）的道具，玩家一眼读作
+         *       「号令一群随从」，与 horde_command（招募/踢出/发动/解散）一致；</li>
+         *   <li><b>形态中性</b>：能力的形态门控是 {@code ul:undead} 整个僵尸族
+         *       （僵尸/尸壳/僵尸村民/猪人），骨头是四形态共有的亡灵令牌；僵尸头会
+         *       排斥猪人/尸壳，腐肉又是招募的消耗品（当图标会被误读成「要吃掉」）；</li>
+         *   <li><b>不撞车</b>：既有能力图标 sprint=皮革靴、stature=盔甲架、
+         *       mob AI=比较器、keybind=纸、jzahar=末影之眼、chicken_riding=粘液球，
+         *       没有骨头；与通用回退（书本）也明显不同。</li>
+         * </ul>
+         */
+        private static final ItemStack ICON = new ItemStack(Items.BONE);
+
         private CommandAbility() {
             super(ZombieLine.ABILITY_COMMAND);
+        }
+
+        @Override
+        public ItemStack getIcon() {
+            return ICON;
         }
 
         /**
@@ -91,12 +116,16 @@ public final class HordeAbilities {
             EntityPlayerMP mp = (EntityPlayerMP) player;
             // M3：horde_command 技能 + 形态门控——持技能但不在不死者形态（鸡/村民等）
             // 不得发尸潮指令（招募/踢人/发动/解散全部覆盖）。
+            //
+            // 双提示去重（2026-11-07）：拒绝分支只回执 locked(reason)，由 morphext 客户端
+            // 用 reason 的 i18n 键渲染唯一一条 Actionbar 文案；这里不再自发服务端消息，
+            // 否则玩家会同时看到「要对着一只僵尸。」和「当前形态无法使用该能力」两条。
             if (!ZombieForms.hasLeadership(mp)) {
-                HordeManager.action(mp, "ul.horde.fail.skill");
+                HordeManager.logAction(mp, "ul.horde.fail.skill");
                 return ActivationResult.locked("ul.horde.fail.skill");
             }
             if (!ZombieForms.isUndead(mp)) {
-                HordeManager.action(mp, "ul.horde.fail.form");
+                HordeManager.logAction(mp, "ul.horde.fail.form");
                 return ActivationResult.locked("ul.horde.fail.form");
             }
             net.minecraft.entity.EntityLivingBase target =
@@ -109,8 +138,8 @@ public final class HordeAbilities {
                 if (target == null || target.isDead || far
                         || !(target instanceof net.minecraft.entity.EntityLiving)
                         || !HordeManager.isZombieFamily(target)) {
-                    HordeManager.action(mp, "ul.horde.recruit.fail.target");
-                    return ActivationResult.unavailable();
+                    HordeManager.logAction(mp, "ul.horde.recruit.fail.target");
+                    return ActivationResult.locked("ul.horde.recruit.fail.target");
                 }
                 int remaining = HordeManager.tryRecruitAt(mp,
                         (net.minecraft.entity.EntityLiving) target);
@@ -130,8 +159,8 @@ public final class HordeAbilities {
             if (target != null) {
                 // 潜行 + 有目标 → 踢出：只认自己的在队成员（服务端判定）
                 if (target.isDead || far || !HordeManager.isTeamMember(mp, target)) {
-                    HordeManager.action(mp, "ul.horde.command.fail.member");
-                    return ActivationResult.unavailable();
+                    HordeManager.logAction(mp, "ul.horde.command.fail.member");
+                    return ActivationResult.locked("ul.horde.command.fail.member");
                 }
                 HordeManager.kickFollower(mp, target);
                 return ActivationResult.success(0);
@@ -189,11 +218,12 @@ public final class HordeAbilities {
         public boolean isAvailable(EntityPlayerMP player, String id) {
             // titan_slam 是形态作用域能力（morph_abilities.json 的 giant.actions）：
             // 服务端只认「当前是巨人形态」，不需要也不接受 horde_leadership 授予；
-            // horde_command 需尸群领导技能 + 不死者形态（M3：形态门控，非不死者不可发指令）。
+            // horde_command 需尸群领导技能 + 不死者形态（M3：形态门控，非不死者不可发指令），
+            // 判据与状态页面板显隐、CommandAbility 的双检同一判据（ZombieForms.canCommandHorde）。
             if (ZombieLine.ABILITY_SLAM.equals(id)) {
                 return ZombieForms.isTitan(player);
             }
-            return ZombieForms.hasLeadership(player) && ZombieForms.isUndead(player);
+            return ZombieForms.canCommandHorde(player);
         }
 
         @Override

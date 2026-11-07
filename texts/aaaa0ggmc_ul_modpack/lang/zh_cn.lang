@@ -1,4 +1,7 @@
-# UL Modpack Content Lang (zh_CN)
+# 数据外置（2026-11-07）：本文件是文案唯一真值源，jar 内 assets/<modid>/lang/ 副本由 processResources 生成（离线兜底）。
+# 运行时覆盖：scripts/sync-texts.sh 把 texts/<modid> 软链进 <gameDir>/resourcepacks/ul-texts/assets/<modid>，该资源包在 options.txt resourcePacks 列表末尾 = 最高优先级。
+# 文件名必须小写（en_us/zh_cn）：MC 1.12.2 的 ResourceLocation 会把 lang 路径强制转小写，大写名在 Linux（大小写敏感）下永远找不到。
+# UL Modpack Content Lang (zh_cn)
 itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # 安卡护符
@@ -11,6 +14,8 @@ aaaa0ggmc_ul_modpack.ankh.lore4=§8只对僵尸类生物生效，一次性。
 # 进度
 advancements.aaaa0ggmc_ul_modpack.infected.title=被感染
 advancements.aaaa0ggmc_ul_modpack.infected.description=被僵尸类生物杀死后，你变成了它。
+advancements.aaaa0ggmc_ul_modpack.crying_wolf.title=狼来了
+advancements.aaaa0ggmc_ul_modpack.crying_wolf.description=你宣告了一次没有目标的尸潮。
 
 # 事件文案
 aaaa0ggmc_ul_modpack.msg.shatter=安卡护符碎了。
@@ -52,7 +57,6 @@ ul.horde.recruit.fail.none=附近没有僵尸。
 ul.horde.recruit.fail.flesh=你手里没有腐肉。
 ul.horde.launch=它们闻到村民了。
 ul.horde.launch.fail.empty=队伍是空的。先去招募。
-ul.horde.launch.fail.place=这里没有值得淹的地方。
 ul.horde.launch.fail.village=附近没有村庄：需要 %s 格内至少 %s 个活村民。
 ul.horde.launch.declare=附近没有人——你是一个失败的领导者。
 ul.horde.launch.fail.cooldown=潮水还在涨。缓一缓再发动。
@@ -77,7 +81,7 @@ ul.titan.slam.cooldown=震地还在冷却。
 
 # 主动能力（morphext 能力轮盘 / 状态页）
 morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=尸群指挥
-morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=能力轮盘释放：对准僵尸族=招募（说服度低先打残、搭腐肉）；潜行对准队员=踢出；潜行对空=发动尸潮，条件不足则解散队伍；尸潮进行中潜行对空=强制收尾。队员会发光描边。
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=能力轮盘释放：对准僵尸族即招募（说服度低先打残、搭腐肉）；潜行对准队员即踢出；潜行对空即发动尸潮，条件不足则解散队伍；尸潮进行中潜行对空即强制收尾。队员会发光描边。
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=震地
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=能力轮盘释放：震击周围敌人。
 
@@ -89,8 +93,3 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=尸潮：进行中
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=尸潮：未发动
 aaaa0ggmc_ul_modpack.status.horde.empty=（队伍是空的）
 aaaa0ggmc_ul_modpack.status.horde.follower=%s（%s/%s）
-
-# 成就
-aaaa0ggmc_ul_modpack.achievement.unlock=成就解锁：%s
-aaaa0ggmc_ul_modpack.achievement.crying_wolf.name=狼来了
-aaaa0ggmc_ul_modpack.achievement.crying_wolf.desc=你宣告了一次没有目标的尸潮。

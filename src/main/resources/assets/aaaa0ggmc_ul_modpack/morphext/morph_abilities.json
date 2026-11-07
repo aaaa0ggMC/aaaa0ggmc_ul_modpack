@@ -1,14 +1,15 @@
 {
   "_doc": "形态能力/免疫（morphext 数据驱动）。husk 免疫窒息；zombie_pigman 免疫火焰环境（火祭烧成猪人后不怕火，形态适配转化环境）；giant=泰坦形态（2026-11-07 数值上调为「至少强于僵尸族总和」，各项口径与对照见 giant 条目 _doc）。震地（titan_slam）是纯形态作用域主动动作，只在本形态声明进 actions，不给任何技能授予（H8 单一震地：核心 giant 的双震地已删，本条为唯一真值）。饥饿/挖掘/睡床/摔落不走本文件，见代码事件。",
   "*": {
-    "_doc": "全局条目（MorphJsonConfig.applyGlobalEntry 折入全部形态）：hands_off/itemless 是 Metamorph Max 被配置禁用的死被动（只展示不生效，按用户决定完全移除，H6/M1）；natural_armor 与 morphext 属性同步双算（morphext 走 modifier、NaturalArmor 走 base 叠加，实测僵尸 2+2=4，M9）——护甲单一来源 = morphext 属性同步（MorphAttributeSyncHandler 已提取原生护甲）；knockback_immune 同类双算（KnockbackImmune 走 base 1.0、morphext 击退同步走 modifier 1.0，铁傀儡属性 1.0+1.0=2.0，M15）——击退抗性单一来源 = morphext 属性同步（便捷字段 knockbackResistance，效果仍为完全免疫）。knockback_resistant（僵尸系 0.05 base）经 M15 核实无双算（morphext 侧提取恒 0），保留不动。synced_mob/mob 是 attack 攻击能力注册名（metamorphmax SyncedMobAttack / 原版 MobAttack，M15-R6）：玩家平A 之外再触发生物本体 attackEntityAsMob，与 morphext attackDamage 同步双算（每挥击约 2× 设计值，铁傀儡另附 7–21 随机+击飞）——按用户拍板移除该通道，攻击力单一来源 = morphext 属性同步（attackDamage 便捷字段或原生提取）。",
+    "_doc": "全局条目（MorphJsonConfig.applyGlobalEntry 折入全部形态）：hands_off/itemless 是 Metamorph Max 被配置禁用的死被动（只展示不生效，按用户决定完全移除，H6/M1）；natural_armor 与 morphext 属性同步双算（morphext 走 modifier、NaturalArmor 走 base 叠加，实测僵尸 2+2=4，M9）——护甲单一来源 = morphext 属性同步（MorphAttributeSyncHandler 已提取原生护甲）；knockback_immune 同类双算（KnockbackImmune 走 base 1.0、morphext 击退同步走 modifier 1.0，铁傀儡属性 1.0+1.0=2.0，M15）——击退抗性单一来源 = morphext 属性同步（便捷字段 knockbackResistance，效果仍为完全免疫）。knockback_resistant（僵尸系 0.05 base）经 M15 核实无双算（morphext 侧提取恒 0），保留不动。synced_mob/mob 是 attack 攻击能力注册名（metamorphmax SyncedMobAttack / 原版 MobAttack，M15-R6）：玩家平A 之外再触发生物本体 attackEntityAsMob，与 morphext attackDamage 同步双算（每挥击约 2× 设计值，铁傀儡另附 7–21 随机+击飞）——按用户拍板移除该通道，攻击力单一来源 = morphext 属性同步（attackDamage 便捷字段或原生提取）。golem_enemy 是 metamorphmax 第三方能力（jar 内 morphs.json 授予 20 形态：blaze/cave_spider/elder_guardian/evocation_illager/guardian/husk/illusion_illager/magma_cube/silverfish/skeleton/slime/spider/stray/vindication_illager/wither/wither_skeleton/zombie/zombie_pigman/zombie_villager/twilightforest:tower_broodling）：每 tick 两次 35×10×35 全实体扫描（EntityIronGolem/EntitySnowman）+ 对无目标者 setAttackTarget(玩家)，与阵营图双真相（undead→golem ENEMY、illager→golem ENEMY 已在核心 faction_relations.json 声明，其余形态靠 MODERATE 回退判敌，20/20 覆盖）；且僵尸村民形态（同时持 faction_villager_relative）下图判 RELATIVE 不打玩家，golem_enemy 每 tick 强设目标再被 FactionManager 抑制撤销，造成持续 AI 任务撤销抖动。按用户点名摘除（FVP-01，审计报告 docs/audit-2026-11-07-faction-vs-passive.md §2.1）：关系单一真值 = 阵营图，行为不退化（含僵尸村民形态依法不被铁傀儡攻击的既有语义）。",
     "removeAbilities": [
       "hands_off",
       "itemless",
       "natural_armor",
       "knockback_immune",
       "synced_mob",
-      "mob"
+      "mob",
+      "golem_enemy"
     ]
   },
   "husk": {
@@ -25,7 +26,7 @@
     ]
   },
   "giant": {
-    "_doc": "泰坦形态数值口径（2026-11-07 上调：各项 ≥ 僵尸族总和，速度除外为权衡项）。便捷字段均为绝对基础值（MorphAttributeSyncHandler）：attackDamage 20.0 = 玩家空手基底 1.0 + Operation 0 差值 19.0（总攻击力=20.0，一击重锤），≥ 僵尸族攻击总和 14（3+3+3+5，+43%）；用便捷字段覆盖巨人原生 50 攻击，避免 attributes map 与原生叠加双算。armor 12.0 = 玩家基底 0 + modifier 12.0（总护甲=12.0），≥ 僵尸族护甲总和 8（4×2，+50%）。knockbackResistance 1.0 = modifier 到属性上限 1.0 = 完全免疫击退（不可撼动）。speed 0.075 = 玩家移速基底 0.1 × 0.75（直写 base，覆盖巨人原生 0.5），巨人体型大、速度是唯一代价权衡项（不吃强度总和预算），保持慢速。attributes generic.maxHealth 120 = 绝对总血量覆盖（setBaseValue + MorphAbilityManager 每 tick 权威收敛，getMaxHealthOverride 口径），≥ 僵尸族生命总和 80（4×20，metamorph morphs.json 显式 health 20），+50% 余量，血牛。abilities/immunities 继承核心 minecraft:giant 条目（MorphJsonConfig 逐键合并、immunities 取并集，勿重复写）。actions = 唯一震地 aaaa0ggmc_ul_modpack:titan_slam（H8）。注：zombie_tide.titan.melee_bonus/knockback_resist/speed_mult 无代码消费方（TitanFormHandler javadoc：形态属性走本文件），仅为设计镜像值，实际以本条为准。",
+    "_doc": "泰坦形态数值口径（2026-11-07 上调：各项 ≥ 僵尸族总和，速度除外为权衡项）。便捷字段均为绝对基础值（MorphAttributeSyncHandler）：attackDamage 20.0 = 玩家空手基底 1.0 + Operation 0 差值 19.0（总攻击力=20.0，一击重锤），≥ 僵尸族攻击总和 14（3+3+3+5，+43%）；用便捷字段覆盖巨人原生 50 攻击，避免 attributes map 与原生叠加双算。armor 12.0 = 玩家基底 0 + modifier 12.0（总护甲=12.0），≥ 僵尸族护甲总和 8（4×2，+50%）。knockbackResistance 1.0 = modifier 到属性上限 1.0 = 完全免疫击退（不可撼动）。speed 0.075 = 玩家移速基底 0.1 × 0.75（直写 base，覆盖巨人原生 0.5），巨人体型大、速度是唯一代价权衡项（不吃强度总和预算），保持慢速。attributes generic.maxHealth 120 = 绝对总血量覆盖（setBaseValue + MorphAbilityManager 每 tick 权威收敛，getMaxHealthOverride 口径），≥ 僵尸族生命总和 80（4×20，metamorph morphs.json 显式 health 20），+50% 余量，血牛。【合并语义】依据 MorphJsonConfig.mergeDefinitions（morph-extension）：abilities / actions / immunities / damageImmunities 均按 id 取并集（同 id 后到者覆盖 params），标量（attackDamage / armor / knockbackResistance / speed / attributes…）后到非 null 者胜；双轨归一化索引把 minecraft:giant 与 giant 归一到同一定义对象，故核心 minecraft:giant 条目与本条目无论加载顺序都并成同一份——本条目只写核心没有的增量，核心已有的 hungerless / rotten / faction_undead_lord / faction_giant_lord / morphext:titanic_stature 与 immunities poison / regeneration 勿重复写。【僵尸族口径】form_categories.json 的 ul:undead 四形态：minecraft:zombie / minecraft:zombie_villager / minecraft:husk / minecraft:zombie_pigman（giant 自身亦在该分类内）。骷髅系（skeleton / stray / wither_skeleton）、凋灵、亡灵马（zombie_horse / skeleton_horse）不属僵尸族；AbyssalCraft 的 abyssalzombie / antizombie / antiabyssalzombie 是 patch 模组生物（ac_* 能力由 morphext-patch-abyssalcraft 注册，依赖该模组安装与深渊阵营谓词），不纳入原版泰坦。【abilities 并集 · 纳入】rotten（4/4 形态共有的腐肉体质）、hungerless（4/4 共有的亡灵无饥饿）、faction_undead（4/4 共有的亡灵阵营成员；与核心 faction_undead_lord 同阵营，FactionManager.getActiveFactions 按阵营取最高秩 LORD，行为无变化，仅补全集条目）、morphext:hungering_aura（husk 的饥饿光环，泰坦散发饥饿气息）、morphext:rage_speed（zombie_pigman 的受击疾走被动，与 pigman_rage 组成「受击→狂暴」链路）、fire_proof（zombie_pigman 的火免；僵尸族一员具备的火免，泰坦更该有——该 id 即 StandardPassives 注册的 DamageImmunityPassive，内部已覆盖 inFire / onFire / lava / hotFloor，故猪人 damageImmunities 里的同四项是同一特性的第二种写法，本条不重复落）。既有 faction_undead_lord / faction_giant_lord / morphext:titanic_stature 为核心条目，保留不动。【actions 并集 · 纳入】zombie_infectious_strike（僵尸腐败挥击，身前 3.5 格撕扯+饥饿+迟缓）、zombie_reinforce（尸潮增援，呼唤 2-3 只僵尸集火准星目标）、zombie_door_break（破门而入，仅木门、0 伤害工具技）、husk_sand_strike（husk 狂沙撕咬）、husk_sand_storm（husk 沙暴，8 格 AoE 严重饥饿 II+迟缓 II）、pigman_wrath_shout（猪人怒潮长啸，自身+周围猪人力量 II/抗性 I）、pigman_rage（猪人狂怒战意，力量 II/速度 I/抗性 I）；既有 aaaa0ggmc_ul_modpack:titan_slam 为唯一震地（H8 单一震地真值，核心 giant 的双震地已删，勿新增第二震地）。【排除项 · 均为有意偏离并集，勿静默补回】sun_allergy——泰坦是亡灵领主，不该怕晒：EntityGiantZombie 继承 EntityMob 而非 EntityZombie，原版巨人不会在日光下燃烧；zombie_villager_cure_plea——身份不符：手持金苹果的虚弱治愈祈愿是僵尸村民「可治愈」身份专属机制，泰坦语境不成立；chicken_riding 与 baby_zombie_stats——被 abilityRequirements 的 formCategory variant=baby 门控，巨人是成年体型，纳入恒不生效、无意义。【immunities / damageImmunities】immunities = poison / regeneration（4/4 形态一致，核心条目已给，经并集生效）；damageImmunities = inWall（husk 的窒息免疫，与 wither 同级 Boss 形态同口径）；猪人的 inFire / onFire / lava / hotFloor 由 fire_proof 能力承载，不在此重复写。注：zombie_tide.titan.melee_bonus / knockback_resist / speed_mult 无代码消费方（TitanFormHandler javadoc：形态属性走本文件），仅为设计镜像值，实际以本条为准。",
     "attackDamage": 20.0,
     "armor": 12.0,
     "knockbackResistance": 1.0,
@@ -33,8 +34,24 @@
     "attributes": {
       "generic.maxHealth": 120.0
     },
+    "abilities": [
+      "faction_undead",
+      "morphext:hungering_aura",
+      "morphext:rage_speed",
+      "fire_proof"
+    ],
     "actions": [
-      "aaaa0ggmc_ul_modpack:titan_slam"
+      "aaaa0ggmc_ul_modpack:titan_slam",
+      "zombie_infectious_strike",
+      "zombie_reinforce",
+      "zombie_door_break",
+      "husk_sand_strike",
+      "husk_sand_storm",
+      "pigman_wrath_shout",
+      "pigman_rage"
+    ],
+    "damageImmunities": [
+      "inWall"
     ]
   }
 }

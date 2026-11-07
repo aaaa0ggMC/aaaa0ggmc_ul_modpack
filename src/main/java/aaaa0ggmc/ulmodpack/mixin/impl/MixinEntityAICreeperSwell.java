@@ -31,18 +31,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *
  * <p>绑定同仓库惯例：SRG 名 + {@code remap = false}
  * （shouldExecute = {@code func_75250_a}、updateTask = {@code func_75246_d}，
- * 已对 {@code mappings-stable39} 核实），方法体内 MCP 引用经 {@code reobfJar}
- * 重映射；{@code @Shadow} 字段声明（swellingCreeper/creeperAttackTarget）同样由
- * reobf 映射到 SRG 字段名后与目标类匹配。</p>
+ * 已对 {@code mappings-stable39} 核实）。{@code @Shadow} 成员名**必须**直接写 SRG 名
+ * （swellingCreeper = {@code field_75269_a}、creeperAttackTarget = {@code field_75268_b}）：
+ * {@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射「owner 为已映射 MC 类」的引用——
+ * {@code @Shadow} 声明及其在 mixin 自身方法体里的引用 owner 是本 mixin 类，不在 MC 映射表内，
+ * 写 MCP 名会原样留在字节码里，与运行时的 SRG 名对不上，直接
+ * {@code InvalidMixinException: @Shadow field ... was not located}（2026-11-07 修）。
+ * 方法体里对原版成员的引用仍由 reobfJar 重映射，无需手写 SRG。</p>
  */
 @Mixin(value = EntityAICreeperSwell.class, remap = false)
 public abstract class MixinEntityAICreeperSwell extends EntityAIBase {
 
     @Shadow
-    EntityCreeper swellingCreeper;
+    EntityCreeper field_75269_a;
 
     @Shadow
-    EntityLivingBase creeperAttackTarget;
+    EntityLivingBase field_75268_b;
 
     /**
      * {@code shouldExecute()}（SRG {@code func_75250_a}）：原判定
@@ -53,11 +57,11 @@ public abstract class MixinEntityAICreeperSwell extends EntityAIBase {
      */
     @Inject(method = "func_75250_a()Z", at = @At("HEAD"), cancellable = true, remap = false)
     private void ulmodpack$onlySwellAtEnemy(CallbackInfoReturnable<Boolean> cir) {
-        EntityLivingBase target = this.swellingCreeper.getAttackTarget();
-        boolean fuseArmed = this.swellingCreeper.getCreeperState() > 0;
+        EntityLivingBase target = this.field_75269_a.getAttackTarget();
+        boolean fuseArmed = this.field_75269_a.getCreeperState() > 0;
         boolean enemyClose = target != null
-                && this.swellingCreeper.getDistanceSq(target) < 9.0D
-                && HateQueries.isEnemy(this.swellingCreeper, target);
+                && this.field_75269_a.getDistanceSq(target) < 9.0D
+                && HateQueries.isEnemy(this.field_75269_a, target);
         cir.setReturnValue(fuseArmed || enemyClose);
     }
 
@@ -68,9 +72,9 @@ public abstract class MixinEntityAICreeperSwell extends EntityAIBase {
      */
     @Inject(method = "func_75246_d()V", at = @At("HEAD"), remap = false)
     private void ulmodpack$disarmOnLostEnemy(CallbackInfo ci) {
-        if (this.creeperAttackTarget != null
-                && !HateQueries.isEnemy(this.swellingCreeper, this.creeperAttackTarget)) {
-            this.creeperAttackTarget = null;
+        if (this.field_75268_b != null
+                && !HateQueries.isEnemy(this.field_75269_a, this.field_75268_b)) {
+            this.field_75268_b = null;
         }
     }
 }

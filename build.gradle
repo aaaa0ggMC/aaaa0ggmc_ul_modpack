@@ -70,4 +70,25 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
     }
+
+    // 数据外置（2026-11-07）：texts/ 与 strengths/normal/ 是仓库里的唯一真值源，
+    // jar 内 assets/<modid>/... 的副本由这里生成，只作「没装外置文件时」的离线兜底：
+    //   texts/<modid>/lang/<locale>.lang        -> assets/<modid>/lang/<LOCALE>.lang
+    //   strengths/normal/<modid>/**             -> assets/<modid>/**
+    //
+    // 【jar 内 lang 文件名必须大写（en_US.lang / zh_CN.lang）——2026-11-07 实测教训】
+    // texts/ 里用小写只是源码目录规范；jar 内必须还原成大写，否则 MC 1.12.2 实际查找的
+    // 名字对不上、Linux + ZIP 大小写敏感 → 整份 lang miss（玩家看到全是原始 key）。
+    // 证据：texts/ 外置之前 jar 里一直是大写 en_US.lang 且工作正常；改成小写后立刻全变 key
+    // （2026-11-07 用户实测，两张截图对比；且 ZipFile.getEntry 证明小写条目本身是命中的，
+    //  说明问题不在 jar 内容而在 MC 侧查找名）。texts/ 仅作收集中心，命名转换在这里做。
+    from('texts') {
+        into 'assets'
+        rename { String name ->
+            name.replace('en_us.lang', 'en_US.lang').replace('zh_cn.lang', 'zh_CN.lang')
+        }
+    }
+    from('strengths/normal/aaaa0ggmc_ul_modpack') {
+        into 'assets/aaaa0ggmc_ul_modpack/ul_strength'
+    }
 }

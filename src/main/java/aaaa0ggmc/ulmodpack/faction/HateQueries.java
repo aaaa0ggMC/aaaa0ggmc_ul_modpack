@@ -27,6 +27,8 @@ import javax.annotation.Nullable;
  *       变身 dummy 归属归一（resolveHost）；可传 {@link AggressionPolicy#DEFENSIVE}
  *       变为「仅报复」口径（§G7，中立生物用）；</li>
  *   <li>{@code isAlly}：主人/同主/同队/阵营和平合一（§G1）；</li>
+ *   <li>{@code isValidTargetFor}：「替玩家选作战目标」三层判据（敌意 + 反向盟友 +
+ *       随从归属），玩家意图驱动/AoE 误伤防护用；</li>
  *   <li>{@code isTolerantOf}：RELATIVE/LORD 宽容面（§G5，受击减让用）；</li>
  *   <li>{@code provokedBy}：在案挑衅统一判据（revenge + dummy 归属，§G10）；</li>
  *   <li>{@code findNearestEnemy}：支持 self 中心/Vec3d/BlockPos 锚点（§G3）与
@@ -59,6 +61,17 @@ public final class HateQueries {
     /** {@code isAlly}：主人/同主/同队/阵营和平合一（§G1）。 */
     public static boolean isAlly(EntityLivingBase self, EntityLivingBase target) {
         return FactionEnmity.isAlly(self, target);
+    }
+
+    /**
+     * {@code isValidTargetFor(controller, candidate)}：「替玩家选作战目标」判据
+     * （morphext FactionEnmity，§「isValidTargetFor」）：{@code isEnemy} 敌意 +
+     * 反向盟友（主人的驯服物/同主/同队/阵营和平）+ 随从归属三层同时满足才可选。
+     * 用于玩家意图驱动、代打别人的入口（准星锁定、召唤集火、嘲讽拉仇、玩家 AoE
+     * 误伤防护）；mob 自主索敌/伤害门用 {@link #isEnemy}，不要混用。
+     */
+    public static boolean isValidTargetFor(EntityLivingBase controller, EntityLivingBase candidate) {
+        return FactionEnmity.isValidTargetFor(controller, candidate);
     }
 
     /** {@code isTolerantOf}：宽容面（RELATIVE/LORD，§G5 受击减让）。 */

@@ -12,6 +12,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +34,7 @@ import org.apache.logging.log4j.Logger;
  *  - zombie/    僵尸线实体侧特性（尸壳实体免疫窒息；玩家形态侧同款免疫
  *               走 morphext 数据，见 assets/.../morphext/morph_abilities.json）；
  *  - ftbq/      FTBQuests 形态检测任务（type: aaaa0ggmc_ul_modpack:morph）；
+ *  - achievement/ 成就（原版 advancement 授予 + 旧自定义 toast 存档一次性迁移）；
  *  - command/   /ulpack 调试指令（含 /ulpack ritual 查看转化规则、/ulpack race 查看种族）。
  *
  * 转化规则（沙葬/水祭/火祭/村祭）与形态类别（ul:undead）是纯数据：
@@ -68,6 +70,9 @@ public class UlModpack {
         LOGGER.info("[ul-modpack] Initializing {} v{}...", NAME, VERSION);
         proxy.preInit(event);
         AnkhConfig.init(event.getModConfigurationDirectory());
+        // 强度难度集（strengths/<difficulty>/）定位 + 当前难度读取；
+        // 必须在任何 UlStrength 查询之前（数值兜底不受影响，但 /ulpack strength 要能立刻用）
+        aaaa0ggmc.ulmodpack.strength.StrengthSets.init(event.getModConfigurationDirectory());
         InfectionHandler.register();
         LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/race/ftbq-morph).");
     }
@@ -76,6 +81,9 @@ public class UlModpack {
     public void init(FMLInitializationEvent event) {
         proxy.init(event);
         aaaa0ggmc.ulmodpack.achievement.Achievements.registerDefaults();
+        // 旧存档一次性迁移挂点（实例方法 handler，类注册会丢掉 onLogin）
+        MinecraftForge.EVENT_BUS.register(
+                new aaaa0ggmc.ulmodpack.achievement.AchievementMigration());
         ZombieLine.register();
     }
 

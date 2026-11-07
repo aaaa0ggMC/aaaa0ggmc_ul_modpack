@@ -1,0 +1,14 @@
+{
+  "display": {
+    "icon": { "item": "minecraft:bone" },
+    "title": { "translate": "advancements.aaaa0ggmc_ul_modpack.crying_wolf.title" },
+    "description": { "translate": "advancements.aaaa0ggmc_ul_modpack.crying_wolf.description" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png"
+  },
+  "criteria": {
+    "crying_wolf": { "trigger": "aaaa0ggmc_ul_modpack:crying_wolf" }
+  }
+}

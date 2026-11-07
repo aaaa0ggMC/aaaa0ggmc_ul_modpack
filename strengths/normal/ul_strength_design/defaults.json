@@ -1,0 +1,41 @@
+{
+  "_doc": "UL 强度设计层·包内默认值。对齐流程：在 config/ul_strength_design/overrides.json 里覆盖同名键（后加载赢）→ 游戏 5 秒内自动热重载或 /ulstrength reload。 tiers=档位表（改档位全线跟随）；values=具体键，命名 <line>.<system>.<item>。 【难度集副本】本文件是 ul-strength-design 包内 defaults.json 的逐字副本，放进 strengths/normal/ 是为了让每个难度袋都是完整数据集（档位 + 各模组 values），切换难度时整袋替换、不依赖原 jar。改档位请以 ul-strength-design 仓库为源，同步后由 scripts/sync-strengths.sh 校验一致性。",
+  "tiers": {
+    "_doc": "档位表：数值对齐改这里，引用档位的地方全部跟随。",
+    "damage": {
+      "_doc": "伤害档（点）。",
+      "t1": 2.0,
+      "t2": 4.0,
+      "t3": 6.0,
+      "t4": 9.0,
+      "t5": 13.0
+    },
+    "health": {
+      "_doc": "生命值档（点）。",
+      "t1": 10.0,
+      "t2": 20.0,
+      "t3": 40.0,
+      "t4": 80.0,
+      "t5": 160.0
+    },
+    "cooldown_ticks": {
+      "_doc": "冷却档（tick，20t=1s：t1=8s/t2=15s/t3=30s/t4=60s/t5=120s）。全栈冷却单位统一为 tick（*_ticks 命名），取值经 UlStrength.cooldownTicks()——历史上以秒为单位的 cooldown_seconds 档位已改名换算为 tick，勿再引入秒单位（秒当 tick 用会得 0.4~6s 的地雷即此）。",
+      "t1": 160.0,
+      "t2": 300.0,
+      "t3": 600.0,
+      "t4": 1200.0,
+      "t5": 2400.0
+    },
+    "speed": {
+      "_doc": "移速倍率档。",
+      "t1": 1.0,
+      "t2": 0.85,
+      "t3": 0.75,
+      "t4": 0.6,
+      "t5": 0.45
+    }
+  },
+  "values": {
+    "_doc": "具体数值键。"
+  }
+}

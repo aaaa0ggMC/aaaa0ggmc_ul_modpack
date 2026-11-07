@@ -37,12 +37,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * javac 调 super 所需（与 {@link MixinPhaseHoldingPattern} 同一写法）；
  * 构造器体与 {@code EntityBat(World)} 逐行等价，即使被 Mixin 合并也不改变初始化。
  * 兼容性注记见 {@link MixinEntityCreeper}（Cleanroom 禁用 @Redirect）。</p>
+ * <p><b>SRG 名约定（2026-11-07 修）</b>：{@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射
+ * 「owner 为已映射 MC 类」的引用——{@code @Shadow} 声明及其在本 mixin 方法体里的引用 owner 是
+ * 本 mixin 类，不在 MC 映射表内。因此 {@code @Shadow} 成员名与上述内部引用<b>必须</b>直接写 SRG 名
+ * （查 {@code reference/mappings-stable39/srg-mcp.srg}），写 MCP 名会原样留在字节码里，运行时
+ * 直接 {@code InvalidMixinException: @Shadow ... was not located}。方法体里对原版成员的引用仍由
+ * reobfJar 重映射，无需手写 SRG。</p>
+ * <p>本类映射：spawnPosition = {@code field_82237_a}。</p>
  */
 @Mixin(value = EntityBat.class, remap = false)
 public abstract class MixinEntityBat extends EntityAmbientCreature {
 
     @Shadow
-    private BlockPos spawnPosition;
+    private BlockPos field_82237_a;
 
     protected MixinEntityBat(World world) {
         super(world);
@@ -79,22 +86,22 @@ public abstract class MixinEntityBat extends EntityAmbientCreature {
                 self.world.playEvent(null, 1025, pos, 0);
             }
         } else {
-            if (this.spawnPosition != null
-                    && (!self.world.isAirBlock(this.spawnPosition) || this.spawnPosition.getY() < 1)) {
-                this.spawnPosition = null;
+            if (this.field_82237_a != null
+                    && (!self.world.isAirBlock(this.field_82237_a) || this.field_82237_a.getY() < 1)) {
+                this.field_82237_a = null;
             }
 
-            if (this.spawnPosition == null || this.rand.nextInt(30) == 0
-                    || this.spawnPosition.distanceSq((int) self.posX, (int) self.posY, (int) self.posZ) < 4.0D) {
-                this.spawnPosition = new BlockPos(
+            if (this.field_82237_a == null || this.rand.nextInt(30) == 0
+                    || this.field_82237_a.distanceSq((int) self.posX, (int) self.posY, (int) self.posZ) < 4.0D) {
+                this.field_82237_a = new BlockPos(
                         (int) self.posX + this.rand.nextInt(7) - this.rand.nextInt(7),
                         (int) self.posY + this.rand.nextInt(6) - 2,
                         (int) self.posZ + this.rand.nextInt(7) - this.rand.nextInt(7));
             }
 
-            double dx = this.spawnPosition.getX() + 0.5D - self.posX;
-            double dy = this.spawnPosition.getY() + 0.1D - self.posY;
-            double dz = this.spawnPosition.getZ() + 0.5D - self.posZ;
+            double dx = this.field_82237_a.getX() + 0.5D - self.posX;
+            double dy = this.field_82237_a.getY() + 0.1D - self.posY;
+            double dz = this.field_82237_a.getZ() + 0.5D - self.posZ;
             self.motionX = self.motionX + (Math.signum(dx) * 0.5D - self.motionX) * 0.1F;
             self.motionY = self.motionY + (Math.signum(dy) * 0.7F - self.motionY) * 0.1F;
             self.motionZ = self.motionZ + (Math.signum(dz) * 0.5D - self.motionZ) * 0.1F;

@@ -52,6 +52,7 @@ import java.util.Locale;
  *                               —— 转化规则（morphext 数据驱动仪式）查看/试触发/排障/重载
  *   /ulpack race <show|set|clear> [race]
  *                               —— 种族判定查看 / 写 ul.race 显式记录（测村民等种族入口）
+ *   /ulpack strength [name]   —— 强度难度（strengths/<difficulty>/）查看 / 切换并热重载
  *   /ulpack reload              —— 重载转化规则、形态类别、ankh.json（种族/安卡配置）
  */
 public class CommandUlPack extends CommandBase {
@@ -68,7 +69,7 @@ public class CommandUlPack extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/ulpack <status|equip|infect|killby|convert|death|ritual|race|reload> [参数]";
+        return "/ulpack <status|equip|infect|killby|convert|death|ritual|race|strength|reload> [参数]";
     }
 
     @Override
@@ -139,6 +140,9 @@ public class CommandUlPack extends CommandBase {
                 break;
             case "race":
                 race(player, args);
+                break;
+            case "strength":
+                strength(player, args);
                 break;
             case "reload":
                 reloadAll(player);
@@ -242,6 +246,56 @@ public class CommandUlPack extends CommandBase {
             }
             default:
                 throw new WrongUsageException("/ulpack race <show|set <race>|clear>");
+        }
+    }
+
+    /**
+     * 强度难度（{@code strengths/<difficulty>/}）查看 / 切换（FTBQ 奖励可直接
+     * {@code command:/ulpack strength <name>} 切难度）。
+     *
+     * <p>切换 = 写 {@code config/aaaa0ggmc_ul_modpack/strengths.json} 的 active +
+     * 立即 {@code UlStrength.reload()}。当前 ul-strength-design 的加载器还不读外置袋，
+     * 因此切换后要<b>如实</b>回报是否生效：用 {@code UlStrength.source} 探一个键的来源，
+     * 出现 {@code strengths:} 前缀才算真正整袋替换；否则说明只是记录了意图，等核心
+     * 加载器落地（见回报里的接口清单）。</p>
+     */
+    private static void strength(EntityPlayerMP player, String[] args) throws CommandException {
+        String name = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+        List<String> sets = aaaa0ggmc.ulmodpack.strength.StrengthSets.available();
+        if (name.isEmpty() || "list".equals(name) || "show".equals(name)) {
+            player.sendMessage(new TextComponentString("Strength sets: "
+                    + (sets.isEmpty() ? "<none installed>" : String.join(", ", sets))));
+            player.sendMessage(new TextComponentString("Active: "
+                    + aaaa0ggmc.ulmodpack.strength.StrengthSets.active()
+                    + " (dir: "
+                    + (aaaa0ggmc.ulmodpack.strength.StrengthSets.activeSetDir() == null
+                            ? "<not installed — using bundled fallback>"
+                            : String.valueOf(aaaa0ggmc.ulmodpack.strength.StrengthSets.activeSetDir()))
+                    + ")"));
+            if (sets.isEmpty()) {
+                player.sendMessage(new TextComponentString(
+                        "Install sets: bash ~/Games/HMCL/scripts/sync-strengths.sh"));
+            }
+            return;
+        }
+        if (sets.isEmpty()) {
+            throw new CommandException("No strength set installed — run: "
+                    + "bash ~/Games/HMCL/scripts/sync-strengths.sh");
+        }
+        if (!aaaa0ggmc.ulmodpack.strength.StrengthSets.setActive(name)) {
+            throw new CommandException("Unknown strength set: " + name
+                    + " (installed: " + String.join(", ", sets) + ")");
+        }
+        aaaa0ggmc.uld.UlStrength.reload();
+        String source = aaaa0ggmc.uld.UlStrength.source("zombie_tide.horde.golem_multiplier");
+        if (source != null && source.startsWith("strengths")) {
+            player.sendMessage(new TextComponentString("Strength set -> " + name
+                    + " (active, values from " + source + ")"));
+        } else {
+            player.sendMessage(new TextComponentString("Strength set -> " + name
+                    + " recorded (config written), but the loader does not read strengths/ yet"
+                    + " — needs ul-strength-design support; effective after that lands."
+                    + " probe source=" + source));
         }
     }
 

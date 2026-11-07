@@ -1,4 +1,7 @@
-# UL Modpack Content Lang (en_US)
+# 数据外置（2026-11-07）：本文件是文案唯一真值源，jar 内 assets/<modid>/lang/ 副本由 processResources 生成（离线兜底）。
+# 运行时覆盖：scripts/sync-texts.sh 把 texts/<modid> 软链进 <gameDir>/resourcepacks/ul-texts/assets/<modid>，该资源包在 options.txt resourcePacks 列表末尾 = 最高优先级。
+# 文件名必须小写（en_us/zh_cn）：MC 1.12.2 的 ResourceLocation 会把 lang 路径强制转小写，大写名在 Linux（大小写敏感）下永远找不到。
+# UL Modpack Content Lang (en_us)
 itemGroup.aaaa0ggmc_ul_modpack=Unlimited Life
 
 # Ankh Amulet
@@ -11,6 +14,8 @@ aaaa0ggmc_ul_modpack.ankh.lore4=§8Zombie-type mobs only. Single use.
 # Advancement
 advancements.aaaa0ggmc_ul_modpack.infected.title=Infected
 advancements.aaaa0ggmc_ul_modpack.infected.description=You were killed by a zombie-type mob and turned into it.
+advancements.aaaa0ggmc_ul_modpack.crying_wolf.title=Crying Wolf
+advancements.aaaa0ggmc_ul_modpack.crying_wolf.description=You declared a tide with nobody in sight.
 
 # Event messages
 aaaa0ggmc_ul_modpack.msg.shatter=The ankh amulet broke.
@@ -52,7 +57,6 @@ ul.horde.recruit.fail.none=No zombies nearby.
 ul.horde.recruit.fail.flesh=You have no rotten flesh.
 ul.horde.launch=They smell the villagers.
 ul.horde.launch.fail.empty=The horde is empty. Recruit first.
-ul.horde.launch.fail.place=Nothing here worth drowning.
 ul.horde.launch.fail.village=No village nearby: needs at least %s living villagers within %s blocks.
 ul.horde.launch.declare=Nobody nearby — you are a failed leader.
 ul.horde.launch.fail.cooldown=The tide is still rising. Wait before launching again.
@@ -77,7 +81,7 @@ ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 
 # Active abilities (morphext ability wheel / status)
 morphext.ability.aaaa0ggmc_ul_modpack.horde_command.name=Horde Command
-morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=Ability wheel: aim at a zombie = recruit (weaken it first and pay rotten flesh at low Persuasion); sneak + aim at a member = kick it out; sneak + look at nothing = launch the tide, or disband the horde if launch conditions are not met; while a tide is running, sneak + look at nothing again = wrap it up. Members glow.
+morphext.ability.aaaa0ggmc_ul_modpack.horde_command.desc=Ability wheel: aim at a zombie to recruit it (weaken it first and pay rotten flesh at low Persuasion); sneak + aim at a member to kick it out; sneak + look at nothing to launch the tide, or to disband the horde if launch conditions are not met; while a tide is running, sneak + look at nothing again to wrap it up. Members glow.
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.name=Ground Slam
 morphext.ability.aaaa0ggmc_ul_modpack.titan_slam.desc=Ability wheel: slam nearby enemies.
 
@@ -89,8 +93,3 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=Tide: active
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=Tide: inactive
 aaaa0ggmc_ul_modpack.status.horde.empty=(the horde is empty)
 aaaa0ggmc_ul_modpack.status.horde.follower=%s (%s/%s)
-
-# Achievements
-aaaa0ggmc_ul_modpack.achievement.unlock=Achievement unlocked: %s
-aaaa0ggmc_ul_modpack.achievement.crying_wolf.name=Crying Wolf
-aaaa0ggmc_ul_modpack.achievement.crying_wolf.desc=You declared a tide with nobody in sight.

@@ -31,12 +31,19 @@ import java.util.UUID;
  * 与新版 Mixin {@code Annotations} 结构不兼容必崩，故改写为 {@code @Inject}
  * （见 {@link MixinEntityCreeper} 注记）。愤怒索敌侧见
  * {@link MixinPigZombieAggressorTarget}。</p>
+ * <p><b>SRG 名约定（2026-11-07 修）</b>：{@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射
+ * 「owner 为已映射 MC 类」的引用——{@code @Shadow} 声明及其在本 mixin 方法体里的引用 owner 是
+ * 本 mixin 类，不在 MC 映射表内。因此 {@code @Shadow} 成员名与上述内部引用<b>必须</b>直接写 SRG 名
+ * （查 {@code reference/mappings-stable39/srg-mcp.srg}），写 MCP 名会原样留在字节码里，运行时
+ * 直接 {@code InvalidMixinException: @Shadow ... was not located}。方法体里对原版成员的引用仍由
+ * reobfJar 重映射，无需手写 SRG。</p>
+ * <p>本类映射：angerTargetUUID = {@code field_175459_bn}。</p>
  */
 @Mixin(value = EntityPigZombie.class, remap = false)
 public abstract class MixinEntityPigZombie {
 
     @Shadow
-    private UUID angerTargetUUID;
+    private UUID field_175459_bn;
 
     @Inject(method = "func_70619_bc()V", at = @At("HEAD"), remap = false)
     private void ulmodpack$restoreNonPlayerRevengeTick(CallbackInfo ci) {
@@ -55,13 +62,13 @@ public abstract class MixinEntityPigZombie {
      */
     private void ulmodpack$restoreNonPlayerRevenge() {
         EntityPigZombie self = (EntityPigZombie) (Object) this;
-        if (this.angerTargetUUID == null || !self.isAngry() || self.getRevengeTarget() != null
+        if (this.field_175459_bn == null || !self.isAngry() || self.getRevengeTarget() != null
                 || self.world == null) {
             return;
         }
         for (Object loaded : self.world.loadedEntityList) {
             Entity candidate = (Entity) loaded;
-            if (candidate != null && this.angerTargetUUID.equals(candidate.getUniqueID())) {
+            if (candidate != null && this.field_175459_bn.equals(candidate.getUniqueID())) {
                 if (candidate instanceof EntityLivingBase && !(candidate instanceof EntityPlayer)) {
                     self.setRevengeTarget((EntityLivingBase) candidate);
                 }

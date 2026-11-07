@@ -47,4 +47,17 @@ public final class ZombieForms {
     public static boolean hasLeadership(EntityPlayerMP player) {
         return SkillRegistry.has(player, ZombieLine.SKILL_HORDE_LEADERSHIP);
     }
+
+    /**
+     * 尸群指挥能力（{@link ZombieLine#ABILITY_COMMAND}）此刻是否被当前形态授予
+     * （2026-11-07 状态页面板显隐判据）：尸群领导技能 + 不死者形态，二者同时满足。
+     *
+     * <p>与服务端释放链的可用性判定同源——{@code HordeAbilities.HordeAbilityHandler}
+     * 对 {@code horde_command} 的 {@code isAvailable} 就是本方法，保证「面板可见
+     * ⟺ 服务端接受释放」。面板显隐只用本判据，不再用「有领导或有随从」兜底：
+     * 后者在取消变形后仍为真（技能持久、随从是世界存档状态），面板会一直挂着。</p>
+     */
+    public static boolean canCommandHorde(EntityPlayerMP player) {
+        return hasLeadership(player) && isUndead(player);
+    }
 }

@@ -35,18 +35,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * （改 attackDragonFrom 调用）；Cleanroom 上 @Redirect 必崩（见
  * {@link MixinEntityCreeper} 注记），改写为 {@code @Inject} 到
  * {@code attackDragonFrom} 本体 HEAD cancel。</p>
+ * <p><b>SRG 名约定（2026-11-07 修）</b>：{@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射
+ * 「owner 为已映射 MC 类」的引用——{@code @Shadow} 声明及其在本 mixin 方法体里的引用 owner 是
+ * 本 mixin 类，不在 MC 映射表内。因此 {@code @Shadow} 成员名与上述内部引用<b>必须</b>直接写 SRG 名
+ * （查 {@code reference/mappings-stable39/srg-mcp.srg}），写 MCP 名会原样留在字节码里，运行时
+ * 直接 {@code InvalidMixinException: @Shadow ... was not located}。方法体里对原版成员的引用仍由
+ * reobfJar 重映射，无需手写 SRG。</p>
+ * <p>本类映射：healingEnderCrystal = {@code field_70992_bH}、dragonPartHead = {@code field_70986_h}、phaseManager = {@code field_184677_bJ}。</p>
  */
 @Mixin(value = EntityDragon.class, remap = false)
 public abstract class MixinEntityDragon {
 
     @Shadow
-    EntityEnderCrystal healingEnderCrystal;
+    EntityEnderCrystal field_70992_bH;
 
     @Shadow
-    MultiPartEntityPart dragonPartHead;
+    MultiPartEntityPart field_70986_h;
 
     @Shadow
-    PhaseManager phaseManager;
+    PhaseManager field_184677_bJ;
 
     /**
      * 伤害受理门：非敌人定向伤害不受理（原版 {@code instanceof EntityPlayer || isExplosion}）。
@@ -91,11 +98,11 @@ public abstract class MixinEntityDragon {
                     self, new net.minecraft.util.math.Vec3d(pos), 64.0D, EntityPlayer.class, null);
         }
 
-        if (crystal == this.healingEnderCrystal) {
+        if (crystal == this.field_70992_bH) {
             self.attackEntityFromPart(
-                    this.dragonPartHead, DamageSource.causeExplosionDamage(blamed), 10.0F);
+                    this.field_70986_h, DamageSource.causeExplosionDamage(blamed), 10.0F);
         }
-        this.phaseManager.getCurrentPhase().onCrystalDestroyed(crystal, pos, source, blamed);
+        this.field_184677_bJ.getCurrentPhase().onCrystalDestroyed(crystal, pos, source, blamed);
         ci.cancel();
     }
 }

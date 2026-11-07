@@ -2,12 +2,14 @@ package aaaa0ggmc.ulmodpack.zombie.titan;
 
 import aaaa0ggmc.morphext.ability.PlayerAbilityData;
 import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
-import aaaa0ggmc.morphext.follower.Followers;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.faction.HateQueries;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
@@ -35,7 +37,8 @@ import java.util.List;
  *  - 挖掘 ×0.5：{@link PlayerEvent.BreakSpeed}；
  *  - 不能睡床：{@link SleepingLocationCheckEvent} DENY（1.12.2 的 PlayerSleepInBedEvent
  *    不可取消，故用可判定结果的睡眠位置检查事件）；
- *  - 震地：半径 4.5、6 伤害、缓慢 II 3 秒、击退、冷却 15 秒、消耗饥饿，不破坏方块。
+ *  - 震地：半径 4.5、伤害 = 当前攻击力 × slam_damage_multiplier（默认 1.5）、
+ *    缓慢 II 3 秒、击退、冷却 15 秒、消耗饥饿，不破坏方块。
  *
  * 全部数值经 {@link UlStrength}（键 zombie_tide.titan.*）。由
  * {@link aaaa0ggmc.ulmodpack.zombie.ZombieLine#register()} 手动注册。
@@ -77,7 +80,8 @@ public final class TitanFormHandler {
 
     /**
      * 震地（泰坦主动能力）：半径内敌人伤害 + 缓慢 + 击退，消耗饥饿，15 秒冷却。
-     * 排除自己与自己的随从；不破坏方块。
+     * 目标过滤走核心「替玩家选作战目标」统一判据（{@code isValidTargetFor}：
+     * 敌意 + 反向盟友 + 随从归属三层），不破坏方块。
      *
      * @return true = 本次已执行；false = 非泰坦形态或冷却中（H7：能力框架据此回执冷却）
      */
@@ -93,7 +97,7 @@ public final class TitanFormHandler {
         }
 
         double radius = UlStrength.num("zombie_tide.titan.slam_radius", 4.5D);
-        float damage = (float) UlStrength.num("zombie_tide.titan.slam_damage", 6.0D);
+        float damage = slamDamage(player);
         int slowTicks = UlStrength.integer("zombie_tide.titan.slam_slow_ticks", 60);
         int slowAmplifier = UlStrength.integer("zombie_tide.titan.slam_slow_amplifier", 1);
         float knockback = (float) UlStrength.num("zombie_tide.titan.slam_knockback", 1.0D);
@@ -103,8 +107,16 @@ public final class TitanFormHandler {
         List<EntityLivingBase> targets = player.world.getEntitiesWithinAABB(EntityLivingBase.class,
                 player.getEntityBoundingBox().grow(radius));
         for (EntityLivingBase target : targets) {
-            if (target == player || Followers.isFollower(target)) {
-                continue; // 不打自己与自己的随从
+            // FVP-16 同型缺陷落在 ul 的一处（审计报告 §2.2 FVP-16 只列了核心
+            // integration/metamorph/vanilla/ 下 5 个 AoE，漏了本处；按同一判据补入）：
+            // 改前只排自己与自己的随从，队友、他人驯服宠物、阵营和平生物都会被卷进
+            // AoE（注释却写「半径内敌人伤害」——文档/实现漂移）。改后走核心统一判据
+            // {@code HateQueries.isValidTargetFor(player, target)}（isEnemy + 反向盟友
+            // + 随从归属三层）：村民/铁傀儡按 undead 阵营判敌（尸潮屠村与守村战不受
+            // 影响），自己的随从/宠物/队友与阵营和平层不再被误伤；无映射生物 MODERATE
+            // 回退判敌，未适配生物不变傻（AGENTS.md 红线）。
+            if (!HateQueries.isValidTargetFor(player, target)) {
+                continue;
             }
             target.attackEntityFrom(source, damage);
             target.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, slowTicks, slowAmplifier, false, true));
@@ -137,5 +149,24 @@ public final class TitanFormHandler {
     /** 震地冷却基数（tick，档位 t2=300t/15s）；H7 执行分支回执用，框架统一套形态策略缩放。 */
     public static int slamCooldownTicks() {
         return UlStrength.cooldownTicks("zombie_tide.titan.slam_cooldown_ticks", "t2", 300);
+    }
+
+    /**
+     * 震地伤害（点）= 玩家<b>当前</b> {@code generic.attackDamage} 属性值 ×
+     * {@code zombie_tide.titan.slam_damage_multiplier}（默认 1.5）。
+     *
+     * <p>口径（2026-11-07）：旧键 {@code slam_damage} 写死 6.0，比泰坦平A（攻击力 20.0，
+     * 见 morph_abilities.json 的 giant.attackDamage）还低，震地等于自残式削弱。改为从攻击力
+     * 派生后与平A/武器/力量药水/属性加成同源，倍率 1.5 = 泰坦 20 → 30 点（较平A +50%，
+     * 明显更高但不至于一击清场；范围目标各自结算，仍受护甲减免与既有击退/缓慢/饥饿/冷却
+     * 代价约束）。取「当前值」而非基础值，玩家侧加成全部跟随。</p>
+     *
+     * <p>属性实例缺失（理论不可达：玩家属性表必有该项）时按空手 1.0 兜底，不抛异常。</p>
+     */
+    public static float slamDamage(EntityPlayerMP player) {
+        IAttributeInstance attack = player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        double current = attack == null ? 1.0D : attack.getAttributeValue();
+        double multiplier = UlStrength.num("zombie_tide.titan.slam_damage_multiplier", 1.5D);
+        return (float) (current * multiplier);
     }
 }

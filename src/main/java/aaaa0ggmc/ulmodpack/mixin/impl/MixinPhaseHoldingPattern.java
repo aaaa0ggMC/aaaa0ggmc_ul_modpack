@@ -28,33 +28,40 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * <p>实现：{@code @Inject HEAD cancel} + 方法体复刻（唯一改动为查询行）。
  * 复刻体对 MCP 名的引用经 reobfJar 重映射；{@code @Shadow} 私有方法/字段同机制。
  * 兼容性注记见 {@link MixinEntityCreeper}（Cleanroom 禁用 @Redirect）。</p>
+ * <p><b>SRG 名约定（2026-11-07 修）</b>：{@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射
+ * 「owner 为已映射 MC 类」的引用——{@code @Shadow} 声明及其在本 mixin 方法体里的引用 owner 是
+ * 本 mixin 类，不在 MC 映射表内。因此 {@code @Shadow} 成员名与上述内部引用<b>必须</b>直接写 SRG 名
+ * （查 {@code reference/mappings-stable39/srg-mcp.srg}），写 MCP 名会原样留在字节码里，运行时
+ * 直接 {@code InvalidMixinException: @Shadow ... was not located}。方法体里对原版成员的引用仍由
+ * reobfJar 重映射，无需手写 SRG。</p>
+ * <p>本类映射：currentPath = {@code field_188677_b}、clockwise = {@code field_188679_d}、strafePlayer = {@code func_188674_a}、navigateToNextPathNode = {@code func_188676_k}。</p>
  */
 @Mixin(targets = "net.minecraft.entity.boss.dragon.phase.PhaseHoldingPattern", remap = false)
 public abstract class MixinPhaseHoldingPattern extends PhaseBase {
 
     @Shadow
-    private Path currentPath;
+    private Path field_188677_b;
 
     @Shadow
-    private boolean clockwise;
+    private boolean field_188679_d;
 
     protected MixinPhaseHoldingPattern(EntityDragon dragon) {
         super(dragon);
     }
 
     @Shadow
-    private void strafePlayer(EntityPlayer player) {
+    private void func_188674_a(EntityPlayer player) {
         throw new AssertionError("mixin shadow");
     }
 
     @Shadow
-    private void navigateToNextPathNode() {
+    private void func_188676_k() {
         throw new AssertionError("mixin shadow");
     }
 
     @Inject(method = "func_188675_j()V", at = @At("HEAD"), cancellable = true, remap = false)
     private void ulmodpack$flyTowardEnemyPlayers(CallbackInfo ci) {
-        if (this.currentPath != null && this.currentPath.isFinished()) {
+        if (this.field_188677_b != null && this.field_188677_b.isFinished()) {
             BlockPos podium = this.dragon.world
                     .getTopSolidOrLiquidBlock(new BlockPos(WorldGenEndPodium.END_PODIUM_LOCATION));
             int crystals = this.dragon.getFightManager() == null
@@ -75,21 +82,21 @@ public abstract class MixinPhaseHoldingPattern extends PhaseBase {
 
             if (enemy != null && (this.dragon.getRNG().nextInt(MathHelper.abs((int) distFactor) + 2) == 0
                     || this.dragon.getRNG().nextInt(crystals + 2) == 0)) {
-                this.strafePlayer(enemy);
+                this.func_188674_a(enemy);
                 ci.cancel();
                 return;
             }
         }
 
-        if (this.currentPath == null || this.currentPath.isFinished()) {
+        if (this.field_188677_b == null || this.field_188677_b.isFinished()) {
             int startIdx = this.dragon.initPathPoints();
             int targetIdx = startIdx;
             if (this.dragon.getRNG().nextInt(8) == 0) {
-                this.clockwise = !this.clockwise;
+                this.field_188679_d = !this.field_188679_d;
                 targetIdx = startIdx + 6;
             }
 
-            if (this.clockwise) {
+            if (this.field_188679_d) {
                 targetIdx++;
             } else {
                 targetIdx--;
@@ -107,13 +114,13 @@ public abstract class MixinPhaseHoldingPattern extends PhaseBase {
                 targetIdx += 12;
             }
 
-            this.currentPath = this.dragon.findPath(startIdx, targetIdx, null);
-            if (this.currentPath != null) {
-                this.currentPath.incrementPathIndex();
+            this.field_188677_b = this.dragon.findPath(startIdx, targetIdx, null);
+            if (this.field_188677_b != null) {
+                this.field_188677_b.incrementPathIndex();
             }
         }
 
-        this.navigateToNextPathNode();
+        this.func_188676_k();
         ci.cancel();
     }
 }

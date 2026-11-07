@@ -17,8 +17,16 @@ import java.util.List;
  * {@code FollowerStatusSection}。专用服务器不加载本类——服务端代码只经
  * {@code CommonProxy.onHordeSnapshot} 空实现中转。
  *
+ * <p><b>降级为纯网络镜像（2026-11-07）</b>：队员列表的权威状态是服务端世界存档
+ * （{@code Followers/FollowerRegistry} 的 owner NBT + {@code HordeState}），客户端拿不到
+ * 也不该拿；分节显隐的权威是「{@code horde_command} 能力是否被当前形态授予」
+ * （服务端 {@code ZombieForms.canCommandHorde}，与释放链 {@code isAvailable} 同源）。
+ * 因此本缓存<b>只做 S2C 快照缓存、不做任何状态判定</b>：不重算显隐、不推断队伍关系、
+ * 不维护第二份权威；{@link Snapshot#granted} 就是服务端判定的逐字镜像，显隐判据随
+ * 服务端单点修改（此前缓存放的 {@code hasHorde = 有领导或有随从} 已删除）。</p>
+ *
  * 数据由服务端 {@code HordeManager.teamJson} 生成、经 {@code HordeNetwork} 的
- * S2C {@code TeamMessage} 推送：说服度 / 队伍上限 / 尸潮状态 / 随从列表。
+ * S2C {@code TeamMessage} 推送：能力授予标志 / 说服度 / 队伍上限 / 尸潮状态 / 随从列表。
  */
 public final class HordeTeamCache {
 
@@ -44,15 +52,19 @@ public final class HordeTeamCache {
         public final int persuasion;
         public final int cap;
         public final boolean tideActive;
-        /** 有尸群领导或有随从——状态页分节显隐标志。 */
-        public final boolean hasHorde;
+        /**
+         * {@code horde_command} 能力是否被当前形态授予（服务端判定，逐字镜像）：
+         * true = 状态页「尸群队伍」分节显示（哪怕没有随从），false = 整个分节不显示。
+         * 判据见服务端 {@code ZombieForms.canCommandHorde}；本缓存不重新判定。
+         */
+        public final boolean granted;
         public final List<Follower> followers;
 
-        Snapshot(int persuasion, int cap, boolean tideActive, boolean hasHorde, List<Follower> followers) {
+        Snapshot(int persuasion, int cap, boolean tideActive, boolean granted, List<Follower> followers) {
             this.persuasion = persuasion;
             this.cap = cap;
             this.tideActive = tideActive;
-            this.hasHorde = hasHorde;
+            this.granted = granted;
             this.followers = Collections.unmodifiableList(followers);
         }
     }
@@ -75,7 +87,7 @@ public final class HordeTeamCache {
             int persuasion = root.has("persuasion") ? root.get("persuasion").getAsInt() : 0;
             int cap = root.has("cap") ? root.get("cap").getAsInt() : 0;
             boolean tideActive = root.has("tideActive") && root.get("tideActive").getAsBoolean();
-            boolean hasHorde = root.has("hasHorde") && root.get("hasHorde").getAsBoolean();
+            boolean granted = root.has("granted") && root.get("granted").getAsBoolean();
             List<Follower> followers = new ArrayList<>();
             if (root.has("followers")) {
                 JsonArray arr = root.getAsJsonArray("followers");
@@ -89,7 +101,7 @@ public final class HordeTeamCache {
                             e.has("maxHealth") ? e.get("maxHealth").getAsDouble() : 0.0D));
                 }
             }
-            current = new Snapshot(persuasion, cap, tideActive, hasHorde, followers);
+            current = new Snapshot(persuasion, cap, tideActive, granted, followers);
         } catch (RuntimeException bad) {
             // 服务端数据异常时不覆盖旧缓存，静默保留上一帧
         }

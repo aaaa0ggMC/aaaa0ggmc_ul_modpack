@@ -8,6 +8,7 @@ import aaaa0ggmc.morphext.network.AbilityNetwork;
 import aaaa0ggmc.morphext.render.Outlines;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.faction.HateQueries;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
@@ -31,6 +32,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.Village;
 import net.minecraft.village.VillageCollection;
 import net.minecraft.server.MinecraftServer;
@@ -335,7 +337,11 @@ public final class HordeManager {
         if (!entry.active && canLead && followers > 0 && village != null) {
             // 发动冷却（固定 30 秒）：是节流不是「发动条件」，冷却中不触发解散语义
             if (onCooldown(player, ZombieLine.ABILITY_LAUNCH)) {
-                action(player, "ul.horde.launch.fail.cooldown");
+                // 双提示去重（2026-11-07）：冷却拒绝由能力框架回执 COOLDOWN，客户端只显示
+                // 「冷却中：%ss」一条；这里再自发「潮水还在涨」就是第二条（招募冷却分支同口径，
+                // 见 tryRecruitAt 只回剩余 tick、不发文案）。演示脚本入口 onAirUse 没有框架
+                // 回执，仍自发文案。
+                logAction(player, "ul.horde.launch.fail.cooldown");
                 return PlayerAbilityStore.get(player)
                         .getCooldown(ZombieLine.ABILITY_LAUNCH, PlayerAbilityStore.now(player));
             }
@@ -560,33 +566,36 @@ public final class HordeManager {
      * 尸潮作战指令：随从僵尸跟随 AI 只跟随不作战（实体 AI 优先级被跟随任务占着），
      * 每轮给它们指派最近的活村民为攻击目标——「带队屠村」的作战语义在这里。
      * 铁傀儡会还击随从（原版守村 AI），随从被铁傀儡打死掉热忱的腐肉。
+     *
+     * <p><b>FVP-33（R2 类名选敌 + R5 自行 setAttackTarget）</b>：改前按
+     * {@code EntityVillager.class} 硬编码「最近村民」并直接 {@code setAttackTarget}，
+     * 与核心 {@code faction_relations.json} 已声明的 {@code undead→villager ENEMY}
+     * 构成双真相——代码自带第二份敌我裁决，图若改口（如未来声明和解）代码不跟随。
+     * 改后选目标走 {@link HateQueries#findNearestEnemy}（内部过 {@code isEnemy}
+     * 阵营图裁决）：候选范围仍是尸潮指定作战对象（村民 = 入侵目标，这是玩法范围
+     * 不是敌我裁决），「能不能打、打哪只」由图决定。今日图判 ENEMY，选中的村民与
+     * 改前的「村庄中心 16 格内最近活村民」逐字节一致，行为不退化；图判非敌时返回
+     * {@code null}，不指派（关系单一真值 = 图）。
+     * 锚点用村庄中心而非随从自身：保留「全队集火同一目标、远处随从也向村庄集结」
+     * 的屠村语义（{@code findNearestEnemy} 的 self 只参与敌意判定，扫描中心是锚点）。
      */
     private static void commandFollowers(EntityPlayerMP owner, HordeState.Entry entry) {
         World world = owner.world;
-        EntityVillager target = null;
-        double best = Double.MAX_VALUE;
-        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
-                new AxisAlignedBB(entry.villageCenter).grow(16.0D))) {
-            if (v.isDead) {
-                continue;
-            }
-            double d = v.getDistanceSq(entry.villageCenter);
-            if (d < best) {
-                best = d;
-                target = v;
-            }
-        }
-        if (target == null) {
-            return;
-        }
         for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
                 owner.getEntityBoundingBox().grow(64.0D))) {
             // 只指派自己的随从（L7 owner 过滤）：他人随从不得被拉去打村民
-            if (isZombieFamily(entity) && Followers.isFollowerOf(entity, owner.getUniqueID())) {
-                EntityLiving z = (EntityLiving) entity;
-                if (z.getAttackTarget() == null || z.getAttackTarget().isDead) {
-                    z.setAttackTarget(target);
-                }
+            if (!isZombieFamily(entity) || !Followers.isFollowerOf(entity, owner.getUniqueID())) {
+                continue;
+            }
+            EntityLiving z = (EntityLiving) entity;
+            if (z.getAttackTarget() != null && !z.getAttackTarget().isDead) {
+                continue; // 已有活目标不重指（与改前同口径）
+            }
+            // FVP-33：敌人选择改问阵营图（村民只是候选，许不许可由图裁决）
+            EntityVillager target = HateQueries.findNearestEnemy(z, new Vec3d(entry.villageCenter),
+                    16.0D, EntityVillager.class, null);
+            if (target != null) {
+                z.setAttackTarget(target);
             }
         }
     }
@@ -1238,8 +1247,12 @@ public final class HordeManager {
         root.addProperty("persuasion", persuasion);
         root.addProperty("cap", Persuasion.followCap(persuasion));
         root.addProperty("tideActive", isTideActive(player));
-        // 状态页分节显隐：有尸群领导或有随从才展示（避免无关玩家被刷屏）
-        root.addProperty("hasHorde", ZombieForms.hasLeadership(player) || !members.isEmpty());
+        // 状态页分节显隐判据（2026-11-07 改）：只看 horde_command 能力是否被当前形态授予
+        // （ZombieForms.canCommandHorde = 尸群领导技能 + 不死者形态，与服务端释放链的
+        // isAvailable 同源），不再用「有领导或有随从」兜底——技能是持久资产、随从是世界
+        // 存档状态，取消变形后旧判据仍为真，面板会一直挂着。
+        // 权威在服务端：客户端 HordeTeamCache 只做 S2C 快照镜像，不自行判定。
+        root.addProperty("granted", ZombieForms.canCommandHorde(player));
         JsonArray followers = new JsonArray();
         int listed = 0;
         for (EntityLiving f : members) {
@@ -1374,6 +1387,19 @@ public final class HordeManager {
         org.apache.logging.log4j.LogManager.getLogger("ulmodpack")
                 .info("[horde] action: " + key + (args.length > 0 ? " " + java.util.Arrays.toString(args) : ""));
         player.sendStatusMessage(new TextComponentTranslation(key, args), true);
+    }
+
+    /**
+     * 只留服务端日志、不发玩家消息（2026-11-07 双提示去重）：
+     * 能力释放链的拒绝分支改走 {@code ActivationResult.locked(reason)}，由 morphext 客户端
+     * 用 reason 的 i18n 键在 Actionbar 渲染<b>唯一一条</b>提示；服务端若再自发一条文案，
+     * 玩家会同时看到两条（如「要对着一只僵尸。」+「当前形态无法使用该能力」）。
+     * 本方法保留原来的日志留痕，不产生任何玩家可见消息。
+     */
+    public static void logAction(EntityPlayerMP player, String key, Object... args) {
+        org.apache.logging.log4j.LogManager.getLogger("ulmodpack")
+                .info("[horde] action: {} [{}]{}", key, player.getName(),
+                        args.length > 0 ? " " + java.util.Arrays.toString(args) : "");
     }
 
     private static void chat(EntityPlayerMP player, String key, Object... args) {

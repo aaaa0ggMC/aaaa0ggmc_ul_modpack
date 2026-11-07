@@ -22,12 +22,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * <p>原判定：两处 {@code getNearestAttackablePlayer(龙, 20/10 与 150/150)}（以龙为中心）。
  * 新判定：{@code HateQueries.findNearestEnemy}（self 中心版）——只把敌人玩家当扫描信号。
  * 视角追踪、随机偏航与阶段切换逐行保持原版。兼容性注记见 {@link MixinEntityCreeper}。</p>
+ * <p><b>SRG 名约定（2026-11-07 修）</b>：{@code remap = false} 时 refmap 不参与，而 reobfJar 只重映射
+ * 「owner 为已映射 MC 类」的引用——{@code @Shadow} 声明及其在本 mixin 方法体里的引用 owner 是
+ * 本 mixin 类，不在 MC 映射表内。因此 {@code @Shadow} 成员名与上述内部引用<b>必须</b>直接写 SRG 名
+ * （查 {@code reference/mappings-stable39/srg-mcp.srg}），写 MCP 名会原样留在字节码里，运行时
+ * 直接 {@code InvalidMixinException: @Shadow ... was not located}。方法体里对原版成员的引用仍由
+ * reobfJar 重映射，无需手写 SRG。</p>
+ * <p>本类映射：scanningTime = {@code field_188667_b}。</p>
  */
 @Mixin(targets = "net.minecraft.entity.boss.dragon.phase.PhaseSittingScanning", remap = false)
 public abstract class MixinPhaseSittingScanning extends PhaseBase {
 
     @Shadow
-    private int scanningTime;
+    private int field_188667_b;
 
     protected MixinPhaseSittingScanning(EntityDragon dragon) {
         super(dragon);
@@ -35,11 +42,11 @@ public abstract class MixinPhaseSittingScanning extends PhaseBase {
 
     @Inject(method = "func_188659_c()V", at = @At("HEAD"), cancellable = true, remap = false)
     private void ulmodpack$scanForEnemyPlayers(CallbackInfo ci) {
-        this.scanningTime++;
+        this.field_188667_b++;
         // §G3 self 中心找敌：只把敌人玩家当扫描信号
         EntityLivingBase found = HateQueries.findNearestEnemy(this.dragon, 20.0D, EntityPlayer.class, null);
         if (found != null) {
-            if (this.scanningTime > 25) {
+            if (this.field_188667_b > 25) {
                 this.dragon.getPhaseManager().setPhase(PhaseList.SITTING_ATTACKING);
             } else {
                 Vec3d toward = new Vec3d(
@@ -70,7 +77,7 @@ public abstract class MixinPhaseSittingScanning extends PhaseBase {
                     this.dragon.rotationYaw = this.dragon.rotationYaw + this.dragon.randomYawVelocity;
                 }
             }
-        } else if (this.scanningTime >= 100) {
+        } else if (this.field_188667_b >= 100) {
             EntityLivingBase far = HateQueries.findNearestEnemy(this.dragon, 150.0D, EntityPlayer.class, null);
             this.dragon.getPhaseManager().setPhase(PhaseList.TAKEOFF);
             if (far != null) {
