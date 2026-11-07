@@ -53,6 +53,8 @@ ul.horde.recruit.fail.flesh=You have no rotten flesh.
 ul.horde.launch=They smell the villagers.
 ul.horde.launch.fail.empty=The horde is empty. Recruit first.
 ul.horde.launch.fail.place=Nothing here worth drowning.
+ul.horde.launch.fail.village=No village nearby: needs at least %s living villagers within %s blocks.
+ul.horde.launch.declare=Nobody nearby — you are a failed leader.
 ul.horde.launch.fail.cooldown=The tide is still rising. Wait before launching again.
 ul.horde.launch.fail.active=The tide hasn't receded yet.
 ul.horde.release=The horde scattered.
@@ -60,13 +62,13 @@ ul.horde.disband=The horde disbanded.
 ul.horde.disband.none=You have no horde to disband.
 ul.horde.kick=%s was kicked out of the horde.
 ul.horde.command.fail.member=It is not in your horde.
-ul.horde.win=The village is quiet.
+ul.horde.win=Tide won — every living villager is gone.
 ul.horde.fail=You died. The tide receded.
 ul.horde.abort=You went too far. The tide scattered.
 
 # Titan
 ul.titan.feast.fail.skill=The dead don't listen to you yet.
-ul.titan.feast.fail.tide=Lead them through a village first.
+ul.zealous_flesh.fail.leader=Nothing happens — you are a bad leader now.
 ul.titan.feast.fail.room=There's no room for a titan here.
 ul.titan.feast.fail.form=You are not one of the undead.
 ul.titan.feast.ok=You grew tall.
@@ -87,3 +89,8 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=Tide: active
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=Tide: inactive
 aaaa0ggmc_ul_modpack.status.horde.empty=(the horde is empty)
 aaaa0ggmc_ul_modpack.status.horde.follower=%s (%s/%s)
+
+# Achievements
+aaaa0ggmc_ul_modpack.achievement.unlock=Achievement unlocked: %s
+aaaa0ggmc_ul_modpack.achievement.crying_wolf.name=Crying Wolf
+aaaa0ggmc_ul_modpack.achievement.crying_wolf.desc=You declared a tide with nobody in sight.

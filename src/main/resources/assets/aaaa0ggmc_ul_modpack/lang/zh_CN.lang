@@ -53,6 +53,8 @@ ul.horde.recruit.fail.flesh=你手里没有腐肉。
 ul.horde.launch=它们闻到村民了。
 ul.horde.launch.fail.empty=队伍是空的。先去招募。
 ul.horde.launch.fail.place=这里没有值得淹的地方。
+ul.horde.launch.fail.village=附近没有村庄：需要 %s 格内至少 %s 个活村民。
+ul.horde.launch.declare=附近没有人——你是一个失败的领导者。
 ul.horde.launch.fail.cooldown=潮水还在涨。缓一缓再发动。
 ul.horde.launch.fail.active=潮水还没退。
 ul.horde.release=队伍散了。
@@ -60,13 +62,13 @@ ul.horde.disband=队伍解散了。
 ul.horde.disband.none=你没有队伍。
 ul.horde.kick=%s 被踢出了队伍。
 ul.horde.command.fail.member=它不在你的队伍里。
-ul.horde.win=村庄安静了。
+ul.horde.win=尸潮胜利：活村民已被全部肃清。
 ul.horde.fail=你死了。潮水退了。
 ul.horde.abort=你走得太远了。潮水散了。
 
 # 泰坦
 ul.titan.feast.fail.skill=死者还不想听你的。
-ul.titan.feast.fail.tide=先带它们屠一次村。
+ul.zealous_flesh.fail.leader=什么都没有发生——你现在还不是合格的领袖。
 ul.titan.feast.fail.room=这里放不下泰坦。
 ul.titan.feast.fail.form=你现在不是不死者。
 ul.titan.feast.ok=你长高了。
@@ -87,3 +89,8 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=尸潮：进行中
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=尸潮：未发动
 aaaa0ggmc_ul_modpack.status.horde.empty=（队伍是空的）
 aaaa0ggmc_ul_modpack.status.horde.follower=%s（%s/%s）
+
+# 成就
+aaaa0ggmc_ul_modpack.achievement.unlock=成就解锁：%s
+aaaa0ggmc_ul_modpack.achievement.crying_wolf.name=狼来了
+aaaa0ggmc_ul_modpack.achievement.crying_wolf.desc=你宣告了一次没有目标的尸潮。

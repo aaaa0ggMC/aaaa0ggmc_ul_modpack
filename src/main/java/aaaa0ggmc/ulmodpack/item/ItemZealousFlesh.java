@@ -80,6 +80,13 @@ public class ItemZealousFlesh extends Item {
     public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entity) {
         if (!world.isRemote && entity instanceof EntityPlayerMP) {
             EntityPlayerMP player = (EntityPlayerMP) entity;
+            // 服务端权威复核：右键预检与进食完成之间状态可能变化（且防绕过预检的进食路径），
+            // 未满足（含未确认尸潮成功）→ 什么都不会发生、不消耗、不变身
+            String failure = TitanFeast.checkFailure(player);
+            if (failure != null) {
+                player.sendStatusMessage(new TextComponentTranslation(failure), true);
+                return stack;
+            }
             if (!player.capabilities.isCreativeMode) {
                 stack.shrink(1); // 消耗 1 个
             }

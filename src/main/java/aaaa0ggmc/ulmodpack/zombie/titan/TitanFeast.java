@@ -36,8 +36,10 @@ public final class TitanFeast {
         if (!ZombieForms.hasLeadership(player)) {
             return "ul.titan.feast.fail.skill";
         }
-        if (HordeManager.tidesCleared(player) < 1) {
-            return "ul.titan.feast.fail.tide";
+        // 门槛（2026-11-07 用户反馈）：食用条件校验尸潮状态的 tide_success 时间戳——
+        // 未确认过尸潮成功（「坏领袖」）吃下毫无变化。
+        if (!HordeManager.hasTideSuccess(player)) {
+            return "ul.zealous_flesh.fail.leader";
         }
         if (!hasHeadroom(player)) {
             return "ul.titan.feast.fail.room";

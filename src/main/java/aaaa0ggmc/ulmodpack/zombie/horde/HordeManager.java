@@ -5,6 +5,7 @@ import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
 import aaaa0ggmc.morphext.follower.Followers;
 import aaaa0ggmc.morphext.follower.TimedSummons;
 import aaaa0ggmc.morphext.network.AbilityNetwork;
+import aaaa0ggmc.morphext.render.Outlines;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
@@ -25,10 +26,8 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.init.Items;
-import net.minecraft.init.MobEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -56,9 +55,11 @@ import java.util.UUID;
  * 条件/上限/随从倍率；不要求夜晚与移动）→ 踢出单个队员（release 单体版）→
  * 发动/解散（32 格内活村民 ≥4 的村庄进入屠村，条件不足则解散）→ tick（每 20 tick：
  * 刷铁傀儡、判成功/中止）→ 收尾（成功 count+1、说服度 ±、随从散开）。玩家死亡=
- * 失败（见 onLivingDeath，即使被仪式接住）。队伍随从常驻描边（原版发光效果）：
- * 每 20 tick 给队员刷新 {@link MobEffects#GLOWING}（时长 50 tick），入队即时挂
- * （{@link #syncTeam} 顺带刷新），离队/踢出/解散不反向清除、靠效果自然过期。
+ * 失败（见 onLivingDeath，即使被仪式接住）。队伍随从常驻<b>白色描边</b>
+ * （核心 {@link Outlines}：team 前缀定色 + 短时长 GLOWING 触发原版 outline 路径）：
+ * 每 20 tick 给队员刷新，入队即时挂（{@link #syncTeam} 顺带刷新），
+ * 离队/踢出/解散由 {@link Outlines#clear} 反向解除（team 归属必须显式清，
+ * 否则名字板会被 team 的 NEVER 规则永久藏掉）。
  *
  * 全部数值经 {@link UlStrength}（键 zombie_tide.horde.*），兜底默认与 defaults.json /
  * 模组 ul_strength/zombie_tide.json 一致。只存 UUID 与坐标（{@link HordeState}），
@@ -73,6 +74,12 @@ public final class HordeManager {
 
     /** M6：尸潮召唤铁傀儡的归属标记（值=主人 UUID 字符串；收尾按标记清理）。 */
     private static final String TAG_TIDE_GOLEM = "ulTideGolem";
+
+    /**
+     * M11：入侵村民标记（值=主人 UUID 字符串）。标记范围/持续时间与尸潮生命周期
+     * 一致：tick 内续标，收尾清理（含未加载村民的重载惰性清理）。
+     */
+    private static final String TAG_TIDE_INVADED = "ulTideInvaded";
 
     /**
      * 常规村庄铁傀儡存活上限（村落线流言/恐吓基线，设计文档「尸潮.md」：常规 15 秒
@@ -307,7 +314,10 @@ public final class HordeManager {
     /**
      * 潜行 + 无目标（{@code horde_command}，2026-11-07 合并语义）：尝试发动尸潮；
      * 不满足发动条件 → 解散当前队伍（原 launch 失败则 release 的合并语义）。
-     * 发动条件 = 尸群领导 + 不死者形态 + 有随从 + 32 格内有效村庄 + 无进行中的尸潮；
+     * 发动条件 = 尸群领导 + 不死者形态 + 有随从 + <b>附近活村民 ≥ village_min_villagers</b>
+     * （半径 village_radius 内已加载活村民计数，<b>不要求村庄结构</b>，荒郊野外可发动）+
+     * 无进行中的尸潮。村民不足走「失败宣告」（提示 + 解散 + 指数衰减扣声望 + 解锁
+     * 「狼来了」成就），不是静默拦截。
      * 不满足（含已在进行中、发动不能）一律 {@link #disband}——「解散当前队伍，
      * 进行中的尸潮一并收尾」。
      *
@@ -332,6 +342,24 @@ public final class HordeManager {
             launch(player, entry, state, village);
             return 0;
         }
+        // 发动条件不满足 → 仍按合并语义解散，但给出具体原因（2026-11-07 用户实测：
+        // 旧文案只报泛化的「队伍解散了」，玩家完全看不出缺什么条件）
+        if (!entry.active) {
+            if (!canLead) {
+                disband(player, ZombieForms.hasLeadership(player)
+                        ? "ul.horde.fail.form" : "ul.horde.fail.skill");
+            } else if (followers <= 0) {
+                disband(player, "ul.horde.launch.fail.empty");
+            } else {
+                // 失败宣告（2026-11-07 口径最终版）：附近活村民 < village_min_villagers
+                // 不是静默拦截——明确宣言 + 解散队伍 + 指数衰减扣声望（累计上限 40/20）+ 解锁「狼来了」
+                Persuasion.addFailureDecay(player);
+                aaaa0ggmc.ulmodpack.achievement.Achievements.unlock(
+                        player, aaaa0ggmc.ulmodpack.achievement.Achievements.CRYING_WOLF);
+                disband(player, "ul.horde.launch.declare");
+            }
+            return 0;
+        }
         disband(player);
         return 0;
     }
@@ -343,7 +371,7 @@ public final class HordeManager {
 
     /**
      * 踢出单个队员（潜行 + 队员目标，原 release 的单体版）：解除随从关系与说服度
-     * 属性打折。描边发光不反向清除，靠效果自然过期（见类注释的取舍）。
+     * 属性打折，并解除白色描边（{@link Outlines#clear}）。
      */
     public static void kickFollower(EntityPlayerMP player, EntityLivingBase member) {
         if (!isTeamMember(player, member)) {
@@ -416,6 +444,7 @@ public final class HordeManager {
         entry.abortSinceTick = 0L;
         state.put(player.getUniqueID(), entry);
         setCooldown(player, ZombieLine.ABILITY_LAUNCH, launchCooldownTicks());
+        Persuasion.resetFailStreak(player); // 发动成功即清「狼来了」连击
         action(player, "ul.horde.launch");
     }
 
@@ -433,6 +462,15 @@ public final class HordeManager {
      * 进行中的尸潮一并收尾（同「中止」不扣说服度）。
      */
     public static void disband(EntityPlayerMP player) {
+        disband(player, null);
+    }
+
+    /**
+     * 解散（可带明确失败原因）：{@code reasonKey} 非空时用原因文案替代泛化的
+     * 「队伍解散了」——发动失败时可操作的信息（缺什么条件）优先于解散本身
+     * （「失败即解散」是 §6.4 的合并语义，玩家侧见任务书说明）。
+     */
+    private static void disband(EntityPlayerMP player, String reasonKey, Object... reasonArgs) {
         HordeState state = HordeState.get(player.world);
         HordeState.Entry entry = state.get(player.getUniqueID());
         int before = countFollowers(player);
@@ -446,7 +484,9 @@ public final class HordeManager {
                 state.remove(player.getUniqueID());
             }
         }
-        if (endedTide || before > 0) {
+        if (reasonKey != null) {
+            action(player, reasonKey, reasonArgs);
+        } else if (endedTide || before > 0) {
             action(player, "ul.horde.disband");
         } else {
             action(player, "ul.horde.disband.none");
@@ -465,6 +505,7 @@ public final class HordeManager {
         if (interval <= 0 || world.getTotalWorldTime() % (long) interval != 0) {
             return;
         }
+        sweepStaleOutlines(world);
         HordeState state = HordeState.get(world);
         // 快照遍历，避免遍历中修改
         List<Map.Entry<UUID, HordeState.Entry>> snapshot = new ArrayList<>();
@@ -484,17 +525,23 @@ public final class HordeManager {
 
             maybeSpawnGolem(world, owner, entry);
             commandFollowers(owner, entry);
+            markInvadedVillagers(world, owner, entry);
 
-            // 成功：活村民清零
-            if (countVillagers(world, entry.villageCenter) <= 0) {
-                succeed(owner, entry, state);
-                continue;
-            }
-            // 中止：远离村庄超过阈值持续 abort_ticks
+            // 中止口径先算（成功判定要用）：玩家远离村庄 = 走中止语义，不判成功
             double abortDist = UlStrength.num("zombie_tide.horde.abort_distance", 48.0D);
             long abortTicks = (long) UlStrength.num("zombie_tide.horde.abort_ticks", 600.0D);
             boolean far = owner.world != world
                     || owner.getDistanceSq(entry.villageCenter) > abortDist * abortDist;
+
+            // 成功：活村民清零。防假胜利（2026-11-07 用户实测「0 村民出现胜利文案」）：
+            // 村民未加载 ≠ 被肃清，必须村庄中心区块已加载；且玩家在场（非远离状态）
+            // 才判成功——否则旧会话/走远后未加载的村庄会被直接判成胜利。
+            if (!far && world.isBlockLoaded(entry.villageCenter)
+                    && countVillagers(world, entry.villageCenter) <= 0) {
+                succeed(owner, entry, state);
+                continue;
+            }
+            // 中止：远离村庄超过阈值持续 abort_ticks
             if (far) {
                 if (entry.abortSinceTick == 0L) {
                     entry.abortSinceTick = world.getTotalWorldTime();
@@ -614,9 +661,125 @@ public final class HordeManager {
         return removed;
     }
 
+    // ============================================================ 入侵村民标记（M11，白色描边）
+
+    /**
+     * 尸潮 active 期间给入侵范围内的村民续挂「入侵标记」（NBT {@link #TAG_TIDE_INVADED}，
+     * 值=主人 UUID）。范围 = 成功判定口径（村庄中心 villager_count_radius 内的活村民），
+     * 持续时间与尸潮生命周期一致：tick 每拍续标，{@link #endTide} / 重载惰性清理收尾。
+     *
+     * <p>描边走核心统一 API {@link Outlines#mark}（默认<b>白色</b>：team 前缀定色 +
+     * 短时长 GLOWING 触发原版 outline 渲染路径）。幂等，每拍重复调用不重复建 team。</p>
+     */
+    private static void markInvadedVillagers(World world, EntityPlayerMP owner, HordeState.Entry entry) {
+        String ownerId = owner.getUniqueID().toString();
+        double r = UlStrength.num("zombie_tide.horde.villager_count_radius", 48.0D);
+        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
+                new AxisAlignedBB(entry.villageCenter).grow(r))) {
+            if (v.isDead) {
+                continue;
+            }
+            if (!ownerId.equals(v.getEntityData().getString(TAG_TIDE_INVADED))) {
+                v.getEntityData().setString(TAG_TIDE_INVADED, ownerId);
+            }
+            Outlines.mark(v);
+        }
+    }
+
+    /**
+     * 收尾清理：移除本场入侵标记 + 白色描边（跨维度扫描已加载村民；未加载的由
+     * {@link #clearStaleInvadeMark} 在村民重载时惰性清理）。
+     */
+    private static void clearInvadedVillagers(EntityPlayerMP player) {
+        if (player == null || player.server == null) {
+            return;
+        }
+        String ownerId = player.getUniqueID().toString();
+        for (WorldServer world : player.server.worlds) {
+            for (Entity entity : new ArrayList<>(world.loadedEntityList)) {
+                if (entity instanceof EntityVillager
+                        && ownerId.equals(entity.getEntityData().getString(TAG_TIDE_INVADED))) {
+                    entity.getEntityData().removeTag(TAG_TIDE_INVADED);
+                    Outlines.clear(entity);
+                }
+            }
+        }
+    }
+
+    /**
+     * 村民重载时的惰性清理：入侵标记只在尸潮生命周期内有效。主人的会话已结束
+     * （条目不存在/非 active）则补清标记与描边，防止存档残留标记。
+     */
+    public static void clearStaleInvadeMark(EntityVillager villager) {
+        String ownerId = villager.getEntityData().getString(TAG_TIDE_INVADED);
+        if (ownerId.isEmpty()) {
+            return;
+        }
+        UUID owner;
+        try {
+            owner = UUID.fromString(ownerId);
+        } catch (IllegalArgumentException corrupt) {
+            villager.getEntityData().removeTag(TAG_TIDE_INVADED);
+            return;
+        }
+        HordeState.Entry entry = HordeState.get(villager.world).get(owner);
+        if (entry != null && entry.active) {
+            return; // 尸潮进行中：保留标记（tick 会续挂描边）
+        }
+        villager.getEntityData().removeTag(TAG_TIDE_INVADED);
+        Outlines.clear(villager);
+    }
+
+    /**
+     * 兜底清扫本维度「还挂在描边 team 上、但已不该描边」的已加载实体。
+     *
+     * <p>覆盖 {@link #dismissFollower} / {@link #clearInvadedVillagers} 够不到的情况：
+     * 解散时随从/村民所在区块未加载 → {@link Followers#revokeAll} 与登记表撤销都要等
+     * 实体重新入世，而 team 归属是存在 scoreboard 里的，不解除就会把名字板永久藏掉
+     * （team 的 {@code NEVER} 规则）。这里在世界 tick 节拍上补清。</p>
+     *
+     * <p>安全口径（本模组里描边只由随从与入侵村民产生）：只清「既不是任何玩家的
+     * 随从、也不是进行中尸潮的入侵村民」的已描边实体；任何在队随从与活跃入侵一律
+     * 保留。无描边 team 时零成本返回（{@link Outlines#hasMarks}）。</p>
+     */
+    private static void sweepStaleOutlines(World world) {
+        if (!Outlines.hasMarks(world)) {
+            return;
+        }
+        HordeState state = HordeState.get(world);
+        for (Entity entity : new ArrayList<>(world.loadedEntityList)) {
+            if (!Outlines.isMarked(entity)) {
+                continue;
+            }
+            if (Followers.getOwnerUuid(entity) != null) {
+                continue; // 仍是（某位玩家的）在队随从
+            }
+            if (entity instanceof EntityVillager && hasActiveInvasion((EntityVillager) entity, state)) {
+                continue; // 仍是进行中尸潮的入侵村民
+            }
+            Outlines.clear(entity);
+        }
+    }
+
+    /** 该村民的入侵标记是否指向一场仍在进行的尸潮。 */
+    private static boolean hasActiveInvasion(EntityVillager villager, HordeState state) {
+        String ownerId = villager.getEntityData().getString(TAG_TIDE_INVADED);
+        if (ownerId.isEmpty()) {
+            return false;
+        }
+        try {
+            HordeState.Entry entry = state.get(UUID.fromString(ownerId));
+            return entry != null && entry.active;
+        } catch (IllegalArgumentException corrupt) {
+            return false;
+        }
+    }
+
     // ============================================================ 收尾
 
     private static void succeed(EntityPlayerMP player, HordeState.Entry entry, HordeState state) {
+        // tide_success 时间戳：热忱的腐肉获得/食用门槛的明确字段（本场确认成功即记录）
+        state.recordTideSuccess(player.getUniqueID(), player.world.getTotalWorldTime());
         incrementTideCleared(player);
         Persuasion.add(player, UlStrength.num("zombie_tide.horde.persuasion_win", 10.0D));
         endTide(player, entry, state);
@@ -649,6 +812,7 @@ public final class HordeManager {
         state.remove(player.getUniqueID());
         releaseFollowers(player);
         clearTideGolems(player);
+        clearInvadedVillagers(player);
         syncTeam(player);
     }
 
@@ -678,7 +842,8 @@ public final class HordeManager {
             }
         }
         if (center == null) {
-            action(player, "ul.horde.launch.fail.place");
+            // 明确提示缺什么（原 fail.place 文案不含条件，用户实测看不懂）
+            action(player, "ul.horde.launch.fail.village", Math.round(radius), 1);
             return;
         }
         HordeState state = HordeState.get(player.world);
@@ -717,7 +882,7 @@ public final class HordeManager {
 
     // ============================================================ 热忱的腐肉掉落
 
-    /** 随从被铁傀儡打死（且主人尸潮 active）→ 掉 1 个热忱的腐肉。 */
+    /** 随从被铁傀儡打死（且主人尸潮 active + 已确认过尸潮成功）→ 掉 1 个热忱的腐肉。 */
     public static void onFollowerDrops(net.minecraftforge.event.entity.living.LivingDropsEvent event) {
         EntityLivingBase dead = event.getEntityLiving();
         if (!Followers.isFollower(dead)) {
@@ -736,10 +901,37 @@ public final class HordeManager {
         if (entry == null || !entry.active) {
             return;
         }
+        // 门槛（2026-11-07 用户反馈「未确认成功就能提前获得」）：获得条件校验
+        // tide_success 时间戳——没确认过尸潮成功的「坏领袖」拿不到热忱的腐肉。
+        if (!hasTideSuccess(dead.world, owner)) {
+            EntityPlayer ownerPlayer = dead.world.getPlayerEntityByUUID(owner);
+            if (ownerPlayer instanceof EntityPlayerMP) {
+                warnNoLeader((EntityPlayerMP) ownerPlayer);
+            }
+            return;
+        }
         int count = UlStrength.integer("zombie_tide.horde.flesh_drop", 1);
         ItemStack flesh = new ItemStack(CommonProxy.ZEALOUS_FLESH, count);
         event.getDrops().add(new EntityItem(dead.world, dead.posX, dead.posY, dead.posZ, flesh));
         Followers.clearOwner(dead);
+    }
+
+    /** 「坏领袖」提示节流（tick）：一场战斗多个随从阵亡时不刷屏。 */
+    private static long noLeaderWarnIntervalTicks() {
+        return Math.max(1L, (long) UlStrength.num(
+                "zombie_tide.horde.no_leader_warn_interval_ticks", 100.0D));
+    }
+    private static final java.util.Map<UUID, Long> LAST_NO_LEADER_WARN = new java.util.WeakHashMap<>();
+
+    /** 未满足热忱的腐肉门槛时的提示（获得/食用共用一条文案）。 */
+    private static void warnNoLeader(EntityPlayerMP player) {
+        long now = player.world.getTotalWorldTime();
+        Long last = LAST_NO_LEADER_WARN.get(player.getUniqueID());
+        if (last != null && now - last < noLeaderWarnIntervalTicks()) {
+            return;
+        }
+        LAST_NO_LEADER_WARN.put(player.getUniqueID(), now);
+        action(player, "ul.zealous_flesh.fail.leader");
     }
 
     // ============================================================ 随从查询 / 属性
@@ -759,16 +951,19 @@ public final class HordeManager {
                 if (entity instanceof EntityLivingBase
                         && player.getUniqueID().equals(Followers.getOwnerUuid(entity))) {
                     removeFollowerMultiplier((EntityLivingBase) entity);
+                    Outlines.clear(entity);
                 }
             }
         }
         return Followers.revokeAll(player.getUniqueID(), server);
     }
 
-    /** 单个随从离队（release/kick 共用）：撤说服度属性打折 + 清随从关系。 */
+    /** 单个随从离队（release/kick 共用）：撤说服度属性打折 + 清随从关系 + 解除白色描边。 */
     private static void dismissFollower(EntityLivingBase follower) {
         removeFollowerMultiplier(follower);
         Followers.clearOwner(follower);
+        // team 归属必须显式解除（否则名字板被 team 的 NEVER 永久藏掉）
+        Outlines.clear(follower);
     }
 
     private static int countFollowers(EntityPlayerMP player) {
@@ -963,19 +1158,19 @@ public final class HordeManager {
         return out;
     }
 
-    // ============================================================ 队员常驻描边（服务端发光）
+    // ============================================================ 队员常驻白色描边（服务端权威）
 
-    /** 发光刷新周期（tick）：每 20 tick 校验一次队员集合并续挂效果。 */
+    /** 描边刷新周期（tick）：每 20 tick 校验一次队员集合并续挂（≤ {@link Outlines#REFRESH_TICKS}）。 */
     private static final int GLOW_REFRESH_TICKS = 20;
-    /** 发光效果时长（tick，2.5 秒）：略长于刷新周期 → 在队常亮无缝。 */
-    private static final int GLOW_DURATION_TICKS = 50;
 
     /**
-     * 给当前队员（{@link #followersOf}）续挂原版发光（{@link MobEffects#GLOWING}）
-     * 做常驻描边。取舍：只「续挂」不清除——入队由 {@link #syncTeam} 即时挂上，
-     * 离队/踢出/解散/死亡后不再刷新，残留效果在 {@link #GLOW_DURATION_TICKS} 内
-     * 自然过期（不做反向清除，避免误伤别的来源给的发光）；纯服务端药水效果，
-     * 不用客户端渲染 hack。每 {@link #GLOW_REFRESH_TICKS} tick 由玩家 tick 调用。
+     * 给当前队员（{@link #followersOf}）续挂<b>白色</b>描边（核心 {@link Outlines#mark}：
+     * 按颜色命名的 scoreboard team 决定描边颜色，短时长 {@code MobEffects.GLOWING}
+     * 触发原版 outline 渲染路径）。每 {@link #GLOW_REFRESH_TICKS} tick 由玩家 tick 调用，
+     * 入队/队伍变化点由 {@link #syncTeam} 即时挂上。
+     *
+     * <p>离队/踢出/解散/收尾一律显式 {@link Outlines#clear}：team 归属不会自然过期，
+     * 不解除会把名字板永久藏掉（team 的 {@code NEVER} 规则）。</p>
      */
     public static void refreshFollowerGlow(EntityPlayerMP player) {
         if (player.world.isRemote
@@ -985,11 +1180,10 @@ public final class HordeManager {
         applyGlow(player);
     }
 
-    /** 立刻给当前队员挂发光（队伍变化点调用，入队即时描边）。 */
+    /** 立刻给当前队员挂白色描边（队伍变化点调用，入队即时描边）。 */
     private static void applyGlow(EntityPlayerMP player) {
         for (EntityLiving f : followersOf(player)) {
-            // ambient + 无粒子：纯描边，不给整队刷药水漩涡
-            f.addPotionEffect(new PotionEffect(MobEffects.GLOWING, GLOW_DURATION_TICKS, 0, true, false));
+            Outlines.mark(f);
         }
     }
 
@@ -1008,7 +1202,7 @@ public final class HordeManager {
     private static final java.util.Map<UUID, String> LAST_TEAM_JSON = new java.util.WeakHashMap<>();
     private static final java.util.Map<UUID, Long> LAST_TEAM_TICK = new java.util.WeakHashMap<>();
 
-    /** 立即推送队伍快照（招募/解散/收尾等变化点调用）；同时给新队员即时挂描边发光。 */
+    /** 立即推送队伍快照（招募/解散/收尾等变化点调用）；同时给新队员即时挂白色描边。 */
     public static void syncTeam(EntityPlayerMP player) {
         applyGlow(player);
         String json = teamJson(player);
@@ -1097,6 +1291,29 @@ public final class HordeManager {
     public static int tidesCleared(EntityPlayerMP player) {
         JsonObject state = PlayerAbilityStore.get(player).getState(ZombieLine.STATE_TIDE_CLEARED);
         return state.has("count") ? state.get("count").getAsInt() : 0;
+    }
+
+    /**
+     * 是否已「确认过至少一次尸潮成功」（热忱的腐肉的获得/食用门槛）。
+     * 权威字段 = {@link HordeState} 的 tide_success 时间戳（{@link #succeed} 写入）；
+     * 旧存档兼容：无时间戳但通关计数 ≥ 1 视为已成功（计数同样只在 succeed 写入）。
+     */
+    public static boolean hasTideSuccess(EntityPlayerMP player) {
+        if (HordeState.get(player.world).getTideSuccessTick(player.getUniqueID()) > 0L) {
+            return true;
+        }
+        return tidesCleared(player) >= 1;
+    }
+
+    /**
+     * UUID 版（随从掉落用：主人可能不在线）。在线时兼容旧存档计数；离线只认时间戳。
+     */
+    private static boolean hasTideSuccess(World world, UUID owner) {
+        if (HordeState.get(world).getTideSuccessTick(owner) > 0L) {
+            return true;
+        }
+        EntityPlayer player = world.getPlayerEntityByUUID(owner);
+        return player instanceof EntityPlayerMP && tidesCleared((EntityPlayerMP) player) >= 1;
     }
 
     private static boolean onCooldown(EntityPlayerMP player, String abilityId) {

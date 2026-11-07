@@ -73,6 +73,9 @@ public final class ZombieLine {
         // 必须传 Class 才能把 static @SubscribeEvent 挂上总线（2026-11-07 尸潮链修复）。
         bus.register(HordeEvents.class);
         bus.register(TitanFormHandler.class);
+        // 村民躲避僵尸阵营玩家（第3条）+ 随从协助（第5条）：handler 全是 static，同样类注册
+        bus.register(aaaa0ggmc.ulmodpack.faction.VillagerFearHandler.class);
+        bus.register(aaaa0ggmc.ulmodpack.faction.FollowerAssistHandler.class);
         // 实例方法 handler，保持实例注册（改类注册会反向丢掉 onLogin）。
         bus.register(new TitanSlamMigration());
         HordeAbilities.registerAll();

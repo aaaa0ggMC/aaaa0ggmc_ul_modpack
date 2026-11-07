@@ -25,7 +25,7 @@ import java.util.UUID;
  *  - 随从被铁傀儡打死（LivingDropsEvent）→ 掉热忱的腐肉；
  *  - 世界 tick → 推进尸潮（刷铁傀儡 / 判成功 / 判中止）；
  *  - 玩家 tick → 队伍快照节流同步（B 键状态页数据源，变化才推、5 秒一拍）
- *    + 队员常驻描边续挂（每 20 tick 刷原版发光，见 HordeManager.refreshFollowerGlow）；
+ *    + 队员常驻白色描边续挂（每 20 tick 刷核心 Outlines，见 HordeManager.refreshFollowerGlow）；
  *  - 随从把主人设为目标 → 清目标（随从不攻击主人）。
  */
 public final class HordeEvents {

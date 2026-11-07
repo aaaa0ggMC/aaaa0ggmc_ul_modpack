@@ -75,6 +75,7 @@ public class UlModpack {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.init(event);
+        aaaa0ggmc.ulmodpack.achievement.Achievements.registerDefaults();
         ZombieLine.register();
     }
 
