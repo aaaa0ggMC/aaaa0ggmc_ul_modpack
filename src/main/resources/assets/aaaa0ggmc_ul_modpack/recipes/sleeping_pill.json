@@ -1,10 +1,15 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "minecraft:red_flower", "data": 0 },
-    { "item": "minecraft:sugar" },
-    { "item": "minecraft:paper" }
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFP",
+    "FFP",
+    "PPS"
   ],
+  "key": {
+    "F": { "item": "minecraft:red_flower", "data": 0 },
+    "P": { "item": "minecraft:paper" },
+    "S": { "item": "minecraft:sugar" }
+  },
   "result": {
     "item": "aaaa0ggmc_ul_modpack:sleeping_pill"
   }
