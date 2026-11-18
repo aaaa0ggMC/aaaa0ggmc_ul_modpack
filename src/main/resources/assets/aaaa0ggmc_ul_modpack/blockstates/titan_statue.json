@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "aaaa0ggmc_ul_modpack:titan_statue" },
+    "facing=east":  { "model": "aaaa0ggmc_ul_modpack:titan_statue", "y": 90 },
+    "facing=south": { "model": "aaaa0ggmc_ul_modpack:titan_statue", "y": 180 },
+    "facing=west":  { "model": "aaaa0ggmc_ul_modpack:titan_statue", "y": 270 }
+  }
+}

@@ -91,6 +91,7 @@ public class UlModpack {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);
+        aaaa0ggmc.ulmodpack.world.DarklandsTerrainPatch.register();
     }
 
     @Mod.EventHandler

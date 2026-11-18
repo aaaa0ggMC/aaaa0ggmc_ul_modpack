@@ -1,8 +1,9 @@
 package aaaa0ggmc.ulmodpack.item;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.UlModpackContainer;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
-import aaaa0ggmc.ulmodpack.zombie.titan.TitanFeast;
+import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
 import net.minecraft.client.resources.I18n;
@@ -10,14 +11,18 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -25,14 +30,10 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * 热忱的腐肉：吃下变泰坦（{@code minecraft:giant}）的入口物品。
+ * 热忱的腐肉：泰坦王冠的合成材料；在僵尸/不死者（{@code ul:undead}）形态下
+ * 也可直接食用，回复固定生命值（默认 10.0 点 / 5 颗心，走 {@code zombie_tide.zealous_flesh.heal_amount}）。
  *
- * 右键进食前预检（有尸群领导 + 通关过尸潮 + 头顶 12 格净空 + 不死者形态），不满足则
- * 提示且不消耗；满足才进入进食动画，进食完成扣 1 个并强制变泰坦（见 {@link TitanFeast}）。
  * 随从被铁傀儡打死时由尸潮系统掉落（{@code HordeManager.onFollowerDrops}）。
- *
- * 变身是服务端权威（{@link TitanFeast#transform}）；客户端只按「是否变身」预判是否播放
- * 进食动画，完整条件在服务端判。体型 patch 留待 morphext-patch-giant。
  */
 public class ItemZealousFlesh extends Item {
 
@@ -56,21 +57,21 @@ public class ItemZealousFlesh extends Item {
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
         if (world.isRemote) {
-            // 客户端：仅按「是否变身」预判是否播放进食动画；技能/履历/空间在服务端判
             IMorphing morphing = Morphing.get(player);
-            if (morphing == null || !morphing.isMorphed()) {
+            if (morphing == null || !morphing.isMorphed() || player.getHealth() >= player.getMaxHealth()) {
                 return new ActionResult<>(EnumActionResult.FAIL, stack);
             }
             player.setActiveHand(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
         if (player instanceof EntityPlayerMP) {
-            String failure = TitanFeast.checkFailure((EntityPlayerMP) player);
+            EntityPlayerMP mp = (EntityPlayerMP) player;
+            String failure = checkEatFailure(mp);
             if (failure != null) {
-                player.sendStatusMessage(new TextComponentTranslation(failure), true);
-                return new ActionResult<>(EnumActionResult.FAIL, stack); // 不消耗
+                mp.sendStatusMessage(new TextComponentTranslation(failure), true);
+                return new ActionResult<>(EnumActionResult.FAIL, stack);
             }
-            player.setActiveHand(hand);
+            mp.setActiveHand(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
         return new ActionResult<>(EnumActionResult.FAIL, stack);
@@ -80,19 +81,38 @@ public class ItemZealousFlesh extends Item {
     public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entity) {
         if (!world.isRemote && entity instanceof EntityPlayerMP) {
             EntityPlayerMP player = (EntityPlayerMP) entity;
-            // 服务端权威复核：右键预检与进食完成之间状态可能变化（且防绕过预检的进食路径），
-            // 未满足（含未确认尸潮成功）→ 什么都不会发生、不消耗、不变身
-            String failure = TitanFeast.checkFailure(player);
+            String failure = checkEatFailure(player);
             if (failure != null) {
                 player.sendStatusMessage(new TextComponentTranslation(failure), true);
                 return stack;
             }
             if (!player.capabilities.isCreativeMode) {
-                stack.shrink(1); // 消耗 1 个
+                stack.shrink(1);
             }
-            TitanFeast.transform(player);
+            double heal = UlModpackContainer.instance().strengthService()
+                    .num("zombie_tide.zealous_flesh.heal_amount", 10.0D);
+            float healAmount = (float) Math.max(0.0D, heal);
+            player.heal(healAmount);
+            if (player.world instanceof WorldServer) {
+                ((WorldServer) player.world).spawnParticle(
+                        EnumParticleTypes.HEART, player.posX, player.posY + 1.2D, player.posZ,
+                        6, 0.4D, 0.4D, 0.4D, 0.05D);
+                player.world.playSound(null, player.posX, player.posY, player.posZ,
+                        SoundEvents.ENTITY_PLAYER_BURP, SoundCategory.PLAYERS, 0.7F, 0.9F);
+            }
         }
         return stack;
+    }
+
+    @Nullable
+    private static String checkEatFailure(EntityPlayerMP player) {
+        if (!ZombieForms.isUndead(player)) {
+            return "ul.zealous_flesh.fail.not_undead";
+        }
+        if (player.getHealth() >= player.getMaxHealth()) {
+            return "ul.zealous_flesh.fail.full";
+        }
+        return null;
     }
 
     @Override

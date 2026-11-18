@@ -52,6 +52,9 @@ public final class HordeEvents {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntityLiving() instanceof EntityPlayerMP) {
             HordeManager.onOwnerDeath((EntityPlayerMP) event.getEntityLiving());
+        } else if (event.getEntityLiving() instanceof net.minecraft.entity.passive.EntityVillager
+                && !event.getEntityLiving().world.isRemote) {
+            HordeManager.onVillagerDeath((net.minecraft.entity.passive.EntityVillager) event.getEntityLiving());
         }
     }
 
@@ -89,6 +92,15 @@ public final class HordeEvents {
     @SubscribeEvent
     public static void onLivingDrops(LivingDropsEvent event) {
         HordeManager.onFollowerDrops(event);
+    }
+
+    @SubscribeEvent
+    public static void onEntityJoinWorld(net.minecraftforge.event.entity.EntityJoinWorldEvent event) {
+        if (!event.getWorld().isRemote
+                && event.getEntity() instanceof net.minecraft.entity.monster.EntityZombieVillager) {
+            HordeManager.tryAdoptInfectedZombieVillager(
+                    (net.minecraft.entity.monster.EntityZombieVillager) event.getEntity());
+        }
     }
 
     @SubscribeEvent

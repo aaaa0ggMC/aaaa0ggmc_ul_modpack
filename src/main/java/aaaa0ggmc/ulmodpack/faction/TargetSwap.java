@@ -1,10 +1,12 @@
-package aaaa0ggmc.ulmodpack.mixin.impl;
+package aaaa0ggmc.ulmodpack.faction;
 
 import aaaa0ggmc.ulmodpack.faction.FindNearestEnemyPlayer;
 import aaaa0ggmc.ulmodpack.faction.HateQueries;
 import aaaa0ggmc.ulmodpack.faction.NearestEnemyPlayerTarget;
 import aaaa0ggmc.ulmodpack.faction.NearestEnemyTarget;
+import com.google.common.base.Predicate;
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
@@ -12,6 +14,10 @@ import net.minecraft.entity.ai.EntityAIFindEntityNearestPlayer;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.monster.AbstractSkeleton;
+import net.minecraft.entity.monster.EntityIronGolem;
+import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityZombieVillager;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.lang.reflect.Field;
@@ -41,9 +47,10 @@ import java.lang.reflect.Field;
  * unseenMemoryTicks=field_188510_h、avoidDistance=field_179508_f、
  * farSpeed=field_75378_b、nearSpeed=field_75379_c）；替身保持原参数语义。</p>
  */
-final class TargetSwap {
+public final class TargetSwap {
 
     private static final Field TARGET_CLASS;
+    private static final Field TARGET_SELECTOR;
     private static final Field CHECK_SIGHT;
     private static final Field UNSEEN_MEMORY;
     private static final Field AVOID_CLASS;
@@ -54,6 +61,7 @@ final class TargetSwap {
     static {
         try {
             TARGET_CLASS = field(EntityAINearestAttackableTarget.class, "field_75307_b", "targetClass");
+            TARGET_SELECTOR = field(EntityAINearestAttackableTarget.class, "field_82643_g", "targetEntitySelector");
             CHECK_SIGHT = field(EntityAITarget.class, "field_75297_f", "shouldCheckSight");
             UNSEEN_MEMORY = field(EntityAITarget.class, "field_188510_h", "unseenMemoryTicks");
             AVOID_CLASS = field(EntityAIAvoidEntity.class, "field_181064_i", "classToAvoid");
@@ -80,7 +88,7 @@ final class TargetSwap {
     private TargetSwap() {
     }
 
-    static EntityAIBase swap(EntityAIBase original, net.minecraft.entity.EntityLiving owner) {
+    public static EntityAIBase swap(EntityAIBase original, net.minecraft.entity.EntityLiving owner) {
         try {
             if (original instanceof EntityAIFindEntityNearestPlayer) {
                 return new FindNearestEnemyPlayer(owner);
@@ -95,11 +103,23 @@ final class TargetSwap {
                 EntityAITarget swapped = null;
                 if (targetClass == EntityPlayer.class) {
                     swapped = new NearestEnemyPlayerTarget(creature, checkSight);
-                } else if (targetClass == AbstractSkeleton.class) {
+                } else if (targetClass == AbstractSkeleton.class
+                        || (creature instanceof EntityZombieVillager
+                        && (targetClass == EntityVillager.class || targetClass == EntityIronGolem.class))) {
                     @SuppressWarnings("unchecked")
                     Class<? extends EntityLivingBase> type =
                             (Class<? extends EntityLivingBase>) targetClass;
                     swapped = new NearestEnemyTarget<>(creature, type, checkSight);
+                } else if (creature instanceof EntityIronGolem && targetClass == EntityLiving.class) {
+                    @SuppressWarnings("unchecked")
+                    Predicate<? super EntityLiving> orig = (Predicate<? super EntityLiving>) TARGET_SELECTOR.get(original);
+                    swapped = new EntityAINearestAttackableTarget<>(
+                            creature,
+                            EntityLiving.class,
+                            10,
+                            checkSight,
+                            false,
+                            input -> (orig == null || orig.apply(input)) && HateQueries.isEnemy(creature, input));
                 }
                 if (swapped != null) {
                     swapped.setUnseenMemoryTicks(UNSEEN_MEMORY.getInt(original));
@@ -108,17 +128,20 @@ final class TargetSwap {
             }
             if (original instanceof EntityAIAvoidEntity) {
                 Class<?> avoidClass = (Class<?>) AVOID_CLASS.get(original);
-                if (avoidClass == EntityPlayer.class) {
+                if (avoidClass == EntityPlayer.class || avoidClass == EntityZombie.class) {
                     @SuppressWarnings("unchecked")
-                    EntityAIAvoidEntity<EntityPlayer> avoid =
-                            (EntityAIAvoidEntity<EntityPlayer>) original;
+                    Class<EntityLivingBase> avoidType = (Class<EntityLivingBase>) avoidClass;
                     return new EntityAIAvoidEntity<>(
                             creature,
-                            EntityPlayer.class,
-                            input -> HateQueries.isEnemy(creature, input),
-                            AVOID_DISTANCE.getFloat(avoid),
-                            FAR_SPEED.getDouble(avoid),
-                            NEAR_SPEED.getDouble(avoid));
+                            avoidType,
+                            input -> {
+                                aaaa0ggmc.morphext.faction.FactionRelation rel = HateQueries.relation(creature, input);
+                                return rel == aaaa0ggmc.morphext.faction.FactionRelation.ENEMY
+                                        || rel == aaaa0ggmc.morphext.faction.FactionRelation.FEAR;
+                            },
+                            AVOID_DISTANCE.getFloat(original),
+                            FAR_SPEED.getDouble(original),
+                            NEAR_SPEED.getDouble(original));
                 }
             }
         } catch (IllegalAccessException ignored) {

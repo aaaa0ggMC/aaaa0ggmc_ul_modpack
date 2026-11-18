@@ -34,7 +34,16 @@ public class NearestEnemyTarget<T extends EntityLivingBase> extends EntityAINear
 
     @Override
     public boolean shouldContinueExecuting() {
-        return super.shouldContinueExecuting()
-                && HateQueries.isEnemy(this.taskOwner, this.taskOwner.getAttackTarget());
+        if (!super.shouldContinueExecuting()) {
+            return false;
+        }
+        EntityLivingBase target = this.taskOwner.getAttackTarget();
+        if (HateQueries.isEnemy(this.taskOwner, target)) {
+            return true;
+        }
+        // 尸潮期间被感染并归入玩家阵营的僵尸村民随从：允许继续攻击指派的村民目标
+        return this.taskOwner instanceof net.minecraft.entity.monster.EntityZombieVillager
+                && aaaa0ggmc.morphext.follower.Followers.isFollower(this.taskOwner)
+                && target instanceof net.minecraft.entity.passive.EntityVillager;
     }
 }

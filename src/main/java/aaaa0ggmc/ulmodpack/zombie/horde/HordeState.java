@@ -41,6 +41,7 @@ public class HordeState extends WorldSavedData {
         public long startTick;
         public long lastGolemSpawnTick;
         public long abortSinceTick;
+        public int initialVillagers;
 
         public Entry() {
             this.active = false;
@@ -48,6 +49,7 @@ public class HordeState extends WorldSavedData {
             this.startTick = 0L;
             this.lastGolemSpawnTick = 0L;
             this.abortSinceTick = 0L;
+            this.initialVillagers = 0;
         }
     }
 
@@ -128,6 +130,7 @@ public class HordeState extends WorldSavedData {
                 entry.startTick = tag.getLong("StartTick");
                 entry.lastGolemSpawnTick = tag.getLong("LastGolem");
                 entry.abortSinceTick = tag.getLong("AbortSince");
+                entry.initialVillagers = tag.getInteger("InitialVillagers");
                 if (tag.hasKey("Village")) {
                     NBTTagCompound pos = tag.getCompoundTag("Village");
                     entry.villageCenter = new BlockPos(pos.getInteger("X"), pos.getInteger("Y"), pos.getInteger("Z"));
@@ -159,6 +162,7 @@ public class HordeState extends WorldSavedData {
             tag.setLong("StartTick", entry.startTick);
             tag.setLong("LastGolem", entry.lastGolemSpawnTick);
             tag.setLong("AbortSince", entry.abortSinceTick);
+            tag.setInteger("InitialVillagers", entry.initialVillagers);
             if (entry.villageCenter != null) {
                 NBTTagCompound pos = new NBTTagCompound();
                 pos.setInteger("X", entry.villageCenter.getX());

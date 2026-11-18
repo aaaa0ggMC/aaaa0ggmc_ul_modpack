@@ -1,5 +1,6 @@
 package aaaa0ggmc.ulmodpack.mixin.impl;
 
+import aaaa0ggmc.ulmodpack.faction.TargetSwap;
 import aaaa0ggmc.ulmodpack.faction.HateQueries;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;

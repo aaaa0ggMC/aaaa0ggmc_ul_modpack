@@ -48,9 +48,13 @@ public abstract class MixinEntityAIDefendVillage {
 
     @Inject(method = "func_75250_a()Z", at = @At("RETURN"), cancellable = true, remap = false)
     private void ulmodpack$onlyAttackEnemies(CallbackInfoReturnable<Boolean> cir) {
-        if (Boolean.TRUE.equals(cir.getReturnValue())
-                && !HateQueries.isEnemy(this.field_75305_a, this.field_75304_b)) {
-            cir.setReturnValue(false);
+        if (Boolean.TRUE.equals(cir.getReturnValue())) {
+            aaaa0ggmc.morphext.faction.FactionRelation rel = HateQueries.relation(this.field_75305_a, this.field_75304_b);
+            if (rel == aaaa0ggmc.morphext.faction.FactionRelation.RELATIVE
+                    || rel == aaaa0ggmc.morphext.faction.FactionRelation.LORD
+                    || rel == aaaa0ggmc.morphext.faction.FactionRelation.FEAR) {
+                cir.setReturnValue(false);
+            }
         }
     }
 }

@@ -67,6 +67,7 @@
     "zombie_tide.villager_fear.flee_speed_near": 0.72,
     "zombie_tide.horde.recruit_cooldown_ticks": 200,
     "zombie_tide.horde.launch_cooldown_ticks": 900,
-    "zombie_tide.titan.slam_cooldown_ticks": 400
+    "zombie_tide.titan.slam_cooldown_ticks": 400,
+    "zombie_tide.zealous_flesh.heal_amount": 10.0
   }
 }

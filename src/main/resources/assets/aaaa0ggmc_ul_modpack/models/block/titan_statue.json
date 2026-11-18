@@ -1,0 +1,189 @@
+{
+  "textures": {
+    "gold": "minecraft:blocks/gold_block",
+    "base": "minecraft:blocks/stonebrick_carved",
+    "gem": "minecraft:blocks/redstone_block",
+    "particle": "minecraft:blocks/gold_block"
+  },
+  "elements": [
+    {
+      "__comment": "Stone pedestal",
+      "from": [2, 0, 2],
+      "to": [14, 3, 14],
+      "faces": {
+        "north": {"texture": "#base"},
+        "south": {"texture": "#base"},
+        "east":  {"texture": "#base"},
+        "west":  {"texture": "#base"},
+        "up":    {"texture": "#base"},
+        "down":  {"texture": "#base"}
+      }
+    },
+    {
+      "__comment": "Gold plinth trim",
+      "from": [3, 3, 3],
+      "to": [13, 4, 13],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Right leg",
+      "from": [4, 4, 6],
+      "to": [7.5, 13, 10],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Left leg",
+      "from": [8.5, 4, 6],
+      "to": [12, 13, 10],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Torso",
+      "from": [4, 13, 6],
+      "to": [12, 22, 10],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Right arm (outstretched zombie pose)",
+      "from": [1, 18.5, 1],
+      "to": [4, 22, 10],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Left arm (outstretched zombie pose)",
+      "from": [12, 18.5, 1],
+      "to": [15, 22, 10],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Head",
+      "from": [4.5, 22, 4.5],
+      "to": [11.5, 29, 11.5],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Crown band",
+      "from": [4, 28.5, 4],
+      "to": [12, 30, 12],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Crown spikes",
+      "from": [4, 30, 4],
+      "to": [5.5, 32, 5.5],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "from": [10.5, 30, 4],
+      "to": [12, 32, 5.5],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "from": [4, 30, 10.5],
+      "to": [5.5, 32, 12],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "from": [10.5, 30, 10.5],
+      "to": [12, 32, 12],
+      "faces": {
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "east":  {"texture": "#gold"},
+        "west":  {"texture": "#gold"},
+        "up":    {"texture": "#gold"},
+        "down":  {"texture": "#gold"}
+      }
+    },
+    {
+      "__comment": "Crown front zealous gem",
+      "from": [7, 28.5, 3.6],
+      "to": [9, 30.5, 4.2],
+      "faces": {
+        "north": {"texture": "#gem"},
+        "south": {"texture": "#gem"},
+        "east":  {"texture": "#gem"},
+        "west":  {"texture": "#gem"},
+        "up":    {"texture": "#gem"},
+        "down":  {"texture": "#gem"}
+      }
+    }
+  ]
+}

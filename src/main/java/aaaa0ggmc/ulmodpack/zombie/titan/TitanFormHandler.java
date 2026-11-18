@@ -6,6 +6,7 @@ import aaaa0ggmc.uld.IStrengthService;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.faction.HateQueries;
+import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
 import net.minecraft.entity.EntityLivingBase;
@@ -14,6 +15,7 @@ import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -21,11 +23,13 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.SleepingLocationCheckEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.List;
 
@@ -58,6 +62,51 @@ public final class TitanFormHandler {
     }
 
     @SubscribeEvent
+    public static void onEquipmentChange(LivingEquipmentChangeEvent event) {
+        if (event.getSlot() != EntityEquipmentSlot.HEAD
+                || !(event.getEntityLiving() instanceof EntityPlayerMP)) {
+            return;
+        }
+        EntityPlayerMP player = (EntityPlayerMP) event.getEntityLiving();
+        boolean wasCrown = event.getFrom().getItem() == CommonProxy.TITAN_CROWN;
+        boolean isCrown = event.getTo().getItem() == CommonProxy.TITAN_CROWN;
+        if (!wasCrown && isCrown) {
+            if (!ZombieForms.isTitan(player)) {
+                String failure = TitanFeast.checkFailure(player);
+                if (failure != null) {
+                    player.sendStatusMessage(new TextComponentTranslation(failure), true);
+                } else {
+                    TitanFeast.transform(player);
+                }
+            }
+        } else if (wasCrown && !isCrown) {
+            if (ZombieForms.isTitan(player)) {
+                TitanFeast.revert(player);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof EntityPlayerMP)) {
+            return;
+        }
+        EntityPlayerMP player = (EntityPlayerMP) event.player;
+        if (player.ticksExisted % 20 != 0) {
+            return;
+        }
+        boolean wearingCrown = player.getItemStackFromSlot(EntityEquipmentSlot.HEAD).getItem() == CommonProxy.TITAN_CROWN;
+        boolean isTitan = ZombieForms.isTitan(player);
+        if (wearingCrown && !isTitan) {
+            if (TitanFeast.checkFailure(player) == null) {
+                TitanFeast.transform(player);
+            }
+        } else if (!wearingCrown && isTitan && TitanFeast.hasSavedPrevForm(player)) {
+            TitanFeast.revert(player);
+        }
+    }
+
+    @SubscribeEvent
     public static void onFall(LivingFallEvent event) {
         EntityLivingBase entity = event.getEntityLiving();
         if (entity instanceof EntityPlayerMP && ZombieForms.isTitan((EntityPlayerMP) entity)) {
@@ -79,9 +128,12 @@ public final class TitanFormHandler {
     public static void onSleepCheck(SleepingLocationCheckEvent event) {
         if (event.getEntityPlayer() instanceof EntityPlayerMP
                 && ZombieForms.isTitan((EntityPlayerMP) event.getEntityPlayer())) {
+            EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
+            if (player.isPotionActive(CommonProxy.POTION_DEEP_SLEEP)) {
+                return;
+            }
             event.setResult(Event.Result.DENY);
-            ((EntityPlayerMP) event.getEntityPlayer())
-                    .sendStatusMessage(new TextComponentTranslation("ul.titan.bed"), true);
+            player.sendStatusMessage(new TextComponentTranslation("ul.titan.bed"), true);
         }
     }
 
@@ -145,13 +197,31 @@ public final class TitanFormHandler {
         PlayerAbilityStore.update(player, data ->
                 data.setCooldown(ZombieLine.ABILITY_SLAM, now, scaledCooldown));
 
-        // 表现：落地震击粒子 + 低音爆炸声（不破坏方块）
+        // 表现：多层冲击波粒子环 + 碎石飞溅 + 沉重爆炸与铁砧落地声（均走 longDistance=false 尊重原版粒子设置，不破坏方块）
         if (player.world instanceof WorldServer) {
-            ((WorldServer) player.world).spawnParticle(EnumParticleTypes.EXPLOSION_LARGE,
-                    player.posX, player.posY, player.posZ, 4, radius, 0.1D, radius, 0.0D);
+            WorldServer ws = (WorldServer) player.world;
+            net.minecraft.block.state.IBlockState ground = ws.getBlockState(player.getPosition().down());
+            int blockId = net.minecraft.block.Block.getStateId(
+                    ground.getMaterial().isSolid() ? ground : net.minecraft.init.Blocks.DIRT.getDefaultState());
+            ws.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, false,
+                    player.posX, player.posY + 0.3D, player.posZ, 6, radius * 0.45D, 0.2D, radius * 0.45D, 0.0D);
+            for (double r : new double[]{radius * 0.55D, radius}) {
+                int points = r < radius ? 16 : 28;
+                for (int i = 0; i < points; i++) {
+                    double angle = (Math.PI * 2.0D * i) / points;
+                    double px = player.posX + Math.cos(angle) * r;
+                    double pz = player.posZ + Math.sin(angle) * r;
+                    ws.spawnParticle(EnumParticleTypes.BLOCK_CRACK, false,
+                            px, player.posY + 0.15D, pz, 2, 0.15D, 0.1D, 0.15D, 0.12D, blockId);
+                    ws.spawnParticle(EnumParticleTypes.CLOUD, false,
+                            px, player.posY + 0.1D, pz, 1, 0.1D, 0.05D, 0.1D, 0.04D);
+                }
+            }
         }
         player.world.playSound(null, player.posX, player.posY, player.posZ,
-                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.7F, 1.1F);
+                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1.0F, 0.75F);
+        player.world.playSound(null, player.posX, player.posY, player.posZ,
+                net.minecraft.init.SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.8F, 0.55F);
         return true;
     }
 

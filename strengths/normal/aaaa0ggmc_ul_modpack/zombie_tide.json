@@ -64,6 +64,7 @@
   "zombie_tide.titan.speed_mult": 0.75,
   "zombie_tide.villager_fear.avoid_distance": 8.0,
   "zombie_tide.villager_fear.flee_speed_far": 0.6,
-  "zombie_tide.villager_fear.flee_speed_near": 0.6
+  "zombie_tide.villager_fear.flee_speed_near": 0.6,
+  "zombie_tide.zealous_flesh.heal_amount": 10.0
  }
 }

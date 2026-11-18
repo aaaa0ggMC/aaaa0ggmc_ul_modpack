@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "M M",
+    "GMG"
+  ],
+  "key": {
+    "M": { "item": "aaaa0ggmc_ul_modpack:zealous_flesh" },
+    "G": { "item": "minecraft:gold_ingot" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:titan_crown"
+  }
+}

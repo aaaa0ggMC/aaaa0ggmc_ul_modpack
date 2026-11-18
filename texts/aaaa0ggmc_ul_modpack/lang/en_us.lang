@@ -30,19 +30,40 @@ ftbquests.task.aaaa0ggmc_ul_modpack.progress=Progress Check
 # Conversion rituals (data: assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json)
 aaaa0ggmc_ul_modpack.ritual.sand_burial.title=Sand Burial
 aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=You break out of the sand as a husk.
-aaaa0ggmc_ul_modpack.ritual.water_ritual.title=Water Ritual
-aaaa0ggmc_ul_modpack.ritual.water_ritual.subtitle=You surface as a zombie.
+aaaa0ggmc_ul_modpack.ritual.gravel_burial.title=Gravel Burial
+aaaa0ggmc_ul_modpack.ritual.gravel_burial.subtitle=You crawl out of the gravel as a zombie.
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=Fire Ritual
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=You rise as a zombie pigman.
 aaaa0ggmc_ul_modpack.ritual.village_emerald.title=Village Rite
 aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=The village files you as a zombie villager.
 
-# Zealous Flesh (titan entry)
+aaaa0ggmc_ul_modpack.horde.bossbar=%s's Raid - Villagers remaining: %s/%s
+# Zealous Flesh (Crown material / undead ration)
 item.aaaa0ggmc_ul_modpack.zealous_flesh.name=Zealous Flesh
 aaaa0ggmc_ul_modpack.zealous_flesh.lore1=§7Always drifting along in tide after tide.
 aaaa0ggmc_ul_modpack.zealous_flesh.lore2=§7Dropped when a follower is killed by an iron golem.
-aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7Eating it needs Horde Leadership,
-aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7and at least one cleared tide.
+aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7Used to craft the Titan Crown;
+aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7Eating it in undead form restores 10 HP.
+
+# Titan Crown
+item.aaaa0ggmc_ul_modpack.titan_crown.name=Titan Crown
+aaaa0ggmc_ul_modpack.titan_crown.lore1=§7A crown forged from Zealous Flesh and Gold Ingots.
+aaaa0ggmc_ul_modpack.titan_crown.lore2=§7Wear in undead form (requires Horde Leadership & 1 cleared tide) to become a Titan;
+aaaa0ggmc_ul_modpack.titan_crown.lore3=§7Take it off to revert. Smart Scale / Human Model bypasses the 12-block headroom check.
+
+# Golden Titan Statue (2-block-tall trophy)
+tile.aaaa0ggmc_ul_modpack.titan_statue.name=Golden Titan Statue
+aaaa0ggmc_ul_modpack.titan_statue.lore1=§7A two-block-tall gilded Titan statue crowned with a crimson gem.
+aaaa0ggmc_ul_modpack.titan_statue.lore2=§7Awarded to the raider who led a horde to flatten a village and claimed the Titan's crown.
+
+# Sleeping Pill & Deep Sleep
+item.aaaa0ggmc_ul_modpack.sleeping_pill.name=Sleeping Pill
+aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7Induces Slowness I, Weakness I, and Deep Sleep.
+aaaa0ggmc_ul_modpack.sleeping_pill.lore2=§7Lie down in any bed or sleeping bag while active to revert to your human form.
+effect.aaaa0ggmc_ul_modpack.deep_sleep=Deep Sleep
+ul.sleeping_pill.already_human=You are already in your original form.
+ul.sleeping_pill.taken=Drowsiness sets in... lie down in a bed or sleeping bag.
+ul.sleeping_pill.reverted=You wake from deep sleep, restored to your original form.
 
 # Horde Leadership / Village Tide
 ul.horde.fail.skill=The dead don't listen to you yet.
@@ -73,9 +94,12 @@ ul.horde.abort=You went too far. The tide scattered.
 # Titan
 ul.titan.feast.fail.skill=The dead don't listen to you yet.
 ul.zealous_flesh.fail.leader=Nothing happens — you are a bad leader now.
+ul.zealous_flesh.fail.not_undead=Only the undead can stomach this zeal.
+ul.zealous_flesh.fail.full=You are already at full health.
 ul.titan.feast.fail.room=There's no room for a titan here.
 ul.titan.feast.fail.form=You are not one of the undead.
 ul.titan.feast.ok=You grew tall.
+ul.titan.crown.revert=The crown comes off, and your stature shrinks back.
 ul.titan.bed=The bed is too small.
 ul.titan.slam.cooldown=Ground Slam is still on cooldown.
 

@@ -1,5 +1,6 @@
 package aaaa0ggmc.ulmodpack.mixin.impl;
 
+import aaaa0ggmc.ulmodpack.faction.TargetSwap;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.monster.EntityZombie;
@@ -25,7 +26,7 @@ public abstract class MixinEntityZombie {
             method = "func_175456_n()V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/ai/EntityAITasks;addTask(ILnet/minecraft/entity/ai/EntityAIBase;)V"
+                    target = "Lnet/minecraft/entity/ai/EntityAITasks;func_75776_a(ILnet/minecraft/entity/ai/EntityAIBase;)V"
             ),
             index = 1,
             remap = false

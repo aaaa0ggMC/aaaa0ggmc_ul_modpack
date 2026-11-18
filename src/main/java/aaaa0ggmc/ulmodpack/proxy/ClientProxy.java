@@ -3,6 +3,7 @@ package aaaa0ggmc.ulmodpack.proxy;
 import aaaa0ggmc.morphext.client.status.StatusSectionRegistry;
 import aaaa0ggmc.ulmodpack.client.FollowerStatusSection;
 import aaaa0ggmc.ulmodpack.client.HordeTeamCache;
+import aaaa0ggmc.ulmodpack.client.TitanTransitionAnimators;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -24,6 +25,8 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(this);
         // B 键状态页（morphext GuiAbilityStatus）的尸群队伍分节
         registerStatusSections();
+        // 僵尸 ↔ 泰坦形态切换过渡动画（DI 注册到 morphext MorphTransitionRegistry）
+        TitanTransitionAnimators.register();
     }
 
     private static void registerStatusSections() {
@@ -40,6 +43,15 @@ public class ClientProxy extends CommonProxy {
         ModelLoader.setCustomModelResourceLocation(
                 ZEALOUS_FLESH, 0,
                 new ModelResourceLocation(ZEALOUS_FLESH.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                TITAN_CROWN, 0,
+                new ModelResourceLocation(TITAN_CROWN.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                TITAN_STATUE_ITEM, 0,
+                new ModelResourceLocation(TITAN_STATUE_ITEM.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                SLEEPING_PILL, 0,
+                new ModelResourceLocation(SLEEPING_PILL.getRegistryName(), "inventory"));
     }
 
     @Override

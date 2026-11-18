@@ -9,6 +9,7 @@ import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.config.AnkhConfig;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
+import aaaa0ggmc.ulmodpack.race.RaceManager;
 import aaaa0ggmc.ulmodpack.race.RaceResolver;
 import baubles.api.BaublesApi;
 import baubles.api.cap.IBaublesItemHandler;
@@ -50,7 +51,7 @@ import aaaa0ggmc.morphext.network.AbilityNetwork;
  *  1. 取消死亡（无死亡界面、无掉落、无死亡消息）；
  *  2. 感染变身：人类变击杀者形态；配置了 race_target_forms 的种族变固定目标形态
  *     （村民 → 僵尸村民，不看击杀者形态）；
- *  3. 回满生命（形态会改写最大生命，故在变身之后回血）；
+ *  3. 只给 1 点血（与转化仪式一致，防止后续引入复原道具后靠僵尸击杀反复白嫖满血）；
  *  4. 安卡护符碎裂，粒子/音效/文案齐发；
  *  5. 解锁进度「被感染」，记录感染状态并回写显式种族记录 ul.race（感染 = 种族变更）。
  *
@@ -139,16 +140,14 @@ public class InfectionHandler implements ConversionStage {
 
         AbstractMorph morph = buildInfectionMorph(player, formSource, race);
         if (morph != null) {
-            // 先拿到形态再变身：acquire 让玩家永久拥有该形态，morph 强制切换
-            MorphAPI.acquire(player, morph);
-            MorphAPI.morph(player, morph, true);
+            // 统一交由 RaceManager 处理感染变身（打断临时形态 + 1.0F 残血防赖血）
+            RaceManager.transition(player, morph,
+                    RaceManager.TransitionReason.INFECTION, RaceManager.HealthPolicy.SET_ONE);
         } else {
             UlModpack.LOGGER.warn("[ul-modpack] No morph available for {} — rescue continues without transformation",
                     EntityList.getKey(formSource));
+            player.setHealth(1.0F);
         }
-
-        // 形态会改写最大生命，变身之后回满
-        player.setHealth(player.getMaxHealth());
 
         spawnInfectionEffects(player);
 

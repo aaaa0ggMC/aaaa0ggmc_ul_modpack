@@ -35,7 +35,10 @@
     "MixinEntityBat",
     "MixinPhaseHoldingPattern",
     "MixinPhaseLandingApproach",
-    "MixinPhaseSittingScanning"
+    "MixinPhaseSittingScanning",
+    "MixinCommandLocate",
+    "MixinEntityVillager",
+    "MixinEntityIronGolem"
   ],
   "client": [
     "MixinEntity"

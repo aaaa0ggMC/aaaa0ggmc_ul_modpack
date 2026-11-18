@@ -175,9 +175,25 @@ public final class HordeManager {
             consumeItem(player, Items.ROTTEN_FLESH, fleshCost);
         }
         setCooldown(player, ZombieLine.ABILITY_COMMAND, recruitCooldownTicks());
+        playRecruitEffect(target);
         action(player, "ul.horde.recruit.ok", 1);
         syncTeam(player);
         return 0;
+    }
+
+    private static void playRecruitEffect(EntityLivingBase target) {
+        if (target.world instanceof WorldServer) {
+            WorldServer ws = (WorldServer) target.world;
+            ws.spawnParticle(net.minecraft.util.EnumParticleTypes.VILLAGER_HAPPY, false,
+                    target.posX, target.posY + target.height * 0.6D, target.posZ,
+                    12, 0.45D, 0.5D, 0.45D, 0.05D);
+            ws.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, false,
+                    target.posX, target.posY + 0.3D, target.posZ,
+                    8, 0.35D, 0.3D, 0.35D, 0.03D);
+            ws.playSound(null, target.posX, target.posY, target.posZ,
+                    net.minecraft.init.SoundEvents.ENTITY_ZOMBIE_INFECT,
+                    net.minecraft.util.SoundCategory.PLAYERS, 0.7F, 1.25F);
+        }
     }
 
     /**
@@ -387,6 +403,14 @@ public final class HordeManager {
             return;
         }
         dismissFollower(member);
+        if (member.world instanceof WorldServer) {
+            ((WorldServer) member.world).spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, false,
+                    member.posX, member.posY + member.height * 0.5D, member.posZ,
+                    10, 0.35D, 0.4D, 0.35D, 0.04D);
+            member.world.playSound(null, member.posX, member.posY, member.posZ,
+                    net.minecraft.init.SoundEvents.ENTITY_ZOMBIE_AMBIENT,
+                    net.minecraft.util.SoundCategory.PLAYERS, 0.6F, 0.7F);
+        }
         action(player, "ul.horde.kick", member.getName());
         syncTeam(player);
     }
@@ -445,20 +469,51 @@ public final class HordeManager {
 
     /** 进入屠村：锁定村庄中心、初始化会话；发动冷却固定 30 秒（cooldown_policy 固定覆盖）。 */
     private static void launch(EntityPlayerMP player, HordeState.Entry entry, HordeState state, BlockPos center) {
+        int total = Math.max(1, countVillagers(player.world, center));
         entry.active = true;
         entry.villageCenter = center;
         entry.startTick = player.world.getTotalWorldTime();
         entry.lastGolemSpawnTick = 0L;
         entry.abortSinceTick = 0L;
+        entry.initialVillagers = total;
         state.put(player.getUniqueID(), entry);
         setCooldown(player, ZombieLine.ABILITY_LAUNCH, launchCooldownTicks());
         Persuasion.resetFailStreak(player); // 发动成功即清「狼来了」连击
+        updateBossBar(player, entry, total);
+        playLaunchEffect(player);
         action(player, "ul.horde.launch");
+    }
+
+    private static void playLaunchEffect(EntityPlayerMP player) {
+        if (!(player.world instanceof WorldServer)) {
+            return;
+        }
+        WorldServer ws = (WorldServer) player.world;
+        for (int i = 0; i < 24; i++) {
+            double angle = (Math.PI * 2.0D * i) / 24.0D;
+            double px = player.posX + Math.cos(angle) * 2.2D;
+            double pz = player.posZ + Math.sin(angle) * 2.2D;
+            ws.spawnParticle(net.minecraft.util.EnumParticleTypes.SPELL_WITCH, false,
+                    px, player.posY + 0.3D, pz, 1, 0.1D, 0.2D, 0.1D, 0.02D);
+            ws.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_LARGE, false,
+                    px, player.posY + 0.2D, pz, 1, 0.05D, 0.1D, 0.05D, 0.03D);
+        }
+        ws.playSound(null, player.posX, player.posY, player.posZ,
+                net.minecraft.init.SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE,
+                net.minecraft.util.SoundCategory.PLAYERS, 0.85F, 0.65F);
     }
 
     /** 解放队伍：移除随从标签、散开恢复野生。 */
     public static void release(EntityPlayerMP player) {
         releaseFollowers(player);
+        if (player.world instanceof WorldServer) {
+            ((WorldServer) player.world).spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, false,
+                    player.posX, player.posY + 0.8D, player.posZ,
+                    16, 1.2D, 0.4D, 1.2D, 0.04D);
+            player.world.playSound(null, player.posX, player.posY, player.posZ,
+                    net.minecraft.init.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                    net.minecraft.util.SoundCategory.PLAYERS, 0.6F, 0.6F);
+        }
         action(player, "ul.horde.release");
         syncTeam(player);
     }
@@ -541,11 +596,18 @@ public final class HordeManager {
             boolean far = owner.world != world
                     || owner.getDistanceSq(entry.villageCenter) > abortDist * abortDist;
 
+            int remaining = countVillagers(world, entry.villageCenter);
+            if (entry.initialVillagers <= 0 && remaining > 0) {
+                entry.initialVillagers = remaining;
+                state.put(e.getKey(), entry);
+            }
+            updateBossBar(owner, entry, remaining);
+
             // 成功：活村民清零。防假胜利（2026-11-07 用户实测「0 村民出现胜利文案」）：
             // 村民未加载 ≠ 被肃清，必须村庄中心区块已加载；且玩家在场（非远离状态）
             // 才判成功——否则旧会话/走远后未加载的村庄会被直接判成胜利。
             if (!far && world.isBlockLoaded(entry.villageCenter)
-                    && countVillagers(world, entry.villageCenter) <= 0) {
+                    && remaining <= 0) {
                 succeed(owner, entry, state);
                 continue;
             }
@@ -599,10 +661,31 @@ public final class HordeManager {
             // FVP-33：敌人选择改问阵营图（村民只是候选，许不许可由图裁决）
             EntityVillager target = HateQueries.findNearestEnemy(z, new Vec3d(entry.villageCenter),
                     villageTargetRadius, EntityVillager.class, null);
+            if (target == null && z instanceof net.minecraft.entity.monster.EntityZombieVillager) {
+                target = findNearestLivingVillager(world, entry.villageCenter, villageTargetRadius);
+            }
             if (target != null) {
                 z.setAttackTarget(target);
             }
         }
+    }
+
+    @javax.annotation.Nullable
+    private static EntityVillager findNearestLivingVillager(World world, BlockPos center, double radius) {
+        EntityVillager best = null;
+        double bestDist = radius * radius;
+        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
+                new AxisAlignedBB(center).grow(radius))) {
+            if (v.isDead) {
+                continue;
+            }
+            double d = v.getDistanceSq(center);
+            if (d <= bestDist) {
+                bestDist = d;
+                best = v;
+            }
+        }
+        return best;
     }
 
     /**
@@ -620,7 +703,8 @@ public final class HordeManager {
         if (countGolems(world, entry.villageCenter) >= golemAliveCap(world, entry.villageCenter)) {
             return;
         }
-        BlockPos pos = findGolemSpawn(world, entry.villageCenter);
+        BlockPos anchor = pickGolemAnchor(world, owner);
+        BlockPos pos = findGolemSpawn(world, anchor);
         if (pos == null) {
             return;
         }
@@ -632,7 +716,48 @@ public final class HordeManager {
         // 即使收尾时区块未加载，重载后也会因 TTL 到期消失，不再累积野生铁傀儡。
         golem.getEntityData().setString(TAG_TIDE_GOLEM, owner.getUniqueID().toString());
         TimedSummons.mark(golem, golemLifespanTicks());
+        golem.motionY = 0.42D;
+        golem.velocityChanged = true;
+        golem.addPotionEffect(new net.minecraft.potion.PotionEffect(
+                net.minecraft.init.MobEffects.RESISTANCE, 40, 1, false, false));
         world.spawnEntity(golem);
+        playGolemSpawnAnimation(world, pos);
+    }
+
+    /** 以玩家及他领导的尸潮随从位置作为铁傀儡生成的候选锚点。 */
+    private static BlockPos pickGolemAnchor(World world, EntityPlayerMP owner) {
+        List<BlockPos> anchors = new ArrayList<>();
+        anchors.add(owner.getPosition());
+        double scanR = strength.num("zombie_tide.horde.follower_scan_radius", 64.0D);
+        for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
+                owner.getEntityBoundingBox().grow(scanR))) {
+            if (isZombieFamily(entity) && !entity.isDead
+                    && Followers.isFollowerOf(entity, owner.getUniqueID())) {
+                anchors.add(entity.getPosition());
+            }
+        }
+        return anchors.get(world.rand.nextInt(anchors.size()));
+    }
+
+    /** 破土跃出动画：铁块碎裂粒子环 + 烟尘冲击波 + 铁砧重击声效（无需额外渲染库）。 */
+    private static void playGolemSpawnAnimation(World world, BlockPos pos) {
+        if (!(world instanceof WorldServer)) {
+            return;
+        }
+        WorldServer ws = (WorldServer) world;
+        double cx = pos.getX() + 0.5D;
+        double cy = pos.getY() + 0.2D;
+        double cz = pos.getZ() + 0.5D;
+        int ironStateId = net.minecraft.block.Block.getStateId(
+                net.minecraft.init.Blocks.IRON_BLOCK.getDefaultState());
+        ws.spawnParticle(net.minecraft.util.EnumParticleTypes.BLOCK_CRACK,
+                cx, cy, cz, 28, 0.7D, 0.3D, 0.7D, 0.15D, ironStateId);
+        ws.spawnParticle(net.minecraft.util.EnumParticleTypes.EXPLOSION_NORMAL,
+                cx, cy + 0.5D, cz, 12, 0.6D, 0.4D, 0.6D, 0.06D);
+        ws.playSound(null, pos, net.minecraft.init.SoundEvents.BLOCK_ANVIL_LAND,
+                net.minecraft.util.SoundCategory.HOSTILE, 0.9F, 0.7F);
+        ws.playSound(null, pos, net.minecraft.init.SoundEvents.ENTITY_IRONGOLEM_HURT,
+                net.minecraft.util.SoundCategory.HOSTILE, 0.9F, 0.85F);
     }
 
     /** 尸潮召唤铁傀儡的存活上限（tick）；到期自动清理，兜底区块未加载时的收尾遗漏。 */
@@ -703,15 +828,30 @@ public final class HordeManager {
     private static void markInvadedVillagers(World world, EntityPlayerMP owner, HordeState.Entry entry) {
         String ownerId = owner.getUniqueID().toString();
         double r = strength.num("zombie_tide.horde.villager_count_radius", 48.0D);
-        for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
-                new AxisAlignedBB(entry.villageCenter).grow(r))) {
+        int maxMarked = Math.max(1, strength.integer("zombie_tide.horde.max_marked_villagers", 32));
+        List<EntityVillager> candidates = world.getEntitiesWithinAABB(EntityVillager.class,
+                new AxisAlignedBB(entry.villageCenter).grow(r));
+        candidates.sort(Comparator.comparingDouble(v -> v.getDistanceSq(entry.villageCenter)));
+        int marked = 0;
+        for (EntityVillager v : candidates) {
             if (v.isDead) {
                 continue;
             }
-            if (!ownerId.equals(v.getEntityData().getString(TAG_TIDE_INVADED))) {
-                v.getEntityData().setString(TAG_TIDE_INVADED, ownerId);
+            if (ownerId.equals(v.getEntityData().getString(TAG_TIDE_INVADED))) {
+                Outlines.mark(v);
+                marked++;
             }
+        }
+        for (EntityVillager v : candidates) {
+            if (marked >= maxMarked) {
+                break;
+            }
+            if (v.isDead || ownerId.equals(v.getEntityData().getString(TAG_TIDE_INVADED))) {
+                continue;
+            }
+            v.getEntityData().setString(TAG_TIDE_INVADED, ownerId);
             Outlines.mark(v);
+            marked++;
         }
     }
 
@@ -842,7 +982,38 @@ public final class HordeManager {
         releaseFollowers(player);
         clearTideGolems(player);
         clearInvadedVillagers(player);
+        clearBossBar(player.getUniqueID());
         syncTeam(player);
+    }
+
+    private static final java.util.Map<UUID, net.minecraft.world.BossInfoServer> TIDE_BOSS_BARS =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static void updateBossBar(EntityPlayerMP owner, HordeState.Entry entry, int remaining) {
+        int total = Math.max(1, Math.max(entry.initialVillagers, remaining));
+        net.minecraft.util.text.ITextComponent title = new net.minecraft.util.text.TextComponentTranslation(
+                "aaaa0ggmc_ul_modpack.horde.bossbar", owner.getName(), remaining, total);
+        net.minecraft.world.BossInfoServer bar = TIDE_BOSS_BARS.computeIfAbsent(owner.getUniqueID(), id -> {
+            net.minecraft.world.BossInfoServer created = new net.minecraft.world.BossInfoServer(
+                    title, net.minecraft.world.BossInfo.Color.RED, net.minecraft.world.BossInfo.Overlay.PROGRESS);
+            created.setVisible(true);
+            return created;
+        });
+        if (!bar.getPlayers().contains(owner)) {
+            bar.addPlayer(owner);
+        }
+        bar.setName(title);
+        bar.setPercent(Math.max(0.0F, Math.min(1.0F, (float) remaining / (float) total)));
+    }
+
+    private static void clearBossBar(UUID ownerId) {
+        net.minecraft.world.BossInfoServer bar = TIDE_BOSS_BARS.remove(ownerId);
+        if (bar != null) {
+            bar.setVisible(false);
+            for (EntityPlayerMP p : new ArrayList<>(bar.getPlayers())) {
+                bar.removePlayer(p);
+            }
+        }
     }
 
     // ============================================================ 调试 / 状态（命令用）
@@ -911,7 +1082,103 @@ public final class HordeManager {
 
     // ============================================================ 热忱的腐肉掉落
 
-    /** 随从被铁傀儡打死（且主人尸潮 active + 已确认过尸潮成功）→ 掉 1 个热忱的腐肉。 */
+    /** 尸潮期间被入侵标记的村民死亡时掉落经验（默认 32 XP，可由 UlStrength 配置）。 */
+    public static void onVillagerDeath(EntityVillager villager) {
+        if (villager == null || villager.world.isRemote) {
+            return;
+        }
+        String ownerId = villager.getEntityData().getString(TAG_TIDE_INVADED);
+        if (ownerId.isEmpty()) {
+            return;
+        }
+        UUID owner;
+        try {
+            owner = UUID.fromString(ownerId);
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
+        HordeState.Entry entry = HordeState.get(villager.world).get(owner);
+        if (entry == null || !entry.active) {
+            return;
+        }
+        int xp = strength.integer("zombie_tide.horde.villager_kill_xp", 32);
+        if (xp > 0) {
+            villager.world.spawnEntity(new net.minecraft.entity.item.EntityXPOrb(
+                    villager.world, villager.posX, villager.posY, villager.posZ, xp));
+        }
+        recordPendingInfection(villager, owner);
+    }
+
+    private static final class PendingInfection {
+        final int dimension;
+        final double x, y, z;
+        final UUID owner;
+        final long expireTick;
+
+        PendingInfection(int dimension, double x, double y, double z, UUID owner, long expireTick) {
+            this.dimension = dimension;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.owner = owner;
+            this.expireTick = expireTick;
+        }
+    }
+
+    private static final List<PendingInfection> PENDING_INFECTIONS = new ArrayList<>();
+
+    private static void recordPendingInfection(EntityVillager villager, UUID owner) {
+        long now = villager.world.getTotalWorldTime();
+        synchronized (PENDING_INFECTIONS) {
+            PENDING_INFECTIONS.removeIf(p -> p.expireTick < now);
+            PENDING_INFECTIONS.add(new PendingInfection(
+                    villager.dimension, villager.posX, villager.posY, villager.posZ, owner, now + 4L));
+        }
+    }
+
+    /** 尸潮期间村民被感染转化出的僵尸村民：自动归入发起者阵营作战，且初始血量为配置比例（默认 50%）。 */
+    public static void tryAdoptInfectedZombieVillager(net.minecraft.entity.monster.EntityZombieVillager zv) {
+        if (zv == null || zv.world.isRemote) {
+            return;
+        }
+        long now = zv.world.getTotalWorldTime();
+        UUID ownerUuid = null;
+        synchronized (PENDING_INFECTIONS) {
+            java.util.Iterator<PendingInfection> it = PENDING_INFECTIONS.iterator();
+            while (it.hasNext()) {
+                PendingInfection p = it.next();
+                if (p.expireTick < now) {
+                    it.remove();
+                    continue;
+                }
+                if (p.dimension == zv.dimension && zv.getDistanceSq(p.x, p.y, p.z) <= 6.25D) {
+                    ownerUuid = p.owner;
+                    it.remove();
+                    break;
+                }
+            }
+        }
+        if (ownerUuid == null) {
+            return;
+        }
+        HordeState.Entry entry = HordeState.get(zv.world).get(ownerUuid);
+        if (entry == null || !entry.active) {
+            return;
+        }
+        Followers.setOwner(zv, ownerUuid, now);
+        Outlines.mark(zv, net.minecraft.util.text.TextFormatting.GREEN);
+        double ratio = Math.max(0.05D, Math.min(1.0D, strength.num("zombie_tide.horde.infected_health_ratio", 0.5D)));
+        float targetHp = (float) Math.max(1.0D, Math.min(zv.getMaxHealth(), zv.getMaxHealth() * ratio));
+        zv.setHealth(targetHp);
+
+        EntityPlayer owner = zv.world.getPlayerEntityByUUID(ownerUuid);
+        if (owner instanceof EntityPlayerMP) {
+            applyFollowerMultiplier(zv, Persuasion.multiplier(Persuasion.get((EntityPlayerMP) owner)));
+            syncTeam((EntityPlayerMP) owner);
+        }
+    }
+
+    /** 随从被铁傀儡打死 → 掉热忱的腐肉（食用时再校验是否通关过尸潮）。 */
     public static void onFollowerDrops(net.minecraftforge.event.entity.living.LivingDropsEvent event) {
         EntityLivingBase dead = event.getEntityLiving();
         if (!Followers.isFollower(dead)) {
@@ -930,37 +1197,10 @@ public final class HordeManager {
         if (entry == null || !entry.active) {
             return;
         }
-        // 门槛（2026-11-07 用户反馈「未确认成功就能提前获得」）：获得条件校验
-        // tide_success 时间戳——没确认过尸潮成功的「坏领袖」拿不到热忱的腐肉。
-        if (!hasTideSuccess(dead.world, owner)) {
-            EntityPlayer ownerPlayer = dead.world.getPlayerEntityByUUID(owner);
-            if (ownerPlayer instanceof EntityPlayerMP) {
-                warnNoLeader((EntityPlayerMP) ownerPlayer);
-            }
-            return;
-        }
         int count = strength.integer("zombie_tide.horde.flesh_drop", 1);
         ItemStack flesh = new ItemStack(CommonProxy.ZEALOUS_FLESH, count);
         event.getDrops().add(new EntityItem(dead.world, dead.posX, dead.posY, dead.posZ, flesh));
         Followers.clearOwner(dead);
-    }
-
-    /** 「坏领袖」提示节流（tick）：一场战斗多个随从阵亡时不刷屏。 */
-    private static long noLeaderWarnIntervalTicks() {
-        return Math.max(1L, (long) strength.num(
-                "zombie_tide.horde.no_leader_warn_interval_ticks", 100.0D));
-    }
-    private static final java.util.Map<UUID, Long> LAST_NO_LEADER_WARN = new java.util.WeakHashMap<>();
-
-    /** 未满足热忱的腐肉门槛时的提示（获得/食用共用一条文案）。 */
-    private static void warnNoLeader(EntityPlayerMP player) {
-        long now = player.world.getTotalWorldTime();
-        Long last = LAST_NO_LEADER_WARN.get(player.getUniqueID());
-        if (last != null && now - last < noLeaderWarnIntervalTicks()) {
-            return;
-        }
-        LAST_NO_LEADER_WARN.put(player.getUniqueID(), now);
-        action(player, "ul.zealous_flesh.fail.leader");
     }
 
     // ============================================================ 随从查询 / 属性
@@ -1219,7 +1459,7 @@ public final class HordeManager {
     /** 立刻给当前队员挂白色描边（队伍变化点调用，入队即时描边）。 */
     private static void applyGlow(EntityPlayerMP player) {
         for (EntityLiving f : followersOf(player)) {
-            Outlines.mark(f);
+            Outlines.mark(f, net.minecraft.util.text.TextFormatting.GREEN);
         }
     }
 

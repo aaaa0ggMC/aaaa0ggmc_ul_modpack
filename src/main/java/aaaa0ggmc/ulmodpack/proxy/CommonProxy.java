@@ -1,11 +1,16 @@
 package aaaa0ggmc.ulmodpack.proxy;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
+import aaaa0ggmc.ulmodpack.block.BlockTitanStatue;
 import aaaa0ggmc.ulmodpack.config.PackConfig;
 import aaaa0ggmc.ulmodpack.infection.UlTriggers;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
+import aaaa0ggmc.ulmodpack.item.ItemSleepingPill;
+import aaaa0ggmc.ulmodpack.item.ItemTitanCrown;
 import aaaa0ggmc.ulmodpack.item.ItemZealousFlesh;
+import aaaa0ggmc.ulmodpack.potion.PotionDeepSleep;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -23,8 +28,20 @@ public class CommonProxy {
 
     public static final ItemAnkhAmulet ANKH_AMULET = new ItemAnkhAmulet();
 
-    /** 热忱的腐肉：吃下变泰坦（不死者线产出，随从被铁傀儡打死掉落）。 */
+    /** 热忱的腐肉：泰坦王冠合成材料；僵尸形态可食用回血。 */
     public static final ItemZealousFlesh ZEALOUS_FLESH = new ItemZealousFlesh();
+
+    /** 泰坦王冠：僵尸形态佩戴变身泰坦，摘下退回原形态。 */
+    public static final ItemTitanCrown TITAN_CROWN = new ItemTitanCrown();
+
+    /** 泰坦金色雕塑：两格高的支线纪念收藏品。 */
+    public static final BlockTitanStatue TITAN_STATUE = new BlockTitanStatue();
+    public static final ItemBlock TITAN_STATUE_ITEM = (ItemBlock) new ItemBlock(TITAN_STATUE)
+            .setRegistryName(TITAN_STATUE.getRegistryName());
+
+    /** 安眠药 & 安眠药水效果：通用种族回撤机制。 */
+    public static final PotionDeepSleep POTION_DEEP_SLEEP = new PotionDeepSleep();
+    public static final ItemSleepingPill SLEEPING_PILL = new ItemSleepingPill();
 
     public void preInit(FMLPreInitializationEvent event) {
         // 通用机制开关（input/按键状态自愈等）先加载，客户端处理器读到的才是生效值；

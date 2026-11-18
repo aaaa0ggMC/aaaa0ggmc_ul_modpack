@@ -32,7 +32,7 @@ public final class VillagerFearHandler {
 
     /** 躲避触发距离（格）：与原版村民躲僵尸一致（EntityVillager.initEntityAI）。 */
     private static float avoidDistance() {
-        return (float) aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.villager_fear.avoid_distance", 8.0D);
+        return (float) aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.villager_fear.avoid_distance", 12.0D);
     }
 
     /** 逃跑速度（远离档）：与原版村民躲僵尸一致。 */
@@ -64,7 +64,10 @@ public final class VillagerFearHandler {
         }
         villager.getEntityData().setBoolean(TAG_FEAR_AI, true);
         villager.tasks.addTask(1, new EntityAIAvoidEntity<EntityPlayer>(villager, EntityPlayer.class,
-                player -> HateQueries.relation(villager, player) == FactionRelation.ENEMY,
+                player -> {
+                    FactionRelation rel = HateQueries.relation(villager, player);
+                    return rel == FactionRelation.ENEMY || rel == FactionRelation.FEAR;
+                },
                 avoidDistance(), fleeSpeedFar(), fleeSpeedNear()));
     }
 }

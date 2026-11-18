@@ -30,19 +30,40 @@ ftbquests.task.aaaa0ggmc_ul_modpack.progress=进度检测
 # 转化仪式（数据来自 assets/aaaa0ggmc_ul_modpack/morphext/conversion_rules.json）
 aaaa0ggmc_ul_modpack.ritual.sand_burial.title=沙葬
 aaaa0ggmc_ul_modpack.ritual.sand_burial.subtitle=你作为尸壳破沙而出。
-aaaa0ggmc_ul_modpack.ritual.water_ritual.title=水祭
-aaaa0ggmc_ul_modpack.ritual.water_ritual.subtitle=你作为僵尸浮上水面。
+aaaa0ggmc_ul_modpack.ritual.gravel_burial.title=砾葬
+aaaa0ggmc_ul_modpack.ritual.gravel_burial.subtitle=你作为僵尸从沙砾中爬出。
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.title=火祭
 aaaa0ggmc_ul_modpack.ritual.fire_ritual.subtitle=你作为僵尸猪人站起。
 aaaa0ggmc_ul_modpack.ritual.village_emerald.title=村祭
 aaaa0ggmc_ul_modpack.ritual.village_emerald.subtitle=村庄把你归成了僵尸村民。
 
-# 热忱的腐肉（泰坦入口）
+aaaa0ggmc_ul_modpack.horde.bossbar=%s 的袭击 - 剩余村民：%s/%s
+# 热忱的腐肉（王冠材料 / 亡灵应急口粮）
 item.aaaa0ggmc_ul_modpack.zealous_flesh.name=热忱的腐肉
 aaaa0ggmc_ul_modpack.zealous_flesh.lore1=§7在一次次潮水中总是那么随波逐流。
 aaaa0ggmc_ul_modpack.zealous_flesh.lore2=§7随从被铁傀儡打死时掉落。
-aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7吃下它，需要尸群领导，
-aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7并且至少屠过一次村。
+aaaa0ggmc_ul_modpack.zealous_flesh.lore3=§7可用于合成泰坦王冠；
+aaaa0ggmc_ul_modpack.zealous_flesh.lore4=§7不死者形态下直接食用可回复 10 点生命。
+
+# 泰坦王冠
+item.aaaa0ggmc_ul_modpack.titan_crown.name=泰坦王冠
+aaaa0ggmc_ul_modpack.titan_crown.lore1=§7以热忱的腐肉与金锭铸成的骸骨冠冕。
+aaaa0ggmc_ul_modpack.titan_crown.lore2=§7不死者形态下佩戴（需尸群领导且至少屠村一次）即可化身泰坦，
+aaaa0ggmc_ul_modpack.titan_crown.lore3=§7摘下则退回原僵尸形态；开启等高缩放/人类外观时无需 12 格净空。
+
+# 泰坦金色雕塑（两格高纪念战利品）
+tile.aaaa0ggmc_ul_modpack.titan_statue.name=泰坦金色雕塑
+aaaa0ggmc_ul_modpack.titan_statue.lore1=§7两格高的鎏金泰坦雕像，冠上嵌着一枚血红宝石。
+aaaa0ggmc_ul_modpack.titan_statue.lore2=§7献给率领尸群踏平村庄、加冕为泰坦的掠夺者。
+
+# 安眠药 & 安眠效果
+item.aaaa0ggmc_ul_modpack.sleeping_pill.name=安眠药
+aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7附带缓慢 I 与虚弱 I 的助眠药片。
+aaaa0ggmc_ul_modpack.sleeping_pill.lore2=§7药效期间躺上床或睡袋，即可解除变身退回玩家种族。
+effect.aaaa0ggmc_ul_modpack.deep_sleep=安眠
+ul.sleeping_pill.already_human=你现在已经是玩家原本的种族了。
+ul.sleeping_pill.taken=睡意袭来……快找张床或睡袋躺下吧。
+ul.sleeping_pill.reverted=安眠醒来，你变回了自己的本来面目。
 
 # 尸群领导 / 尸潮
 ul.horde.fail.skill=死者还不想听你的。
@@ -73,9 +94,12 @@ ul.horde.abort=你走得太远了。潮水散了。
 # 泰坦
 ul.titan.feast.fail.skill=死者还不想听你的。
 ul.zealous_flesh.fail.leader=什么都没有发生——你现在还不是合格的领袖。
+ul.zealous_flesh.fail.not_undead=只有不死者才能咽下这股热忱。
+ul.zealous_flesh.fail.full=你现在不需要进食。
 ul.titan.feast.fail.room=这里放不下泰坦。
 ul.titan.feast.fail.form=你现在不是不死者。
 ul.titan.feast.ok=你长高了。
+ul.titan.crown.revert=王冠离首，身形缩回了原本的模样。
 ul.titan.bed=床太小了。
 ul.titan.slam.cooldown=震地还在冷却。
 
