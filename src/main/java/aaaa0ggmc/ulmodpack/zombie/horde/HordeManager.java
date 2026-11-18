@@ -6,6 +6,7 @@ import aaaa0ggmc.morphext.follower.Followers;
 import aaaa0ggmc.morphext.follower.TimedSummons;
 import aaaa0ggmc.morphext.network.AbilityNetwork;
 import aaaa0ggmc.morphext.render.Outlines;
+import aaaa0ggmc.uld.IStrengthService;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.faction.HateQueries;
@@ -83,14 +84,15 @@ public final class HordeManager {
      */
     private static final String TAG_TIDE_INVADED = "ulTideInvaded";
 
-    /**
-     * 常规村庄铁傀儡存活上限（村落线流言/恐吓基线，设计文档「尸潮.md」：常规 15 秒
-     * 1 只、上限 3；尸潮 5 秒 1 只、上限 9，正好 3 倍）。{@code golem_multiplier}
-     * 以它为 1.0 基线，见 {@link #golemAliveCap()}。
-     */
-    private static final int REGULAR_GOLEM_CAP = 3;
+    private static volatile IStrengthService strength = UlStrength.service();
 
     private HordeManager() {
+    }
+
+    public static void setStrengthService(IStrengthService service) {
+        if (service != null) {
+            strength = service;
+        }
     }
 
     // ============================================================ 招募
@@ -156,8 +158,8 @@ public final class HordeManager {
         }
         boolean needHurt = persuasion < Persuasion.thresholdMid();
         boolean needFlesh = persuasion < Persuasion.thresholdLow();
-        double hurtBelow = UlStrength.num("zombie_tide.horde.persuasion_hurt_below", 0.5D);
-        int fleshCost = UlStrength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
+        double hurtBelow = strength.num("zombie_tide.horde.persuasion_hurt_below", 0.5D);
+        int fleshCost = strength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
         if (needFlesh && countItem(player, Items.ROTTEN_FLESH) < fleshCost) {
             action(player, "ul.horde.recruit.fail.flesh");
             return 0;
@@ -205,8 +207,8 @@ public final class HordeManager {
 
         boolean needHurt = persuasion < Persuasion.thresholdMid();
         boolean needFlesh = persuasion < Persuasion.thresholdLow();
-        double hurtBelow = UlStrength.num("zombie_tide.horde.persuasion_hurt_below", 0.5D);
-        int fleshCost = UlStrength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
+        double hurtBelow = strength.num("zombie_tide.horde.persuasion_hurt_below", 0.5D);
+        int fleshCost = strength.integer("zombie_tide.horde.recruit_flesh_cost", 1);
 
         // 说服度 <20 要搭一块腐肉：先预检，不满足提示且不招募
         if (needFlesh && countItem(player, Items.ROTTEN_FLESH) < fleshCost) {
@@ -249,7 +251,7 @@ public final class HordeManager {
 
     /** 招募射程（服务端权威距离校验）。 */
     private static double recruitReach() {
-        return UlStrength.num("zombie_tide.horde.recruit_reach", 4.5D);
+        return strength.num("zombie_tide.horde.recruit_reach", 4.5D);
     }
 
     /**
@@ -507,7 +509,7 @@ public final class HordeManager {
         if (world.isRemote) {
             return;
         }
-        long interval = (long) UlStrength.num("zombie_tide.horde.tick_interval", 20.0D);
+        long interval = (long) strength.num("zombie_tide.horde.tick_interval", 20.0D);
         if (interval <= 0 || world.getTotalWorldTime() % (long) interval != 0) {
             return;
         }
@@ -534,8 +536,8 @@ public final class HordeManager {
             markInvadedVillagers(world, owner, entry);
 
             // 中止口径先算（成功判定要用）：玩家远离村庄 = 走中止语义，不判成功
-            double abortDist = UlStrength.num("zombie_tide.horde.abort_distance", 48.0D);
-            long abortTicks = (long) UlStrength.num("zombie_tide.horde.abort_ticks", 600.0D);
+            double abortDist = strength.num("zombie_tide.horde.abort_distance", 48.0D);
+            long abortTicks = (long) strength.num("zombie_tide.horde.abort_ticks", 600.0D);
             boolean far = owner.world != world
                     || owner.getDistanceSq(entry.villageCenter) > abortDist * abortDist;
 
@@ -551,14 +553,15 @@ public final class HordeManager {
             if (far) {
                 if (entry.abortSinceTick == 0L) {
                     entry.abortSinceTick = world.getTotalWorldTime();
+                    state.put(e.getKey(), entry);
                 } else if (world.getTotalWorldTime() - entry.abortSinceTick >= abortTicks) {
                     abort(owner, entry, state);
                     continue;
                 }
-            } else {
+            } else if (entry.abortSinceTick != 0L) {
                 entry.abortSinceTick = 0L;
+                state.put(e.getKey(), entry);
             }
-            state.put(e.getKey(), entry);
         }
     }
 
@@ -581,8 +584,10 @@ public final class HordeManager {
      */
     private static void commandFollowers(EntityPlayerMP owner, HordeState.Entry entry) {
         World world = owner.world;
+        double followerScanRadius = strength.num("zombie_tide.horde.follower_scan_radius", 64.0D);
+        double villageTargetRadius = strength.num("zombie_tide.horde.village_target_radius", 16.0D);
         for (Entity entity : world.getEntitiesWithinAABB(EntityLiving.class,
-                owner.getEntityBoundingBox().grow(64.0D))) {
+                owner.getEntityBoundingBox().grow(followerScanRadius))) {
             // 只指派自己的随从（L7 owner 过滤）：他人随从不得被拉去打村民
             if (!isZombieFamily(entity) || !Followers.isFollowerOf(entity, owner.getUniqueID())) {
                 continue;
@@ -593,7 +598,7 @@ public final class HordeManager {
             }
             // FVP-33：敌人选择改问阵营图（村民只是候选，许不许可由图裁决）
             EntityVillager target = HateQueries.findNearestEnemy(z, new Vec3d(entry.villageCenter),
-                    16.0D, EntityVillager.class, null);
+                    villageTargetRadius, EntityVillager.class, null);
             if (target != null) {
                 z.setAttackTarget(target);
             }
@@ -601,17 +606,18 @@ public final class HordeManager {
     }
 
     /**
-     * 尸潮期间每 golem_interval tick 尝试刷 1 只铁傀儡，同时存活 ≤ {@link #golemAliveCap()}
-     * （golem_max_alive 与 golem_multiplier 合成上限）。
+     * 尸潮期间每 {@code golem_interval_ticks} tick 尝试刷 1 只铁傀儡，同时
+     * 同场存活 ≤ {@link #golemAliveCap(World, BlockPos)}（村民数 × 倍率，再被
+     * {@code golem_max_alive} 硬上限兜底）。
      */
     private static void maybeSpawnGolem(World world, EntityPlayerMP owner, HordeState.Entry entry) {
         long now = world.getTotalWorldTime();
-        long interval = (long) UlStrength.num("zombie_tide.horde.golem_interval_ticks", 100.0D);
+        long interval = (long) strength.num("zombie_tide.horde.golem_interval_ticks", 100.0D);
         if (entry.lastGolemSpawnTick != 0L && now - entry.lastGolemSpawnTick < interval) {
             return;
         }
         entry.lastGolemSpawnTick = now;
-        if (countGolems(world, entry.villageCenter) >= golemAliveCap()) {
+        if (countGolems(world, entry.villageCenter) >= golemAliveCap(world, entry.villageCenter)) {
             return;
         }
         BlockPos pos = findGolemSpawn(world, entry.villageCenter);
@@ -631,24 +637,38 @@ public final class HordeManager {
 
     /** 尸潮召唤铁傀儡的存活上限（tick）；到期自动清理，兜底区块未加载时的收尾遗漏。 */
     private static int golemLifespanTicks() {
-        return UlStrength.integer("zombie_tide.horde.golem_lifespan_ticks", 1200);
+        return strength.integer("zombie_tide.horde.golem_lifespan_ticks", 1200);
     }
 
     /**
-     * 尸潮傀儡存活上限 = 常规上限 {@link #REGULAR_GOLEM_CAP}（3 只）×
-     * {@code zombie_tide.horde.golem_multiplier}（设计常量 tideIronGolemMultiplier；
-     * 配置值 3.0 = 「对常规 3 只正好 3 倍」→ 9，见设计文档「尸潮.md」铁傀儡刷新一节），
-     * 再与 {@code golem_max_alive} 取小封顶（默认 ≤9）。倍率读不到回退 1.0
-     * （= 常规 1 倍、仅 3 只）；结果下限 1。
+     * 尸潮傀儡存活上限（用户口径 2026-11-07：「上限就是玩家周围区块最多 N×村民个数 个铁傀儡」）：
+     * 村庄中心 {@code villager_count_radius} 内<b>活村民数</b> ×
+     * {@code zombie_tide.horde.golem_villager_multiplier}（N，默认 1.0 = 一村民一傀儡），
+     * 再与 {@code zombie_tide.horde.golem_max_alive} 取小封顶，结果下限 1。
+     *
+     * <p>两者配合：倍率项是<b>主口径</b>（随村庄规模伸缩），{@code golem_max_alive} 是
+     * <b>硬上限兜底</b>——只在「村民过多」（村民数 × N 超过它）时生效，防止巨型村庄爆量。
+     * 村民极少时上限自然很低（屠村发动本身要求 ≥ {@code village_min_villagers} 个村民，
+     * 所以实际下限由发动条件保证；{@code cap < 1} 的钳制只防「全村死绝仍刷傀儡」的边角）。
+     * 计数锚点用村庄中心而非玩家当前位置：与成功判定（{@link #countVillagers}）、入侵标记
+     * （{@link #markInvadedVillagers}）、落点搜索（{@link #findGolemSpawn}）同一把尺子，
+     * 且玩家须留在中心 {@code abort_distance} 内否则尸潮中止——「玩家周围」≈「村庄周围」。</p>
+     *
+     * <p>与 {@link #countGolems} 同半径（{@code villager_count_radius}）：上限的村民侧与
+     * 存活侧的统计范围必须一致，否则走远的傀儡漏计会导致上限失守。</p>
+     *
+     * <p>原版对照（{@code reference/.../village/Village.java:60-82}）：原版上限 =
+     * {@code numVillagers / 10} + 要求 >20 扇门 + 每 tick 1/7000 概率；尸潮这条是自研计时
+     * 路径，不受原版条件约束，也不改原版村庄生成逻辑。</p>
      */
-    private static int golemAliveCap() {
-        int maxAlive = UlStrength.integer("zombie_tide.horde.golem_max_alive", 9);
-        double multiplier = UlStrength.num("zombie_tide.horde.golem_multiplier", 1.0D);
-        int cap = (int) Math.round(REGULAR_GOLEM_CAP * multiplier);
+    private static int golemAliveCap(World world, BlockPos center) {
+        int villagers = countVillagers(world, center);
+        double perVillager = strength.num("zombie_tide.horde.golem_villager_multiplier", 1.0D);
+        int cap = (int) Math.round(villagers * perVillager);
         if (cap < 1) {
             cap = 1;
         }
-        return Math.min(cap, maxAlive);
+        return Math.min(cap, strength.integer("zombie_tide.horde.golem_max_alive", 20));
     }
 
     /** M6：清理本场尸潮召唤的铁傀儡（跨维度扫描已加载区块；未加载的由 TTL 兜底）。 */
@@ -682,7 +702,7 @@ public final class HordeManager {
      */
     private static void markInvadedVillagers(World world, EntityPlayerMP owner, HordeState.Entry entry) {
         String ownerId = owner.getUniqueID().toString();
-        double r = UlStrength.num("zombie_tide.horde.villager_count_radius", 48.0D);
+        double r = strength.num("zombie_tide.horde.villager_count_radius", 48.0D);
         for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
                 new AxisAlignedBB(entry.villageCenter).grow(r))) {
             if (v.isDead) {
@@ -790,7 +810,7 @@ public final class HordeManager {
         // tide_success 时间戳：热忱的腐肉获得/食用门槛的明确字段（本场确认成功即记录）
         state.recordTideSuccess(player.getUniqueID(), player.world.getTotalWorldTime());
         incrementTideCleared(player);
-        Persuasion.add(player, UlStrength.num("zombie_tide.horde.persuasion_win", 10.0D));
+        Persuasion.add(player, strength.num("zombie_tide.horde.persuasion_win", 10.0D));
         endTide(player, entry, state);
         chat(player, "ul.horde.win");
     }
@@ -800,7 +820,7 @@ public final class HordeManager {
         HordeState state = HordeState.get(player.world);
         HordeState.Entry entry = state.get(player.getUniqueID());
         if (entry != null && entry.active) {
-            Persuasion.add(player, UlStrength.num("zombie_tide.horde.persuasion_fail", -20.0D));
+            Persuasion.add(player, strength.num("zombie_tide.horde.persuasion_fail", -20.0D));
             endTide(player, entry, state);
             chat(player, "ul.horde.fail");
         }
@@ -829,7 +849,7 @@ public final class HordeManager {
 
     /** 调试：强制在村民聚集地发动屠村（忽略队伍/村民数检查）。 */
     public static void forceStart(EntityPlayerMP player) {
-        double radius = UlStrength.num("zombie_tide.horde.village_radius", 32.0D);
+        double radius = strength.num("zombie_tide.horde.village_radius", 32.0D);
         // 与正式发动同一套「村民聚集即村庄」判定；调试版把人数下限压到 1
         List<EntityVillager> villagers = player.world.getEntitiesWithinAABB(
                 EntityVillager.class, player.getEntityBoundingBox().grow(radius));
@@ -919,7 +939,7 @@ public final class HordeManager {
             }
             return;
         }
-        int count = UlStrength.integer("zombie_tide.horde.flesh_drop", 1);
+        int count = strength.integer("zombie_tide.horde.flesh_drop", 1);
         ItemStack flesh = new ItemStack(CommonProxy.ZEALOUS_FLESH, count);
         event.getDrops().add(new EntityItem(dead.world, dead.posX, dead.posY, dead.posZ, flesh));
         Followers.clearOwner(dead);
@@ -927,7 +947,7 @@ public final class HordeManager {
 
     /** 「坏领袖」提示节流（tick）：一场战斗多个随从阵亡时不刷屏。 */
     private static long noLeaderWarnIntervalTicks() {
-        return Math.max(1L, (long) UlStrength.num(
+        return Math.max(1L, (long) strength.num(
                 "zombie_tide.horde.no_leader_warn_interval_ticks", 100.0D));
     }
     private static final java.util.Map<UUID, Long> LAST_NO_LEADER_WARN = new java.util.WeakHashMap<>();
@@ -981,7 +1001,7 @@ public final class HordeManager {
 
     private static List<EntityLiving> followersOf(EntityPlayerMP player) {
         UUID owner = player.getUniqueID();
-        double r = UlStrength.num("zombie_tide.horde.follower_count_radius", 64.0D);
+        double r = strength.num("zombie_tide.horde.follower_count_radius", 64.0D);
         List<EntityLiving> out = new ArrayList<>();
         for (EntityLiving e : player.world.getEntitiesWithinAABB(EntityLiving.class,
                 player.getEntityBoundingBox().grow(r))) {
@@ -1033,8 +1053,8 @@ public final class HordeManager {
      * 质心为村庄中心；不足返回 null。
      */
     private static BlockPos findVillageCenter(EntityPlayerMP player) {
-        double radius = UlStrength.num("zombie_tide.horde.village_radius", 32.0D);
-        int minVillagers = UlStrength.integer("zombie_tide.horde.village_min_villagers", 4);
+        double radius = strength.num("zombie_tide.horde.village_radius", 32.0D);
+        int minVillagers = strength.integer("zombie_tide.horde.village_min_villagers", 4);
         List<EntityVillager> villagers = player.world.getEntitiesWithinAABB(
                 EntityVillager.class, player.getEntityBoundingBox().grow(radius));
         int n = 0;
@@ -1056,7 +1076,7 @@ public final class HordeManager {
 
     /** 活村民计数（成功判定口径）：滤 {@code isDead}，死村民不再拖一拍误判「未清零」。 */
     private static int countVillagers(World world, BlockPos center) {
-        double r = UlStrength.num("zombie_tide.horde.villager_count_radius", 48.0D);
+        double r = strength.num("zombie_tide.horde.villager_count_radius", 48.0D);
         int n = 0;
         for (EntityVillager v : world.getEntitiesWithinAABB(EntityVillager.class,
                 new AxisAlignedBB(center).grow(r))) {
@@ -1068,8 +1088,15 @@ public final class HordeManager {
         return n;
     }
 
+    /**
+     * 同场铁傀儡计数（上限比对侧）：半径取 {@code villager_count_radius}（= 尸潮竞技场 =
+     * 成功判定统计活村民的同一范围），<b>不</b>取 {@code golem_spawn_radius}——后者只是落点
+     * 搜索范围，傀儡会追攻击者走远，用它会漏计、导致 {@link #golemAliveCap} 失守。
+     * 统计全部 {@code EntityIronGolem}（含原版村庄傀儡）：上限口径是「这一带最多几只傀儡」，
+     * 原版刷出来的同样占额（与用户口径一致）。
+     */
     private static int countGolems(World world, BlockPos center) {
-        double r = UlStrength.num("zombie_tide.horde.golem_spawn_radius", 16.0D);
+        double r = strength.num("zombie_tide.horde.villager_count_radius", 48.0D);
         return world.getEntitiesWithinAABB(EntityIronGolem.class,
                 new AxisAlignedBB(center).grow(r)).size();
     }
@@ -1081,8 +1108,8 @@ public final class HordeManager {
      * 地面扫描失败的列走高度图兜底（原行为：最上层不透明方块之上、两格空气）。
      */
     private static BlockPos findGolemSpawn(World world, BlockPos center) {
-        int r = (int) UlStrength.num("zombie_tide.horde.golem_spawn_radius", 16.0D);
-        int tries = UlStrength.integer("zombie_tide.horde.golem_spawn_tries", 12);
+        int r = (int) strength.num("zombie_tide.horde.golem_spawn_radius", 16.0D);
+        int tries = strength.integer("zombie_tide.horde.golem_spawn_tries", 12);
         BlockPos fallback = null;
         for (int i = 0; i < tries; i++) {
             // 对称区间 [-r, r]：0..r 加随机方向，避免写死倍率字面量
@@ -1155,7 +1182,7 @@ public final class HordeManager {
 
     /** recruit_radius 内的僵尸族（含僵尸猪人，见 {@link #isZombieFamily}），近者优先。 */
     private static List<EntityLiving> zombiesNear(EntityPlayerMP player) {
-        double r = UlStrength.num("zombie_tide.horde.recruit_radius", 16.0D);
+        double r = strength.num("zombie_tide.horde.recruit_radius", 16.0D);
         List<EntityLiving> out = new ArrayList<>();
         for (EntityLiving e : player.world.getEntitiesWithinAABB(EntityLiving.class,
                 player.getEntityBoundingBox().grow(r))) {
@@ -1216,7 +1243,7 @@ public final class HordeManager {
         applyGlow(player);
         String json = teamJson(player);
         LAST_TEAM_JSON.put(player.getUniqueID(), json);
-        LAST_TEAM_TICK.put(player.getUniqueID(), player.world.getTotalWorldTime());
+        LAST_TEAM_TICK.put(player.getUniqueID(), (long) player.ticksExisted);
         try {
             HordeNetwork.sendTeam(player, json);
         } catch (Throwable t) {
@@ -1226,9 +1253,9 @@ public final class HordeManager {
 
     /** 节流同步（PlayerTickEvent 调用）：快照有变化才推，且不超过每 5 秒一拍。 */
     public static void syncTeamIfChanged(EntityPlayerMP player) {
-        long now = player.world.getTotalWorldTime();
+        long now = player.ticksExisted;
         Long last = LAST_TEAM_TICK.get(player.getUniqueID());
-        if (last != null && now - last < TEAM_SYNC_INTERVAL_TICKS) {
+        if (last != null && now >= last && now - last < TEAM_SYNC_INTERVAL_TICKS) {
             return;
         }
         // 每拍最多构建一次 teamJson；没变化也要推进时间戳，否则 idle 后每个 tick 都重建 JSON
@@ -1348,7 +1375,7 @@ public final class HordeManager {
 
     /** 招募冷却基数（tick，档位 t1=160t/8s）；执行分支据此回执，框架统一套形态策略缩放（H7）。 */
     public static int recruitCooldownTicks() {
-        return UlStrength.cooldownTicks("zombie_tide.horde.recruit_cooldown_ticks", "t1", 160);
+        return strength.cooldownTicks("zombie_tide.horde.recruit_cooldown_ticks", "t1", 160);
     }
 
     /**
@@ -1357,7 +1384,7 @@ public final class HordeManager {
      * 改档位 t3 时需同步改该钉子（显式例外，见其 _doc）。
      */
     public static int launchCooldownTicks() {
-        return UlStrength.cooldownTicks("zombie_tide.horde.launch_cooldown_ticks", "t3", 600);
+        return strength.cooldownTicks("zombie_tide.horde.launch_cooldown_ticks", "t3", 600);
     }
 
     private static int countItem(EntityPlayerMP player, Item item) {

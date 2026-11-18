@@ -1,28 +1,5 @@
 {
-  "factions": {
-    "wolf": {
-      "parent": "beast"
-    },
-    "ocelot": {
-      "parent": "beast"
-    }
-  },
-  "entity_mappings": {
-    "minecraft:slime": ["slime"],
-    "slime": ["slime"],
-    "minecraft:guardian": ["aquatic"],
-    "guardian": ["aquatic"],
-    "minecraft:elder_guardian": ["aquatic"],
-    "elder_guardian": ["aquatic"],
-    "minecraft:wolf": ["wolf", "beast"],
-    "wolf": ["wolf", "beast"],
-    "minecraft:polar_bear": ["beast"],
-    "polar_bear": ["beast"],
-    "minecraft:ocelot": ["ocelot", "beast"],
-    "ocelot": ["ocelot", "beast"]
-  },
   "relations": [
-    { "from": "zombie", "to": "creeper", "relation": "MEMBER", "symmetric": true },
-    { "from": "wolf", "to": "skeleton", "relation": "ENEMY", "symmetric": true }
+    { "from": "zombie", "to": "creeper", "relation": "MEMBER", "symmetric": true }
   ]
 }

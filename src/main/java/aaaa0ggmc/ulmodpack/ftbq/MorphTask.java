@@ -130,6 +130,7 @@ public class MorphTask extends Task {
     }
 
     @Override
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public String getAltTitle() {
         return net.minecraft.client.resources.I18n.format("ftbquests.task.aaaa0ggmc_ul_modpack.morph")
                 + ": " + String.join(", ", morphs);

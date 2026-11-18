@@ -33,7 +33,7 @@ public class CryingWolfTrigger implements ICriterionTrigger<CryingWolfTrigger.In
     /** criterion 名（与 advancements/crying_wolf.json 的 criteria 键一致）。 */
     public static final String CRITERION = "crying_wolf";
 
-    private final Set<Listener<Instance>> listeners = new HashSet<>();
+    private final java.util.Map<PlayerAdvancements, Set<Listener<Instance>>> listenersByPlayer = new java.util.HashMap<>();
 
     @Override
     public ResourceLocation getId() {
@@ -42,17 +42,23 @@ public class CryingWolfTrigger implements ICriterionTrigger<CryingWolfTrigger.In
 
     @Override
     public void addListener(PlayerAdvancements advancements, Listener<Instance> listener) {
-        listeners.add(listener);
+        listenersByPlayer.computeIfAbsent(advancements, k -> new HashSet<>()).add(listener);
     }
 
     @Override
     public void removeListener(PlayerAdvancements advancements, Listener<Instance> listener) {
-        listeners.remove(listener);
+        Set<Listener<Instance>> set = listenersByPlayer.get(advancements);
+        if (set != null) {
+            set.remove(listener);
+            if (set.isEmpty()) {
+                listenersByPlayer.remove(advancements);
+            }
+        }
     }
 
     @Override
     public void removeAllListeners(PlayerAdvancements advancements) {
-        listeners.clear();
+        listenersByPlayer.remove(advancements);
     }
 
     @Override
@@ -63,7 +69,11 @@ public class CryingWolfTrigger implements ICriterionTrigger<CryingWolfTrigger.In
     /** 狼来了触发点（服务端）：授予该玩家 crying_wolf criterion。 */
     public void trigger(EntityPlayerMP player) {
         PlayerAdvancements advancements = player.getAdvancements();
-        List<Listener<Instance>> pending = new ArrayList<>(listeners);
+        Set<Listener<Instance>> set = listenersByPlayer.get(advancements);
+        if (set == null || set.isEmpty()) {
+            return;
+        }
+        List<Listener<Instance>> pending = new ArrayList<>(set);
         for (Listener<Instance> listener : pending) {
             if (listener.getCriterionInstance().test(player)) {
                 listener.grantCriterion(advancements);

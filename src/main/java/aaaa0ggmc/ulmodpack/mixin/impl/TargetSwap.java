@@ -46,73 +46,82 @@ final class TargetSwap {
     private static final Field TARGET_CLASS;
     private static final Field CHECK_SIGHT;
     private static final Field UNSEEN_MEMORY;
+    private static final Field AVOID_CLASS;
     private static final Field AVOID_DISTANCE;
     private static final Field FAR_SPEED;
     private static final Field NEAR_SPEED;
 
     static {
         try {
-            TARGET_CLASS = field(EntityAINearestAttackableTarget.class, "field_75307_b");
-            CHECK_SIGHT = field(EntityAITarget.class, "field_75297_f");
-            UNSEEN_MEMORY = field(EntityAITarget.class, "field_188510_h");
-            AVOID_DISTANCE = field(EntityAIAvoidEntity.class, "field_179508_f");
-            FAR_SPEED = field(EntityAIAvoidEntity.class, "field_75378_b");
-            NEAR_SPEED = field(EntityAIAvoidEntity.class, "field_75379_c");
+            TARGET_CLASS = field(EntityAINearestAttackableTarget.class, "field_75307_b", "targetClass");
+            CHECK_SIGHT = field(EntityAITarget.class, "field_75297_f", "shouldCheckSight");
+            UNSEEN_MEMORY = field(EntityAITarget.class, "field_188510_h", "unseenMemoryTicks");
+            AVOID_CLASS = field(EntityAIAvoidEntity.class, "field_181064_i", "classToAvoid");
+            AVOID_DISTANCE = field(EntityAIAvoidEntity.class, "field_179508_f", "avoidDistance");
+            FAR_SPEED = field(EntityAIAvoidEntity.class, "field_75378_b", "farSpeed");
+            NEAR_SPEED = field(EntityAIAvoidEntity.class, "field_75379_c", "nearSpeed");
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    private static Field field(Class<?> owner, String srgName) throws ReflectiveOperationException {
-        Field f = owner.getDeclaredField(srgName);
-        f.setAccessible(true);
-        return f;
+    private static Field field(Class<?> owner, String srgName, String mcpName) throws ReflectiveOperationException {
+        try {
+            Field f = owner.getDeclaredField(srgName);
+            f.setAccessible(true);
+            return f;
+        } catch (NoSuchFieldException ignored) {
+            Field f = owner.getDeclaredField(mcpName);
+            f.setAccessible(true);
+            return f;
+        }
     }
 
     private TargetSwap() {
     }
 
-    /**
-     * 把原版「只认玩家/只认骷髅/只扫玩家/躲避玩家」的 AI 任务换成敌人过滤版；
-     * 其余任务原样返回。
-     */
-    static EntityAIBase swap(EntityAIBase original, EntityCreature owner) {
+    static EntityAIBase swap(EntityAIBase original, net.minecraft.entity.EntityLiving owner) {
         try {
+            if (original instanceof EntityAIFindEntityNearestPlayer) {
+                return new FindNearestEnemyPlayer(owner);
+            }
+            if (!(owner instanceof EntityCreature)) {
+                return original;
+            }
+            EntityCreature creature = (EntityCreature) owner;
             if (original instanceof EntityAINearestAttackableTarget) {
                 Class<?> targetClass = (Class<?>) TARGET_CLASS.get(original);
                 boolean checkSight = (Boolean) CHECK_SIGHT.get(original);
                 EntityAITarget swapped = null;
                 if (targetClass == EntityPlayer.class) {
-                    swapped = new NearestEnemyPlayerTarget(owner, checkSight);
+                    swapped = new NearestEnemyPlayerTarget(creature, checkSight);
                 } else if (targetClass == AbstractSkeleton.class) {
                     @SuppressWarnings("unchecked")
                     Class<? extends EntityLivingBase> type =
                             (Class<? extends EntityLivingBase>) targetClass;
-                    swapped = new NearestEnemyTarget<>(owner, type, checkSight);
+                    swapped = new NearestEnemyTarget<>(creature, type, checkSight);
                 }
                 if (swapped != null) {
-                    // 链式注册（.setUnseenMemoryTicks(n)）的值一并复制
                     swapped.setUnseenMemoryTicks(UNSEEN_MEMORY.getInt(original));
                     return swapped;
                 }
             }
-            if (original instanceof EntityAIFindEntityNearestPlayer) {
-                return new FindNearestEnemyPlayer(owner);
-            }
             if (original instanceof EntityAIAvoidEntity) {
-                @SuppressWarnings("unchecked")
-                EntityAIAvoidEntity<EntityPlayer> avoid =
-                        (EntityAIAvoidEntity<EntityPlayer>) original;
-                return new EntityAIAvoidEntity<>(
-                        owner,
-                        EntityPlayer.class,
-                        input -> HateQueries.isEnemy(owner, input),
-                        AVOID_DISTANCE.getFloat(avoid),
-                        FAR_SPEED.getDouble(avoid),
-                        NEAR_SPEED.getDouble(avoid));
+                Class<?> avoidClass = (Class<?>) AVOID_CLASS.get(original);
+                if (avoidClass == EntityPlayer.class) {
+                    @SuppressWarnings("unchecked")
+                    EntityAIAvoidEntity<EntityPlayer> avoid =
+                            (EntityAIAvoidEntity<EntityPlayer>) original;
+                    return new EntityAIAvoidEntity<>(
+                            creature,
+                            EntityPlayer.class,
+                            input -> HateQueries.isEnemy(creature, input),
+                            AVOID_DISTANCE.getFloat(avoid),
+                            FAR_SPEED.getDouble(avoid),
+                            NEAR_SPEED.getDouble(avoid));
+                }
             }
         } catch (IllegalAccessException ignored) {
-            // 反射失败（理论不可达）保持原任务，行为退回原版
         }
         return original;
     }

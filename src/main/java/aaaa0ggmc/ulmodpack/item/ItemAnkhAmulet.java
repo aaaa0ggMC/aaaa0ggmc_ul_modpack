@@ -70,10 +70,18 @@ public class ItemAnkhAmulet extends Item implements IBauble {
             return;
         }
         IAttributeInstance attr = living.getEntityAttribute(SharedMonsterAttributes.ARMOR);
-        if (attr == null || attr.getModifier(ARMOR_UUID) != null) {
+        if (attr == null) {
             return;
         }
-        attr.applyModifier(new AttributeModifier(ARMOR_UUID, ARMOR_NAME, ARMOR_AMOUNT, 0));
+        double bonus = aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("overworld.ankh.armor_bonus", ARMOR_AMOUNT);
+        AttributeModifier existing = attr.getModifier(ARMOR_UUID);
+        if (existing != null) {
+            if (Math.abs(existing.getAmount() - bonus) < 1.0E-6D) {
+                return;
+            }
+            attr.removeModifier(ARMOR_UUID);
+        }
+        attr.applyModifier(new AttributeModifier(ARMOR_UUID, ARMOR_NAME, bonus, 0));
     }
 
     /** 服务端移除护甲修饰符（不存在则不动）。 */

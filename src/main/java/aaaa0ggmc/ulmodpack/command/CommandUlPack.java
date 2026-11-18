@@ -8,6 +8,8 @@ import aaaa0ggmc.morphext.conversion.rule.ConversionRuleRegistry;
 import aaaa0ggmc.morphext.conversion.rule.RuleExecutor;
 import aaaa0ggmc.morphext.conversion.rule.RuleMatcher;
 import aaaa0ggmc.morphext.form.FormCategories;
+import aaaa0ggmc.uld.IStrengthService;
+import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.config.AnkhConfig;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
@@ -57,6 +59,16 @@ import java.util.Locale;
  */
 public class CommandUlPack extends CommandBase {
 
+    private final IStrengthService strengthService;
+
+    public CommandUlPack() {
+        this(UlStrength.service());
+    }
+
+    public CommandUlPack(IStrengthService strengthService) {
+        this.strengthService = strengthService != null ? strengthService : UlStrength.service();
+    }
+
     @Override
     public String getName() {
         return "ulpack";
@@ -79,11 +91,19 @@ public class CommandUlPack extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        EntityPlayerMP player = getCommandSenderAsPlayer(sender);
         if (args.length < 1) {
             throw new WrongUsageException(getUsage(sender));
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
+        if ("strength".equals(sub)) {
+            strength(sender, args);
+            return;
+        }
+        if ("reload".equals(sub)) {
+            reloadAll(sender);
+            return;
+        }
+        EntityPlayerMP player = getCommandSenderAsPlayer(sender);
         switch (sub) {
             case "status":
                 status(player);
@@ -140,12 +160,6 @@ public class CommandUlPack extends CommandBase {
                 break;
             case "race":
                 race(player, args);
-                break;
-            case "strength":
-                strength(player, args);
-                break;
-            case "reload":
-                reloadAll(player);
                 break;
             case "tide":
                 aaaa0ggmc.ulmodpack.zombie.horde.HordeCommands.tide(player, args);
@@ -253,13 +267,13 @@ public class CommandUlPack extends CommandBase {
      * 强度难度（{@code strengths/<difficulty>/}）查看 / 切换（FTBQ 奖励可直接
      * {@code command:/ulpack strength <name>} 切难度）。
      *
-     * <p>切换 = 写 {@code config/aaaa0ggmc_ul_modpack/strengths.json} 的 active +
-     * 立即 {@code UlStrength.reload()}。当前 ul-strength-design 的加载器还不读外置袋，
-     * 因此切换后要<b>如实</b>回报是否生效：用 {@code UlStrength.source} 探一个键的来源，
+     * <p>切换 = 写 {@code config/strengths.json} 的 active +
+     * 立即 {@code strengthService.reload()}。当前 ul-strength-design 的加载器还不读外置袋，
+     * 因此切换后要<b>如实</b>回报是否生效：用 {@code strengthService.source} 探一个键的来源，
      * 出现 {@code strengths:} 前缀才算真正整袋替换；否则说明只是记录了意图，等核心
      * 加载器落地（见回报里的接口清单）。</p>
      */
-    private static void strength(EntityPlayerMP player, String[] args) throws CommandException {
+    private void strength(ICommandSender player, String[] args) throws CommandException {
         String name = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
         List<String> sets = aaaa0ggmc.ulmodpack.strength.StrengthSets.available();
         if (name.isEmpty() || "list".equals(name) || "show".equals(name)) {
@@ -286,8 +300,8 @@ public class CommandUlPack extends CommandBase {
             throw new CommandException("Unknown strength set: " + name
                     + " (installed: " + String.join(", ", sets) + ")");
         }
-        aaaa0ggmc.uld.UlStrength.reload();
-        String source = aaaa0ggmc.uld.UlStrength.source("zombie_tide.horde.golem_multiplier");
+        strengthService.reload();
+        String source = strengthService.source("zombie_tide.horde.golem_villager_multiplier");
         if (source != null && source.startsWith("strengths")) {
             player.sendMessage(new TextComponentString("Strength set -> " + name
                     + " (active, values from " + source + ")"));
@@ -310,7 +324,7 @@ public class CommandUlPack extends CommandBase {
     }
 
     /** 全量数据重载：转化规则 + 形态类别 + ankh.json（种族/安卡配置）。 */
-    private static void reloadAll(EntityPlayerMP player) {
+    private static void reloadAll(ICommandSender player) {
         ConversionRuleRegistry.reload();
         FormCategories.reload();
         AnkhConfig.reload();

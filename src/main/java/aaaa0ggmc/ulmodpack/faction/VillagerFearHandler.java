@@ -32,17 +32,17 @@ public final class VillagerFearHandler {
 
     /** 躲避触发距离（格）：与原版村民躲僵尸一致（EntityVillager.initEntityAI）。 */
     private static float avoidDistance() {
-        return (float) UlStrength.num("zombie_tide.villager_fear.avoid_distance", 8.0D);
+        return (float) aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.villager_fear.avoid_distance", 8.0D);
     }
 
     /** 逃跑速度（远离档）：与原版村民躲僵尸一致。 */
     private static double fleeSpeedFar() {
-        return UlStrength.num("zombie_tide.villager_fear.flee_speed_far", 0.6D);
+        return aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.villager_fear.flee_speed_far", 0.6D);
     }
 
     /** 逃跑速度（贴近档）：与原版村民躲僵尸一致。 */
     private static double fleeSpeedNear() {
-        return UlStrength.num("zombie_tide.villager_fear.flee_speed_near", 0.6D);
+        return aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.villager_fear.flee_speed_near", 0.6D);
     }
 
     /** 幂等标记：同一实体实例不重复加任务（实体跨世界搬运等场景防重复）。 */

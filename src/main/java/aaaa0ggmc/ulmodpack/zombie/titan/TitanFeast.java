@@ -74,7 +74,7 @@ public final class TitanFeast {
 
     /** 头顶 headroom 格是否净空（泰坦约 11.7 格高，需 12 格垂直空间）。 */
     private static boolean hasHeadroom(EntityPlayerMP player) {
-        int headroom = UlStrength.integer("zombie_tide.titan.headroom", 12);
+        int headroom = aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().integer("zombie_tide.titan.headroom", 12);
         BlockPos base = new BlockPos(player.posX, player.posY, player.posZ);
         for (int i = 1; i <= headroom; i++) {
             if (!player.world.isAirBlock(base.up(i))) {

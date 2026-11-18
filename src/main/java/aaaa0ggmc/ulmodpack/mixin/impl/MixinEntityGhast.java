@@ -1,6 +1,6 @@
 package aaaa0ggmc.ulmodpack.mixin.impl;
 
-import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.monster.EntityGhast;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,6 +26,6 @@ public abstract class MixinEntityGhast {
             remap = false
     )
     private EntityAIBase ulmodpack$swapEnemyTarget(EntityAIBase original) {
-        return TargetSwap.swap(original, (EntityCreature) (Object) this);
+        return TargetSwap.swap(original, (EntityLiving) (Object) this);
     }
 }

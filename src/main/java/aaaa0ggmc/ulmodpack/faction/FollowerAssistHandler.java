@@ -54,28 +54,35 @@ public final class FollowerAssistHandler {
 
     /** 协助有效期（tick）：主人最后一次对该目标出手后的存活窗口。 */
     private static long assistTtlTicks() {
-        return Math.max(1L, (long) UlStrength.num("zombie_tide.assist.ttl_ticks", 100.0D));
+        return Math.max(1L, (long) aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.assist.ttl_ticks", 100.0D));
     }
 
     /** 目标距主人的最大协助距离（格）。 */
     private static double assistRange() {
-        return UlStrength.num("zombie_tide.assist.range", 32.0D);
+        return aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.assist.range", 32.0D);
     }
 
     /** 受令随从距主人的最大距离（格，对齐 horde follower_count_radius 口径）。 */
     private static double followerRange() {
-        return UlStrength.num("zombie_tide.assist.follower_range", 64.0D);
+        return aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.assist.follower_range", 64.0D);
     }
 
     /** 校准节流（tick）：每 N tick 最多重新校准/补设一次（防每 tick 重复设置导致 AI 抖动）。 */
     private static long reconcileInterval() {
-        return Math.max(1L, (long) UlStrength.num("zombie_tide.assist.reconcile_interval", 20.0D));
+        return Math.max(1L, (long) aaaa0ggmc.ulmodpack.UlModpackContainer.instance().strengthService().num("zombie_tide.assist.reconcile_interval", 20.0D));
     }
 
     /** 每个主人一条协助记录（仅服务端主线程访问）。 */
     private static final Map<UUID, Assist> ASSISTS = new HashMap<>();
 
     private FollowerAssistHandler() {
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.player != null) {
+            ASSISTS.remove(event.player.getUniqueID());
+        }
     }
 
     /** 协助记录：目标（实体 id + UUID 双保险）、有效期、是否防御语义。 */

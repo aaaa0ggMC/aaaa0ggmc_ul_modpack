@@ -201,6 +201,14 @@ bus.register(new TitanSlamMigration());   // 实例方法，保持不变
    （= 常规 1 倍、仅 3 只），配置值 3.0 → 9，与接线前行为一致；`golem_max_alive` 仍是 ≤9 硬上限。
    刷怪间隔仍由 `golem_interval_ticks` 直配（100t = 设计的 3 倍速率），倍率只作用于数量上限。
    `zombie_tide.json` 的 `_doc` 已注明该键单位（「对常规 3 只的倍率」）与回退例外。
+   → **2026-11-07（同日稍后）按用户口径改回「N×村民数」并删键**：用户原话「上限就是玩家周围区块最多
+   N×村民个数 个铁傀儡，只不过生成速度很快」。`HordeManager.golemAliveCap(World, BlockPos)` 改为
+   `clamp(round(村庄中心 villager_count_radius 内活村民数 × golem_villager_multiplier), 1, golem_max_alive)`，
+   N 默认 1.0（6 村民 → 上限 6）；`golem_max_alive` 降级为硬上限兜底（normal 9→20、hard 12→30，
+   只在村民×N 超过它时生效）；旧键 `golem_multiplier` 与常量 `REGULAR_GOLEM_CAP` 一并删除（避免第二个数量真相），
+   `CommandUlPack` 的强度来源探针键同步换成 `golem_villager_multiplier`。`countGolems` 半径由
+   `golem_spawn_radius`(16) 改 `villager_count_radius`(48)，与上限的村民侧同一把尺子（傀儡会走远，用小半径会漏计失守）。
+   生成速度未动（`golem_interval_ticks` normal 100t / hard 80t，相对原版每 tick 1/7000 已 ~70 倍速）。
 3. `countVillagers`（`HordeManager.java:818-822`）不过滤 `isDead`，死村民可能拖一拍再判成功（无害）。
    → **2026-11-07 已修**：改为逐个滤 `isDead` 统计活村民，成功判定「活村民清零」口径与
    `findVillageCenter`（同样滤 isDead）对齐；死村民不再拖一拍。

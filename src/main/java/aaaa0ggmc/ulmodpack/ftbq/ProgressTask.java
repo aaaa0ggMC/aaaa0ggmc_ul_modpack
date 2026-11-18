@@ -104,6 +104,7 @@ public class ProgressTask extends Task {
     }
 
     @Override
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public String getAltTitle() {
         return net.minecraft.client.resources.I18n.format("ftbquests.task.aaaa0ggmc_ul_modpack.progress")
                 + ": " + (key == null ? "" : key);
@@ -129,20 +130,15 @@ public class ProgressTask extends Task {
             if (data == null) {
                 return 0L;
             }
-            JsonObject root = data.toJson();
-            JsonElement states = root.get("states");
-            if (states == null || !states.isJsonObject()) {
+            JsonObject state = data.getState(key);
+            if (state == null || state.size() == 0) {
                 return 0L;
             }
-            JsonElement state = states.getAsJsonObject().get(key);
-            if (state == null || !state.isJsonObject()) {
-                return 0L;  // 键不存在
-            }
-            JsonElement count = state.getAsJsonObject().get("count");
+            JsonElement count = state.get("count");
             if (count != null && count.isJsonPrimitive() && count.getAsJsonPrimitive().isNumber()) {
                 return count.getAsLong();
             }
-            return 1L;  // 键存在但没有 count：按 1 次计
+            return 1L;
         } catch (RuntimeException ignored) {
             return 0L;
         }

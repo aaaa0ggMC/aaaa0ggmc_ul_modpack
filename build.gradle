@@ -31,15 +31,18 @@ repositories {
 
 dependencies {
     // UL 强度设计层 —— 全包可调数值统一入口（UlStrength）
-    compile files("libs/ul-strength-design-1.0.0.jar")
+    def strengthDev = file("../ul-strength-design/build/libs/ul-strength-design-1.0.0-dev.jar")
+    compile files(strengthDev.exists() ? strengthDev : "libs/ul-strength-design-1.0.0.jar")
     // Baubles —— 安卡护符的 AMULET（脖子）槽位
     compile files("libs/Baubles-1.12-1.5.2.jar")
     // Metamorph —— 感染变身的形态引擎（MorphAPI/MorphManager）
     compile files("libs/metamorph-1.4-1.12.2.jar")
     // morphext —— 整合包能力/玩家数据层（感染状态记录）
-    compile files("libs/morph-extension-1.0.0.jar")
+    def morphExtDev = file("../morph-extension/build/libs/morph-extension-1.0.0-dev.jar")
+    compile files(morphExtDev.exists() ? morphExtDev : "libs/morph-extension-1.0.0.jar")
     compile files("libs/mclib-2.4.3-1.12.2.jar")
     // FTB Quests（1202 fork）+ FTBLib —— 形态检测任务注入
+    testCompile "junit:junit:4.13.2"
     compile files("libs/FTBQuests-1202.9.0.15.jar")
     compile files("libs/FTBLib-5.4.7.2.jar")
     // MixinBooter —— 原版生物硬编码玩家检测的逐生物 Mixin 注入载体

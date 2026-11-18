@@ -2,6 +2,7 @@ package aaaa0ggmc.ulmodpack.zombie.titan;
 
 import aaaa0ggmc.morphext.ability.PlayerAbilityData;
 import aaaa0ggmc.morphext.ability.PlayerAbilityStore;
+import aaaa0ggmc.uld.IStrengthService;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.faction.HateQueries;
@@ -45,7 +46,15 @@ import java.util.List;
  */
 public final class TitanFormHandler {
 
+    private static volatile IStrengthService strength = UlStrength.service();
+
     public TitanFormHandler() {
+    }
+
+    public static void setStrengthService(IStrengthService service) {
+        if (service != null) {
+            strength = service;
+        }
     }
 
     @SubscribeEvent
@@ -61,7 +70,7 @@ public final class TitanFormHandler {
     public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
         if (event.getEntityPlayer() instanceof EntityPlayerMP
                 && ZombieForms.isTitan((EntityPlayerMP) event.getEntityPlayer())) {
-            float mult = (float) UlStrength.num("zombie_tide.titan.dig_mult", 0.5D);
+            float mult = (float) strength.num("zombie_tide.titan.dig_mult", 0.5D);
             event.setNewSpeed(event.getOriginalSpeed() * mult);
         }
     }
@@ -96,11 +105,11 @@ public final class TitanFormHandler {
             return false;
         }
 
-        double radius = UlStrength.num("zombie_tide.titan.slam_radius", 4.5D);
+        double radius = strength.num("zombie_tide.titan.slam_radius", 4.5D);
         float damage = slamDamage(player);
-        int slowTicks = UlStrength.integer("zombie_tide.titan.slam_slow_ticks", 60);
-        int slowAmplifier = UlStrength.integer("zombie_tide.titan.slam_slow_amplifier", 1);
-        float knockback = (float) UlStrength.num("zombie_tide.titan.slam_knockback", 1.0D);
+        int slowTicks = strength.integer("zombie_tide.titan.slam_slow_ticks", 60);
+        int slowAmplifier = strength.integer("zombie_tide.titan.slam_slow_amplifier", 1);
+        float knockback = (float) strength.num("zombie_tide.titan.slam_knockback", 1.0D);
         int cooldownTicks = slamCooldownTicks();
 
         DamageSource source = DamageSource.causePlayerDamage(player);
@@ -120,11 +129,11 @@ public final class TitanFormHandler {
             }
             target.attackEntityFrom(source, damage);
             target.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, slowTicks, slowAmplifier, false, true));
-            target.knockBack(player, knockback, target.posX - player.posX, target.posZ - player.posZ);
+            target.knockBack(player, knockback, player.posX - target.posX, player.posZ - target.posZ);
         }
 
         // 消耗饥饿（降低食物等级，不低于 0）
-        int cost = (int) UlStrength.num("zombie_tide.titan.slam_hunger_cost", 4.0D);
+        int cost = (int) strength.num("zombie_tide.titan.slam_hunger_cost", 4.0D);
         int level = player.getFoodStats().getFoodLevel();
         if (level > 0) {
             player.getFoodStats().setFoodLevel(Math.max(0, level - cost));
@@ -148,7 +157,7 @@ public final class TitanFormHandler {
 
     /** 震地冷却基数（tick，档位 t2=300t/15s）；H7 执行分支回执用，框架统一套形态策略缩放。 */
     public static int slamCooldownTicks() {
-        return UlStrength.cooldownTicks("zombie_tide.titan.slam_cooldown_ticks", "t2", 300);
+        return strength.cooldownTicks("zombie_tide.titan.slam_cooldown_ticks", "t2", 300);
     }
 
     /**
@@ -166,7 +175,7 @@ public final class TitanFormHandler {
     public static float slamDamage(EntityPlayerMP player) {
         IAttributeInstance attack = player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
         double current = attack == null ? 1.0D : attack.getAttributeValue();
-        double multiplier = UlStrength.num("zombie_tide.titan.slam_damage_multiplier", 1.5D);
+        double multiplier = strength.num("zombie_tide.titan.slam_damage_multiplier", 1.5D);
         return (float) (current * multiplier);
     }
 }

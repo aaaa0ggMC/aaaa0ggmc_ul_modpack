@@ -1,5 +1,5 @@
 {
-  "_doc": "【难度套 · hard（2026-11-07 从 strengths/normal/ 派生）】完整数据集，非增量补丁；整袋替换旧的「bundled 默认→各模组 assets→config 覆盖」三层合并（加载器支持后）。派生依据=只动「有代码消费方」的键，按四组加难度：①招募门槛（打残阈值 0.5→0.35、腐肉 1→2、招募半径 16→12、三档说服度阈值 20/50/80→30/65/90）；②队伍规模（上限 8/12/16/20→4/6/9/12，尸群雪球更小）；③说服度经济（胜利 10→8、失败 -20→-30、两条衰减封顶 40/20→60/30、λ 0.35→0.45、下限 20→30 以保持「floor=threshold_low」不变量防死局）；④村庄防御（铁傀儡倍率 3→4 且 max_alive 9→12 保持合成上限一致、间隔 100→80、寿命 1200→1500、生成半径 16→20、尝试 12→16；有效村庄半径 32→24、最低活村民 4→6）；⑤收尾宽容度（abort 48/600→40/400）；⑥随从协助削弱（ttl 100→70、range 32→24、follower_range 64→48）；⑦村民逃生加强（避开距离 8→11、逃速 0.6→0.72）。另新增三个冷却值键（recruit 200/launch 900/slam 400 tick）——值键优先于档位表（UlStrength.cooldownTicks 语义），不改共享档位表。【不动项】titan.* 全部（slam_damage_multiplier=1.5 等为用户已拍板的设计不变量）；persuasion_start（0-100 设计标尺）；tick_interval/follower_count_radius/villager_count_radius/flesh_drop/no_leader_warn_interval_ticks/assist.reconcile_interval（节流/计数口径，非难度杠杆；villager_count_radius 同时是胜利判定半径，缩小会让胜利更容易，故不动）；13 个无消费方的设计镜像键（改了不生效，见对账表）；档位表 tiers（跨模组对齐标尺）。对账：32 键改值、3 键新增、32 键与 normal 相同、0 键丢失。",
+  "_doc": "【难度套 · hard（2026-11-07 从 strengths/normal/ 派生）】完整数据集，非增量补丁；整袋替换旧的「bundled 默认→各模组 assets→config 覆盖」三层合并（加载器支持后）。派生依据=只动「有代码消费方」的键，按四组加难度：①招募门槛（打残阈值 0.5→0.35、腐肉 1→2、招募半径 16→12、三档说服度阈值 20/50/80→30/65/90）；②队伍规模（上限 8/12/16/20→4/6/9/12，尸群雪球更小）；③说服度经济（胜利 10→8、失败 -20→-30、两条衰减封顶 40/20→60/30、λ 0.35→0.45、下限 20→30 以保持「floor=threshold_low」不变量防死局）；④村庄防御（2026-11-07 随上限口径改为「N×村民数」后重算：golem_villager_multiplier 与 normal 同为 1.0（口径本身不是难度杠杆），加难度只走硬上限与节奏——max_alive 9→30、间隔 100→80、寿命 1200→1500、生成半径 16→20、尝试 12→16；有效村庄半径 32→24、最低活村民 4→6）；⑤收尾宽容度（abort 48/600→40/400）；⑥随从协助削弱（ttl 100→70、range 32→24、follower_range 64→48）；⑦村民逃生加强（避开距离 8→11、逃速 0.6→0.72）。另新增三个冷却值键（recruit 200/launch 900/slam 400 tick）——值键优先于档位表（UlStrength.cooldownTicks 语义），不改共享档位表。【不动项】titan.* 全部（slam_damage_multiplier=1.5 等为用户已拍板的设计不变量）；persuasion_start（0-100 设计标尺）；tick_interval/follower_count_radius/villager_count_radius/flesh_drop/no_leader_warn_interval_ticks/assist.reconcile_interval（节流/计数口径，非难度杠杆；villager_count_radius 同时是胜利判定半径，缩小会让胜利更容易，故不动）；13 个无消费方的设计镜像键（改了不生效，见对账表）；档位表 tiers（跨模组对齐标尺）。对账（2026-11-07 铁傀儡口径变更后重算）：31 键改值、3 键新增、33 键与 normal 相同、0 键丢失；golem_multiplier 已随新口径从 normal/hard 两袋删除，golem_villager_multiplier 两袋同为 1.0（计入「与 normal 相同」）。",
   "values": {
     "overworld.ankh.armor_bonus": 2.0,
     "zombie_tide.assist.follower_range": 48.0,
@@ -19,10 +19,10 @@
     "zombie_tide.horde.follower_teleport_distance": 24.0,
     "zombie_tide.horde.golem_interval_ticks": 80,
     "zombie_tide.horde.golem_lifespan_ticks": 1500,
-    "zombie_tide.horde.golem_max_alive": 12,
-    "zombie_tide.horde.golem_multiplier": 4.0,
+    "zombie_tide.horde.golem_max_alive": 30,
     "zombie_tide.horde.golem_spawn_radius": 20.0,
     "zombie_tide.horde.golem_spawn_tries": 16,
+    "zombie_tide.horde.golem_villager_multiplier": 1.0,
     "zombie_tide.horde.mult_bottom": 0.55,
     "zombie_tide.horde.mult_high": 1.0,
     "zombie_tide.horde.mult_low": 0.7,

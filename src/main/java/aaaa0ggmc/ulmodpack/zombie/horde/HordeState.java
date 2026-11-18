@@ -67,9 +67,9 @@ public class HordeState extends WorldSavedData {
         super(name);
     }
 
-    /** 取（或懒建）本维度的尸潮数据。 */
+    /** 取（或懒建）全服共享的尸潮数据（跨维度一致）。 */
     public static HordeState get(World world) {
-        MapStorage storage = world.getPerWorldStorage();
+        MapStorage storage = world.getMapStorage();
         HordeState data = (HordeState) storage.getOrLoadData(HordeState.class, DATA_NAME);
         if (data == null) {
             data = new HordeState();

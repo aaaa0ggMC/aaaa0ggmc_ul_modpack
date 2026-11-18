@@ -1,26 +1,21 @@
 package aaaa0ggmc.ulmodpack.faction;
 
-import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAIFindEntityNearestPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
  * 「最近的敌对玩家」查找器：原版 {@code EntityAIFindEntityNearestPlayer}
  * （整类只扫 {@code world.playerEntities}，只认玩家为敌）的阵营化替身。
- *
- * <p>继承原类以满足 {@code @Redirect(NEW)} 的返回类型要求（替换其构造调用），
- * 目标选择与续期全部改走统一仇恨接口 {@link HateQueries}（morphext 阵营图判定）：
- * 只把「敌人玩家」选为攻击目标（跳过非敌人找下一个敌人）；目标失去敌资格
- * （变形换阵营/臣服）即停任务，走原版 {@code resetTask} 停用语义清空攻击目标。</p>
  */
 public class FindNearestEnemyPlayer extends EntityAIFindEntityNearestPlayer {
 
-    private final EntityCreature hateOwner;
+    private final EntityLiving hateOwner;
     private EntityPlayer hateTarget;
 
-    public FindNearestEnemyPlayer(EntityCreature creature) {
-        super(creature);
-        this.hateOwner = creature;
+    public FindNearestEnemyPlayer(EntityLiving owner) {
+        super(owner);
+        this.hateOwner = owner;
     }
 
     @Override

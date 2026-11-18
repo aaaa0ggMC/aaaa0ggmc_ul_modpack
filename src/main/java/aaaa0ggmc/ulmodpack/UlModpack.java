@@ -47,7 +47,7 @@ import org.apache.logging.log4j.Logger;
         modid = UlModpack.MODID,
         name = UlModpack.NAME,
         version = UlModpack.VERSION,
-        dependencies = "required-after:baubles;required-after:metamorph;required-after:aaaa0ggmc_morph_extension;required-after:ftbquests",
+        dependencies = "required-after:ul_strength_design;required-after:baubles;required-after:metamorph;required-after:aaaa0ggmc_morph_extension;required-after:ftbquests",
         acceptableRemoteVersions = "*"
 )
 public class UlModpack {
@@ -68,6 +68,7 @@ public class UlModpack {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("[ul-modpack] Initializing {} v{}...", NAME, VERSION);
+        UlModpackContainer.init(aaaa0ggmc.uld.UlStrength.service());
         proxy.preInit(event);
         AnkhConfig.init(event.getModConfigurationDirectory());
         // 强度难度集（strengths/<difficulty>/）定位 + 当前难度读取；
@@ -94,6 +95,6 @@ public class UlModpack {
 
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandUlPack());
+        event.registerServerCommand(new CommandUlPack(UlModpackContainer.instance().strengthService()));
     }
 }

@@ -36,5 +36,8 @@
     "MixinPhaseHoldingPattern",
     "MixinPhaseLandingApproach",
     "MixinPhaseSittingScanning"
+  ],
+  "client": [
+    "MixinEntity"
   ]
 }

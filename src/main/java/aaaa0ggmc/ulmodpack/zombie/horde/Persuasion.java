@@ -1,5 +1,6 @@
 package aaaa0ggmc.ulmodpack.zombie.horde;
 
+import aaaa0ggmc.uld.IStrengthService;
 import aaaa0ggmc.uld.UlStrength;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.zombie.ZombieLine;
@@ -41,17 +42,25 @@ import net.minecraft.util.text.TextComponentTranslation;
  */
 public final class Persuasion {
 
+    private static volatile IStrengthService strength = UlStrength.service();
+
     private Persuasion() {
+    }
+
+    public static void setStrengthService(IStrengthService service) {
+        if (service != null) {
+            strength = service;
+        }
     }
 
     /** 初始 / 上限说服度（设计 100）。 */
     public static int start() {
-        return (int) Math.round(UlStrength.num("zombie_tide.horde.persuasion_start", 100.0D));
+        return (int) Math.round(strength.num("zombie_tide.horde.persuasion_start", 100.0D));
     }
 
     /** 声望下限（最低可招募值）：衰减/死亡后不低于此值。 */
     public static int floor() {
-        return (int) Math.round(UlStrength.num("zombie_tide.persuasion.decay_floor", 20.0D));
+        return (int) Math.round(strength.num("zombie_tide.persuasion.decay_floor", 20.0D));
     }
 
     /** 当前说服度（缺省回落初始值，旧存档无字段时补默认）。 */
@@ -126,8 +135,8 @@ public final class Persuasion {
      * 即「剩余额度 × (1 − e^(−λ))」：每次只衰减剩余额度的一部分，累计 ≤ cap。
      */
     private static double decayDelta(String capKey, double capDefault, int count) {
-        double cap = UlStrength.num(capKey, capDefault);
-        double lambda = UlStrength.num("zombie_tide.persuasion.decay_lambda", 0.35D);
+        double cap = strength.num(capKey, capDefault);
+        double lambda = strength.num("zombie_tide.persuasion.decay_lambda", 0.35D);
         double decayedNow = cap * (1.0D - Math.exp(-lambda * count));
         double decayedPrev = cap * (1.0D - Math.exp(-lambda * (count - 1)));
         return decayedNow - decayedPrev;
@@ -152,43 +161,43 @@ public final class Persuasion {
     /** 随从生命 / 攻击属性倍率（按说服度档位）。 */
     public static double multiplier(int persuasion) {
         if (persuasion >= thresholdHigh()) {
-            return UlStrength.num("zombie_tide.horde.mult_high", 1.0D);
+            return strength.num("zombie_tide.horde.mult_high", 1.0D);
         }
         if (persuasion >= thresholdMid()) {
-            return UlStrength.num("zombie_tide.horde.mult_mid", 0.85D);
+            return strength.num("zombie_tide.horde.mult_mid", 0.85D);
         }
         if (persuasion >= thresholdLow()) {
-            return UlStrength.num("zombie_tide.horde.mult_low", 0.7D);
+            return strength.num("zombie_tide.horde.mult_low", 0.7D);
         }
-        return UlStrength.num("zombie_tide.horde.mult_bottom", 0.55D);
+        return strength.num("zombie_tide.horde.mult_bottom", 0.55D);
     }
 
     /** 队伍上限（按说服度档位）。 */
     public static int followCap(int persuasion) {
         if (persuasion >= thresholdHigh()) {
-            return UlStrength.integer("zombie_tide.horde.follow_cap_full", 20);
+            return strength.integer("zombie_tide.horde.follow_cap_full", 20);
         }
         if (persuasion >= thresholdMid()) {
-            return UlStrength.integer("zombie_tide.horde.follow_cap_high", 16);
+            return strength.integer("zombie_tide.horde.follow_cap_high", 16);
         }
         if (persuasion >= thresholdLow()) {
-            return UlStrength.integer("zombie_tide.horde.follow_cap_mid", 12);
+            return strength.integer("zombie_tide.horde.follow_cap_mid", 12);
         }
-        return UlStrength.integer("zombie_tide.horde.follow_cap_low", 8);
+        return strength.integer("zombie_tide.horde.follow_cap_low", 8);
     }
 
     /** 低于此阈值招募要「打残」（生命 < persuasion_hurt_below 比例）。设计 50。 */
     public static double thresholdMid() {
-        return UlStrength.num("zombie_tide.horde.persuasion_threshold_mid", 50.0D);
+        return strength.num("zombie_tide.horde.persuasion_threshold_mid", 50.0D);
     }
 
     /** 低于此阈值招募还要搭一块腐肉。设计 20。 */
     public static double thresholdLow() {
-        return UlStrength.num("zombie_tide.horde.persuasion_threshold_low", 20.0D);
+        return strength.num("zombie_tide.horde.persuasion_threshold_low", 20.0D);
     }
 
     private static double thresholdHigh() {
-        return UlStrength.num("zombie_tide.horde.persuasion_threshold_high", 80.0D);
+        return strength.num("zombie_tide.horde.persuasion_threshold_high", 80.0D);
     }
 
     private static int clamp(int value) {

@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * 末影龙：「对玩家特判」重定向到统一仇恨接口（Boss 阶段机回退语义保留）。
@@ -60,16 +61,16 @@ public abstract class MixinEntityDragon {
      * 爆炸照常结算（波及口径）。
      */
     @Inject(
-            method = "func_82195_e(Lnet/minecraft/util/DamageSource;F)V",
+            method = "func_82195_e(Lnet/minecraft/util/DamageSource;F)Z",
             at = @At("HEAD"),
             cancellable = true,
             remap = false
     )
-    private void ulmodpack$onlyEnemiesDamage(DamageSource source, float amount, CallbackInfo ci) {
+    private void ulmodpack$onlyEnemiesDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         EntityLivingBase attacker = HateQueries.resolveDamageSource(source);
         boolean enemyStrike = attacker != null && HateQueries.isEnemy((EntityDragon) (Object) this, attacker);
         if (!enemyStrike && !source.isExplosion()) {
-            ci.cancel();
+            cir.setReturnValue(false);
         }
     }
 
