@@ -1,11 +1,15 @@
 package aaaa0ggmc.ulmodpack.proxy;
 
 import aaaa0ggmc.morphext.client.status.StatusSectionRegistry;
+import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.client.FollowerStatusSection;
 import aaaa0ggmc.ulmodpack.client.HordeTeamCache;
 import aaaa0ggmc.ulmodpack.client.TitanTransitionAnimators;
+import aaaa0ggmc.ulmodpack.fluid.FluidLethe;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
@@ -52,6 +56,45 @@ public class ClientProxy extends CommonProxy {
         ModelLoader.setCustomModelResourceLocation(
                 SLEEPING_PILL, 0,
                 new ModelResourceLocation(SLEEPING_PILL.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                LETHE_SOUP, 0,
+                new ModelResourceLocation(LETHE_SOUP.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                PIECES, 0,
+                new ModelResourceLocation(PIECES.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                SHELF_OF_PIECES_ITEM, 0,
+                new ModelResourceLocation(SHELF_OF_PIECES_ITEM.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                BITTERSWEET_ORE_ITEM, 0,
+                new ModelResourceLocation(BITTERSWEET_ORE_ITEM.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                SWEETENER, 0,
+                new ModelResourceLocation(SWEETENER.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                BITTERANT, 0,
+                new ModelResourceLocation(BITTERANT.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                SWEET_DREAM, 0,
+                new ModelResourceLocation(SWEET_DREAM.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                NIGHTMARE, 0,
+                new ModelResourceLocation(NIGHTMARE.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                DNA_SWAB, 0,
+                new ModelResourceLocation(DNA_SWAB.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                DNA_RECOMBINATOR_ITEM, 0,
+                new ModelResourceLocation(DNA_RECOMBINATOR_ITEM.getRegistryName(), "inventory"));
+
+        final ModelResourceLocation letheFluidLoc = new ModelResourceLocation(
+                UlModpack.MODID + ":" + FluidLethe.FLUID_NAME, "fluid");
+        ModelLoader.setCustomStateMapper(LETHE_WATER_BLOCK, new StateMapperBase() {
+            @Override
+            protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
+                return letheFluidLoc;
+            }
+        });
     }
 
     @Override

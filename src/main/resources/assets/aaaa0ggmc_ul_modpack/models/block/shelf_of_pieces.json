@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "minecraft:blocks/planks_oak",
+    "side": "aaaa0ggmc_ul_modpack:blocks/shelf_of_pieces"
+  }
+}

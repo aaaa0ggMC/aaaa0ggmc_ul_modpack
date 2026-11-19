@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "aaaa0ggmc_ul_modpack:blocks/bittersweet_ore"
+  }
+}

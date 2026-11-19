@@ -13,6 +13,8 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,6 +58,10 @@ public class UlModpack {
     public static final String VERSION = "1.0.0";
     public static final Logger LOGGER = LogManager.getLogger(NAME);
 
+    static {
+        FluidRegistry.enableUniversalBucket();
+    }
+
     @Mod.Instance(MODID)
     public static UlModpack INSTANCE;
 
@@ -74,6 +80,8 @@ public class UlModpack {
         // 强度难度集（strengths/<difficulty>/）定位 + 当前难度读取；
         // 必须在任何 UlStrength 查询之前（数值兜底不受影响，但 /ulpack strength 要能立刻用）
         aaaa0ggmc.ulmodpack.strength.StrengthSets.init(event.getModConfigurationDirectory());
+        aaaa0ggmc.ulmodpack.dna.DnaRecipeRegistry.load(event.getModConfigurationDirectory());
+        aaaa0ggmc.ulmodpack.dna.DnaNetwork.init();
         InfectionHandler.register();
         LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/race/ftbq-morph).");
     }
@@ -86,6 +94,10 @@ public class UlModpack {
         MinecraftForge.EVENT_BUS.register(
                 new aaaa0ggmc.ulmodpack.achievement.AchievementMigration());
         ZombieLine.register();
+        net.minecraftforge.fml.common.network.NetworkRegistry.INSTANCE.registerGuiHandler(
+                this, new aaaa0ggmc.ulmodpack.dna.DnaGuiHandler());
+        GameRegistry.registerWorldGenerator(
+                new aaaa0ggmc.ulmodpack.world.OverworldAdditionsGenerator(), 10);
     }
 
     @Mod.EventHandler
