@@ -127,6 +127,7 @@ public final class RaceManager {
         if (player.isPotionActive(CommonProxy.POTION_DEEP_SLEEP)) {
             player.removePotionEffect(CommonProxy.POTION_DEEP_SLEEP);
         }
+        aaaa0ggmc.ulmodpack.dna.DnaRecombineHandler.cancelPending(player);
     }
 
     public static boolean hasTemporaryForm(EntityPlayerMP player) {

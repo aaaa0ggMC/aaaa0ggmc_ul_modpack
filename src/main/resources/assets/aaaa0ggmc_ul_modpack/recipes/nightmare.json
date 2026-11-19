@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PBP",
+    "PPP"
+  ],
+  "key": {
+    "P": { "item": "aaaa0ggmc_ul_modpack:pieces" },
+    "B": { "item": "aaaa0ggmc_ul_modpack:bitterant" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:nightmare"
+  }
+}

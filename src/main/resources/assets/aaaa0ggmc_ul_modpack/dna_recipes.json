@@ -1,0 +1,147 @@
+{
+  "recipes": [
+    {
+      "entity": "minecraft:sheep",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:mutton", "count": 2 }
+      ],
+      "optional": [
+        {
+          "item": "minecraft:wool",
+          "meta": -1,
+          "count": 2,
+          "when_missing": { "Sheared": true },
+          "copy_meta_to_byte": "Color",
+          "missing_hint_key": "ul.dna.hint.sheep_sheared",
+          "present_hint_key": "ul.dna.hint.sheep_wool"
+        }
+      ]
+    },
+    {
+      "entity": "minecraft:cow",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:beef", "count": 2 },
+        { "item": "minecraft:leather", "count": 2 }
+      ]
+    },
+    {
+      "entity": "minecraft:mooshroom",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:beef", "count": 2 },
+        { "item": "minecraft:red_mushroom", "count": 2 }
+      ]
+    },
+    {
+      "entity": "minecraft:pig",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:porkchop", "count": 2 }
+      ],
+      "optional": [
+        {
+          "item": "minecraft:saddle",
+          "meta": 0,
+          "count": 1,
+          "when_present": { "Saddle": true },
+          "missing_hint_key": "ul.dna.hint.pig_unsaddled",
+          "present_hint_key": "ul.dna.hint.pig_saddled"
+        }
+      ]
+    },
+    {
+      "entity": "minecraft:chicken",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:chicken", "count": 2 },
+        { "item": "minecraft:feather", "count": 4 }
+      ]
+    },
+    {
+      "entity": "minecraft:rabbit",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:rabbit", "count": 2 },
+        { "item": "minecraft:rabbit_hide", "count": 1 }
+      ]
+    },
+    {
+      "entity": "minecraft:wolf",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:bone", "count": 2 },
+        { "item": "minecraft:beef", "count": 1 }
+      ]
+    },
+    {
+      "entity": "minecraft:ocelot",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:fish", "meta": -1, "count": 2 }
+      ]
+    },
+    {
+      "entity": "minecraft:squid",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:dye", "meta": 0, "count": 4 }
+      ]
+    },
+    {
+      "entity": "minecraft:bat",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:leather", "count": 2 },
+        { "item": "minecraft:coal", "meta": -1, "count": 1 }
+      ]
+    },
+    {
+      "entity": "minecraft:horse",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:leather", "count": 4 },
+        { "item": "minecraft:wheat", "count": 2 }
+      ]
+    },
+    {
+      "entity": "minecraft:polar_bear",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:fish", "meta": -1, "count": 4 },
+        { "item": "minecraft:snowball", "count": 4 }
+      ]
+    },
+    {
+      "entity": "minecraft:llama",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:leather", "count": 2 },
+        { "item": "minecraft:wool", "meta": -1, "count": 2 }
+      ]
+    },
+    {
+      "entity": "minecraft:parrot",
+      "energy_fe": 20000,
+      "weakness_ticks": 200,
+      "required": [
+        { "item": "minecraft:feather", "count": 4 },
+        { "item": "minecraft:wheat_seeds", "count": 4 }
+      ]
+    }
+  ]
+}

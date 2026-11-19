@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "SDN",
+    "III"
+  ],
+  "key": {
+    "P": { "item": "aaaa0ggmc_ul_modpack:pieces" },
+    "S": { "item": "aaaa0ggmc_ul_modpack:sweet_dream" },
+    "D": { "item": "minecraft:diamond" },
+    "N": { "item": "aaaa0ggmc_ul_modpack:nightmare" },
+    "I": { "item": "minecraft:iron_ingot" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:dna_recombinator"
+  }
+}
