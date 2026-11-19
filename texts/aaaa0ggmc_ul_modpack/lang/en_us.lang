@@ -58,12 +58,68 @@ aaaa0ggmc_ul_modpack.titan_statue.lore2=§7Awarded to the raider who led a horde
 
 # Sleeping Pill & Deep Sleep
 item.aaaa0ggmc_ul_modpack.sleeping_pill.name=Sleeping Pill
-aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7Induces Slowness I, Weakness I, and Deep Sleep.
+aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7Grants Deep Sleep (built-in Slowness I, Weakness I, and gentle regeneration).
 aaaa0ggmc_ul_modpack.sleeping_pill.lore2=§7Lie down in any bed or sleeping bag while active to revert to your human form.
 effect.aaaa0ggmc_ul_modpack.deep_sleep=Deep Sleep
 ul.sleeping_pill.already_human=You are already in your original form.
 ul.sleeping_pill.taken=Drowsiness sets in... lie down in a bed or sleeping bag.
 ul.sleeping_pill.reverted=You wake from deep sleep, restored to your original form.
+
+# Water of Lethe & Oblivion
+fluid.aaaa0ggmc_ul_modpack.lethe_water=Water of Lethe
+tile.aaaa0ggmc_ul_modpack.lethe_water.name=Water of Lethe
+item.aaaa0ggmc_ul_modpack.lethe_soup.name=Lethe Soup
+aaaa0ggmc_ul_modpack.lethe_soup.lore1=§7Quick 0.8s drink: instantly heals 6 HP, stacking 4s of Slowness I and Weakness I.
+aaaa0ggmc_ul_modpack.lethe_soup.lore2=§7Scoop from Water of Lethe with a bowl (16 bowls per source; sneak to scoop in bulk).
+effect.aaaa0ggmc_ul_modpack.oblivion=Oblivion
+
+# Pieces & Shelf of Pieces
+item.aaaa0ggmc_ul_modpack.pieces.name=Pieces
+aaaa0ggmc_ul_modpack.pieces.lore1=§7Scattered fragments dropped from a Shelf of Pieces.
+tile.aaaa0ggmc_ul_modpack.shelf_of_pieces.name=Shelf of Pieces
+aaaa0ggmc_ul_modpack.shelf_of_pieces.lore1=§7Enchanting power equal to 4 bookshelves; found in village libraries.
+aaaa0ggmc_ul_modpack.shelf_of_pieces.lore2=§7Drops 3–9 Pieces without Silk Touch (or craft with 8 buckets of Water of Lethe + Bookshelf).
+
+# Bittersweet Ore, Sweetener & Bitterant
+tile.aaaa0ggmc_ul_modpack.bittersweet_ore.name=Bittersweet Ore
+item.aaaa0ggmc_ul_modpack.sweetener.name=Sweetener
+aaaa0ggmc_ul_modpack.sweetener.lore1=§7Primarily mined from Bittersweet Ore during the day (Iron pickaxe+).
+aaaa0ggmc_ul_modpack.sweetener.lore2=§7Edible: grants brief Regeneration I, followed by Poison I once it fades.
+item.aaaa0ggmc_ul_modpack.bitterant.name=Bitterant
+aaaa0ggmc_ul_modpack.bitterant.lore1=§7Primarily mined from Bittersweet Ore at night (Iron pickaxe+).
+aaaa0ggmc_ul_modpack.bitterant.lore2=§7Edible: grants brief Strength I, followed by Poison I once it fades.
+
+# Sweet Dream & Nightmare
+item.aaaa0ggmc_ul_modpack.sweet_dream.name=Sweet Dream
+aaaa0ggmc_ul_modpack.sweet_dream.lore1=§7A dream core forged from 8 Pieces surrounding a Sweetener.
+item.aaaa0ggmc_ul_modpack.nightmare.name=Nightmare
+aaaa0ggmc_ul_modpack.nightmare.lore1=§7A dream core forged from 8 Pieces surrounding a Bitterant.
+
+# DNA Swab & DNA Recombinator
+item.aaaa0ggmc_ul_modpack.dna_swab.name=DNA Swab
+aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7Right-click a whitelisted animal to sample its DNA for the DNA Recombinator.
+aaaa0ggmc_ul_modpack.dna_swab.sample_line=§bSample: %s
+aaaa0ggmc_ul_modpack.dna_swab.req_line=§7Required: %s
+aaaa0ggmc_ul_modpack.dna_swab.opt_line=§eOptional: %s
+ul.dna_swab.already_sampled=This swab already contains a DNA sample.
+ul.dna_swab.not_whitelisted=Cannot sample DNA from this creature.
+ul.dna_swab.sampled=Sampled DNA from %s.
+
+tile.aaaa0ggmc_ul_modpack.dna_recombinator.name=DNA Recombinator
+aaaa0ggmc_ul_modpack.dna_recombinator.lore1=§7Requires FE/RF power (default 20,000 FE per recombination).
+aaaa0ggmc_ul_modpack.dna_recombinator.lore2=§7Insert a sampled DNA Swab and matching materials to recombine into that creature.
+ul.dna.gui.start=Recombine
+ul.dna.gui.insert_swab=Insert a sampled DNA Swab first.
+ul.dna.hint.sheep_sheared=No wool: Sheared Sheep
+ul.dna.hint.sheep_wool=Wool ready: Full fleece
+ul.dna.hint.pig_unsaddled=Opt: Saddle (plain pig)
+ul.dna.hint.pig_saddled=Saddle ready: Saddled
+ul.dna.err.no_swab=Insert a sampled DNA Swab in the top slot first.
+ul.dna.err.no_energy=Not enough energy: %s / %s FE.
+ul.dna.err.missing_req=Missing required material: %s x%s.
+ul.dna.recombine_started=Recombination started! Morph completes after %ss of Weakness.
+ul.dna.recombine_complete=Recombination complete! You have taken your new form.
+ul.dna.recombine_failed=Recombination failed: unable to construct target morph.
 
 # Horde Leadership / Village Tide
 ul.horde.fail.skill=The dead don't listen to you yet.

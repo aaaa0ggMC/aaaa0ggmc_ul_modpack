@@ -58,12 +58,68 @@ aaaa0ggmc_ul_modpack.titan_statue.lore2=§7献给率领尸群踏平村庄、加�
 
 # 安眠药 & 安眠效果
 item.aaaa0ggmc_ul_modpack.sleeping_pill.name=安眠药
-aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7附带缓慢 I 与虚弱 I 的助眠药片。
+aaaa0ggmc_ul_modpack.sleeping_pill.lore1=§7赋予「安眠」效果（自带缓慢 I、虚弱 I 与缓速生命恢复）。
 aaaa0ggmc_ul_modpack.sleeping_pill.lore2=§7药效期间躺上床或睡袋，即可解除变身退回玩家种族。
 effect.aaaa0ggmc_ul_modpack.deep_sleep=安眠
 ul.sleeping_pill.already_human=你现在已经是玩家原本的种族了。
 ul.sleeping_pill.taken=睡意袭来……快找张床或睡袋躺下吧。
 ul.sleeping_pill.reverted=安眠醒来，你变回了自己的本来面目。
+
+# 孟婆汤 & 遗忘效果
+fluid.aaaa0ggmc_ul_modpack.lethe_water=孟婆汤
+tile.aaaa0ggmc_ul_modpack.lethe_water.name=孟婆汤
+item.aaaa0ggmc_ul_modpack.lethe_soup.name=孟婆汤
+aaaa0ggmc_ul_modpack.lethe_soup.lore1=§70.8 秒快速饮用：瞬间回复 6 点生命，叠加 4 秒缓慢 I 与虚弱 I。
+aaaa0ggmc_ul_modpack.lethe_soup.lore2=§7用空碗右键孟婆汤源流体可盛取（每格 16 碗，潜行可批量盛取）。
+effect.aaaa0ggmc_ul_modpack.oblivion=遗忘
+
+# Pieces & 碎屑书架
+item.aaaa0ggmc_ul_modpack.pieces.name=Pieces
+aaaa0ggmc_ul_modpack.pieces.lore1=§7散落的记忆碎屑，来自碎屑书架。
+tile.aaaa0ggmc_ul_modpack.shelf_of_pieces.name=碎屑书架
+aaaa0ggmc_ul_modpack.shelf_of_pieces.lore1=§7附魔效用等同于 4 个普通书架；生成于村庄图书馆。
+aaaa0ggmc_ul_modpack.shelf_of_pieces.lore2=§7非精准采集破坏会掉落 3–9 个 Pieces（也可用 8 桶孟婆汤与书架合成）。
+
+# 甘苦矿、甜蜜素 & 苦味剂
+tile.aaaa0ggmc_ul_modpack.bittersweet_ore.name=甘苦矿
+item.aaaa0ggmc_ul_modpack.sweetener.name=甜蜜素
+aaaa0ggmc_ul_modpack.sweetener.lore1=§7甘苦矿在白天开采的主要产物（铁镐及以上）。
+aaaa0ggmc_ul_modpack.sweetener.lore2=§7食用获得短暂生命恢复 I，药效结束后触发中毒 I。
+item.aaaa0ggmc_ul_modpack.bitterant.name=苦味剂
+aaaa0ggmc_ul_modpack.bitterant.lore1=§7甘苦矿在夜晚开采的主要产物（铁镐及以上）。
+aaaa0ggmc_ul_modpack.bitterant.lore2=§7食用获得短暂力量 I，药效结束后触发中毒 I。
+
+# 美梦 & 噩梦
+item.aaaa0ggmc_ul_modpack.sweet_dream.name=美梦
+aaaa0ggmc_ul_modpack.sweet_dream.lore1=§7由 8 个 Pieces 包裹甜蜜素凝结而成的梦境核心。
+item.aaaa0ggmc_ul_modpack.nightmare.name=噩梦
+aaaa0ggmc_ul_modpack.nightmare.lore1=§7由 8 个 Pieces 包裹苦味剂凝结而成的梦境核心。
+
+# 棉签 & DNA 重组机
+item.aaaa0ggmc_ul_modpack.dna_swab.name=采样棉签
+aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7右键白名单动物即可采集其 DNA，供 DNA 重组机使用。
+aaaa0ggmc_ul_modpack.dna_swab.sample_line=§b样本：%s
+aaaa0ggmc_ul_modpack.dna_swab.req_line=§7必选原料：%s
+aaaa0ggmc_ul_modpack.dna_swab.opt_line=§e可选原料：%s
+ul.dna_swab.already_sampled=这支棉签已经采集过 DNA 样本了。
+ul.dna_swab.not_whitelisted=无法采集该生物的 DNA。
+ul.dna_swab.sampled=已采集 %s 的 DNA 样本。
+
+tile.aaaa0ggmc_ul_modpack.dna_recombinator.name=DNA 重组机
+aaaa0ggmc_ul_modpack.dna_recombinator.lore1=§7需要 FE/RF 电力驱动（单次重组默认消耗 20,000 FE）。
+aaaa0ggmc_ul_modpack.dna_recombinator.lore2=§7放入采样棉签与对应生物原料后即可启动基因重组。
+ul.dna.gui.start=开始重组
+ul.dna.gui.insert_swab=请先放入已采样的棉签。
+ul.dna.hint.sheep_sheared=缺羊毛：变为没毛羊
+ul.dna.hint.sheep_wool=已放羊毛：完整毛色
+ul.dna.hint.pig_unsaddled=可选：鞍（普通猪）
+ul.dna.hint.pig_saddled=已放鞍：带鞍猪
+ul.dna.err.no_swab=请先在顶部槽位放入已采样的棉签。
+ul.dna.err.no_energy=电力不足：%s / %s FE。
+ul.dna.err.missing_req=缺少必选原料：%s x%s。
+ul.dna.recombine_started=基因重组已启动！%s 秒虚弱结束后将完成变身。
+ul.dna.recombine_complete=基因重组完成，你已蜕变为新的形态！
+ul.dna.recombine_failed=基因重组失败：无法构建目标生物形态。
 
 # 尸群领导 / 尸潮
 ul.horde.fail.skill=死者还不想听你的。
