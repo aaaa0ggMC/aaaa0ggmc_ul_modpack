@@ -30,8 +30,8 @@ public class FtbqTaskRegistry {
     public static void onRegisterTasks(RegistryEvent.Register<TaskType> event) {
         MORPH = new TaskType(MorphTask::new);
         MORPH.setRegistryName(UlModpack.MODID, "morph");
-        // 任务图标 = 物品图标（Icon.getIcon(String) 会把裸字符串当图片路径解析成 missing texture）
-        MORPH.setIcon(ItemIcon.getItemIcon(CommonProxy.ANKH_AMULET));
+        // 默认任务图标：采样棉签（具体任务会优先动态取对应生物的刷怪蛋图标）
+        MORPH.setIcon(ItemIcon.getItemIcon(CommonProxy.DNA_SWAB));
         event.getRegistry().register(MORPH);
 
         // 通用进度数值任务：读玩家 morphext 数据的状态键比大小，与具体模组无关

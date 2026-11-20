@@ -1,44 +1,54 @@
 package aaaa0ggmc.ulmodpack.ftbq;
 
+import com.feed_the_beast.ftblib.lib.config.ConfigGroup;
+import com.feed_the_beast.ftblib.lib.icon.Icon;
+import com.feed_the_beast.ftblib.lib.icon.ItemIcon;
+import com.feed_the_beast.ftblib.lib.io.DataIn;
+import com.feed_the_beast.ftblib.lib.io.DataOut;
 import com.feed_the_beast.ftbquests.quest.Quest;
 import com.feed_the_beast.ftbquests.quest.QuestData;
 import com.feed_the_beast.ftbquests.quest.task.BooleanTaskData;
 import com.feed_the_beast.ftbquests.quest.task.Task;
 import com.feed_the_beast.ftbquests.quest.task.TaskData;
 import com.feed_the_beast.ftbquests.quest.task.TaskType;
-import com.feed_the_beast.ftblib.lib.config.ConfigGroup;
-import com.feed_the_beast.ftblib.lib.io.DataIn;
-import com.feed_the_beast.ftblib.lib.io.DataOut;
 import mchorse.metamorph.api.morphs.AbstractMorph;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemMonsterPlacer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * FTBQuests 形态检测任务：检测玩家「变成了什么」。
+ * FTBQuests 形态检测任务：检测玩家「变成了什么」及其 NBT 变体（幼年 / 特定 NBT / 任意变种）。
  *
- * type 名：{@code aaaa0ggmc_ul_modpack:morph}
- * 字段：
- *   morphs   形态 id 列表（任一命中即算完成；写 "zombie" 自动补 minecraft: 前缀）
- *   acquired true = 检查“曾获得过的形态”列表；false（默认）= 检查“当前形态”
- *
- * autoSubmitOnPlayerTick=10：FTBQuests 每 10 tick 自动提交一次，
- * 玩家变身的瞬间即可完成任务，无需点击。
- *
- * 任务源（quests/*.json）两种写法：
- *   "morph:minecraft:zombie,minecraft:husk"                （简写）
- *   { type: "morph", morphs: ["minecraft:zombie"], acquired: true }  （对象）
+ * <p>图标默认根据首个目标形态动态生成对应生物的刷怪蛋图标，无刷怪蛋时退回采样棉签图标。</p>
  */
 public class MorphTask extends Task {
 
     public List<String> morphs = new ArrayList<>();
     public boolean acquired;
+    public boolean baby;
+    public boolean anyVariant;
+    public String nbtMatch = "";
+
+    @Nullable
+    private transient NBTTagCompound parsedNbtCache;
+    @Nullable
+    private transient String parsedNbtKey;
 
     public MorphTask(Quest quest) {
         super(quest);
@@ -65,13 +75,21 @@ public class MorphTask extends Task {
         if (acquired) {
             tag.setBoolean("acquired", true);
         }
+        if (baby) {
+            tag.setBoolean("baby", true);
+        }
+        if (anyVariant) {
+            tag.setBoolean("any_variant", true);
+        }
+        if (nbtMatch != null && !nbtMatch.isEmpty()) {
+            tag.setString("nbt_match", nbtMatch);
+        }
     }
 
     @Override
     public void readData(NBTTagCompound tag) {
         super.readData(tag);
         morphs.clear();
-        // 兼容字符串（逗号分隔）与字符串列表两种写法
         if (tag.hasKey("morphs", 8)) {
             for (String s : tag.getString("morphs").split(",")) {
                 String t = s.trim();
@@ -89,6 +107,11 @@ public class MorphTask extends Task {
             }
         }
         acquired = tag.getBoolean("acquired");
+        baby = tag.getBoolean("baby");
+        anyVariant = tag.getBoolean("any_variant");
+        nbtMatch = tag.getString("nbt_match").trim();
+        parsedNbtCache = null;
+        parsedNbtKey = null;
     }
 
     @Override
@@ -96,6 +119,9 @@ public class MorphTask extends Task {
         super.writeNetData(data);
         data.writeString(String.join(",", morphs));
         data.writeBoolean(acquired);
+        data.writeBoolean(baby);
+        data.writeBoolean(anyVariant);
+        data.writeString(nbtMatch != null ? nbtMatch : "");
     }
 
     @Override
@@ -109,6 +135,11 @@ public class MorphTask extends Task {
             }
         }
         acquired = data.readBoolean();
+        baby = data.readBoolean();
+        anyVariant = data.readBoolean();
+        nbtMatch = data.readString().trim();
+        parsedNbtCache = null;
+        parsedNbtKey = null;
     }
 
     @Override
@@ -127,10 +158,34 @@ public class MorphTask extends Task {
                 },
                 "String");
         config.addBool("acquired", () -> acquired, (b) -> acquired = b, false);
+        config.addBool("baby", () -> baby, (b) -> baby = b, false);
+        config.addBool("any_variant", () -> anyVariant, (b) -> anyVariant = b, false);
+        config.addString("nbt_match",
+                () -> nbtMatch != null ? nbtMatch : "",
+                (s) -> {
+                    nbtMatch = s != null ? s.trim() : "";
+                    parsedNbtCache = null;
+                    parsedNbtKey = null;
+                },
+                "");
     }
 
     @Override
-    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @SideOnly(Side.CLIENT)
+    public Icon getAltIcon() {
+        if (!morphs.isEmpty()) {
+            ResourceLocation id = new ResourceLocation(normalize(morphs.get(0)));
+            if (EntityList.ENTITY_EGGS.containsKey(id)) {
+                ItemStack egg = new ItemStack(Items.SPAWN_EGG);
+                ItemMonsterPlacer.applyEntityIdToItemStack(egg, id);
+                return ItemIcon.getItemIcon(egg);
+            }
+        }
+        return super.getAltIcon();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
     public String getAltTitle() {
         return net.minecraft.client.resources.I18n.format("ftbquests.task.aaaa0ggmc_ul_modpack.morph")
                 + ": " + String.join(", ", morphs);
@@ -139,6 +194,22 @@ public class MorphTask extends Task {
     @Override
     public int autoSubmitOnPlayerTick() {
         return 10;
+    }
+
+    @Nullable
+    NBTTagCompound getExpectedNbt() {
+        if (nbtMatch == null || nbtMatch.isEmpty()) {
+            return null;
+        }
+        if (!nbtMatch.equals(parsedNbtKey)) {
+            parsedNbtKey = nbtMatch;
+            try {
+                parsedNbtCache = JsonToNBT.getTagFromJson(nbtMatch);
+            } catch (Exception e) {
+                parsedNbtCache = null;
+            }
+        }
+        return parsedNbtCache;
     }
 
     /** 形态 id 归一：去空白、小写、无命名空间补 minecraft:。 */
@@ -178,10 +249,55 @@ public class MorphTask extends Task {
                 return false;
             }
             String name = normalize(morph.name);
-            for (String want : task.morphs) {
-                if (normalize(want).equals(name)) {
-                    return true;
+            boolean nameMatched = false;
+            for (String candidate : task.morphs) {
+                if (name.equals(normalize(candidate))) {
+                    nameMatched = true;
+                    break;
                 }
+            }
+            if (!nameMatched) {
+                return false;
+            }
+            if (!task.baby && !task.anyVariant && (task.nbtMatch == null || task.nbtMatch.isEmpty())) {
+                return true;
+            }
+            NBTTagCompound fullTag = new NBTTagCompound();
+            morph.toNBT(fullTag);
+            NBTTagCompound entityData = fullTag.getCompoundTag("EntityData");
+
+            if (task.baby) {
+                boolean isBaby = (entityData.hasKey("Age") && entityData.getInteger("Age") < 0)
+                        || fullTag.getBoolean("Baby");
+                if (!isBaby) {
+                    return false;
+                }
+            }
+            if (task.anyVariant && !hasNonDefaultVariant(entityData)) {
+                return false;
+            }
+            NBTTagCompound expected = task.getExpectedNbt();
+            if (expected != null && !NBTUtil.areNBTEquals(expected, entityData, true)) {
+                return false;
+            }
+            return true;
+        }
+
+        private static boolean hasNonDefaultVariant(NBTTagCompound entityData) {
+            if (entityData.getBoolean("Sheared") || entityData.getBoolean("Saddle")) {
+                return true;
+            }
+            if (entityData.hasKey("Color") && entityData.getByte("Color") != 0) {
+                return true;
+            }
+            if (entityData.hasKey("Variant") && entityData.getInteger("Variant") != 0) {
+                return true;
+            }
+            if (entityData.hasKey("RabbitType") && entityData.getInteger("RabbitType") != 0) {
+                return true;
+            }
+            if (entityData.hasKey("CatType") && entityData.getInteger("CatType") != 0) {
+                return true;
             }
             return false;
         }
