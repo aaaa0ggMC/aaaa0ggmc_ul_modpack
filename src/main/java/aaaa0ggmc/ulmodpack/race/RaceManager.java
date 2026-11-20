@@ -1,6 +1,8 @@
 package aaaa0ggmc.ulmodpack.race;
 
 import aaaa0ggmc.morphext.conversion.MorphFactory;
+import aaaa0ggmc.morphext.integration.metamorph.MorphTransitionKind;
+import aaaa0ggmc.morphext.integration.metamorph.MorphTransitionService;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import aaaa0ggmc.ulmodpack.zombie.ZombieForms;
@@ -38,7 +40,13 @@ public final class RaceManager {
         /** 临时形态退栈（如摘下泰坦王冠）。 */
         TEMPORARY_POP,
         /** 完全回撤为玩家原本种族（如安眠药）。 */
-        REVERT_HUMAN
+        REVERT_HUMAN,
+        /** 管理员命令 / 调试强制变身：不压栈、不打断临时状态（决策表与 VARIANT_APPLY / AGE_SET 相同）。 */
+        ADMIN,
+        /** 仅应用形态变体（颜色 / 花纹等），不改种族进程。 */
+        VARIANT_APPLY,
+        /** 仅设置年龄段（幼年 / 成年），不改种族进程。 */
+        AGE_SET
     }
 
     public enum HealthPolicy {
@@ -53,13 +61,26 @@ public final class RaceManager {
     private RaceManager() {
     }
 
-    /** 按形态 ID 切换（自动通过 {@link MorphFactory} 构建 morph）。 */
+    /** 按形态 ID 切换（无额外 EntityData；{@code extraEntityData = null} 的薄转发）。 */
     public static boolean transitionToForm(EntityPlayerMP player, String formId,
+                                           TransitionReason reason, HealthPolicy healthPolicy) {
+        return transitionToForm(player, formId, null, reason, healthPolicy);
+    }
+
+    /**
+     * 按形态 ID 切换，并可选合并额外 {@code EntityData}（如 {@code {Color:4b}} / {@code {Sheared:1b}}）。
+     *
+     * <p>这是 ul 包内「带变体数据变身」的唯一入口；{@code extraEntityData} 由
+     * {@link MorphFactory#buildFromFormId(String, net.minecraft.world.World, NBTTagCompound)}
+     * 合并进实体默认 NBT（同名键后写覆盖）。</p>
+     */
+    public static boolean transitionToForm(EntityPlayerMP player, String formId,
+                                           @Nullable NBTTagCompound extraEntityData,
                                            TransitionReason reason, HealthPolicy healthPolicy) {
         if (player == null || formId == null || formId.isEmpty()) {
             return false;
         }
-        AbstractMorph morph = MorphFactory.buildFromFormId(formId, player.world);
+        AbstractMorph morph = MorphFactory.buildFromFormId(formId, player.world, extraEntityData);
         if (morph == null) {
             UlModpack.LOGGER.warn("[RaceManager] Failed to build morph '{}' for {} (reason={})",
                     formId, player.getName(), reason);
@@ -77,13 +98,11 @@ public final class RaceManager {
         String currentForm = ZombieForms.currentFormId(player);
         String targetForm = targetMorph != null && targetMorph.name != null ? targetMorph.name : "";
 
-        if (reason == TransitionReason.TEMPORARY_PUSH) {
+        if (pushesStack(reason)) {
             if (!currentForm.isEmpty() && !currentForm.equals(targetForm)) {
                 setTempPrevForm(player, currentForm);
             }
-        } else if (reason == TransitionReason.INFECTION
-                || reason == TransitionReason.EVOLVE
-                || reason == TransitionReason.REVERT_HUMAN) {
+        } else if (interruptsTemporary(reason)) {
             interruptTemporaryState(player);
         }
 
@@ -132,6 +151,52 @@ public final class RaceManager {
 
     public static boolean hasTemporaryForm(EntityPlayerMP player) {
         return player != null && !getTempPrevForm(player).isEmpty();
+    }
+
+    /**
+     * 返回核心形态写入 SPI 的观察者实现（由 {@link UlModpackMorphextPlugin} 在
+     * morphext PreInit 经 {@code MorphextPluginContext} 注册，docs/dna-recombinator-design.md §2.3 / §7 A4）。
+     *
+     * <p>依赖方向仍是「内容层 → 核心」：核心只提供 SPI 与回调，不反向依赖 ul 包。
+     * 注册后，核心侧（{@code RuleExecutor} / {@code MetamorphServerAbilities}）发生的任何
+     * 形态写入都会回调该观察者，由本类决定整合包语义。</p>
+     */
+    public static MorphTransitionService.Listener coreListener() {
+        return LISTENER;
+    }
+
+    private static final MorphTransitionService.Listener LISTENER =
+            new MorphTransitionService.Listener() {
+                @Override
+                public void onExternalTransition(EntityPlayerMP player,
+                                                 @Nullable AbstractMorph morph,
+                                                 MorphTransitionKind kind) {
+                    // 决策表：核心 CONVERSION / ABILITY_GRANT 写入都对应"形态已被别处改掉"，
+                    // 与 INFECTION / EVOLVE / REVERT_HUMAN 同列 —— 打断临时状态
+                    // （清临时形态栈 / 清安眠药效 / 清 DNA pending）。
+                    // 具体行为见 docs/dna-recombinator-design.md §2.3 行为差异清单。
+                    String target = morph != null && morph.name != null ? morph.name : "<none>";
+                    UlModpack.LOGGER.info("[RaceManager] external transition observed: player={} form={} kind={}",
+                            player.getName(), target, kind);
+                    interruptTemporaryState(player);
+                }
+            };
+
+    /**
+     * 决策表：该 reason 是否把当前形态压进 {@code ul_race_temp_prev_form}。
+     * 纯函数——新增枚举值不会静默落进别的分支（docs/dna-recombinator-design.md §3.2）。
+     */
+    public static boolean pushesStack(TransitionReason reason) {
+        return reason == TransitionReason.TEMPORARY_PUSH;
+    }
+
+    /**
+     * 决策表：该 reason 是否调 {@link #interruptTemporaryState}（连带清安眠药效与 DNA pending）。
+     * 纯函数，与 {@link #pushesStack} 互斥（压栈语义不打断自身）。
+     */
+    public static boolean interruptsTemporary(TransitionReason reason) {
+        return reason == TransitionReason.INFECTION || reason == TransitionReason.EVOLVE
+                || reason == TransitionReason.REVERT_HUMAN;
     }
 
     private static void applyHealthPolicy(EntityPlayerMP player, float prevRatio, HealthPolicy policy) {

@@ -1,7 +1,6 @@
 package aaaa0ggmc.ulmodpack.command;
 
 import aaaa0ggmc.morphext.conversion.DeathContext;
-import aaaa0ggmc.morphext.conversion.MorphFactory;
 import aaaa0ggmc.morphext.conversion.WorldQuery;
 import aaaa0ggmc.morphext.conversion.rule.ConversionRule;
 import aaaa0ggmc.morphext.conversion.rule.ConversionRuleRegistry;
@@ -15,14 +14,13 @@ import aaaa0ggmc.ulmodpack.config.AnkhConfig;
 import aaaa0ggmc.ulmodpack.infection.InfectionHandler;
 import aaaa0ggmc.ulmodpack.item.ItemAnkhAmulet;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
+import aaaa0ggmc.ulmodpack.race.RaceManager;
 import aaaa0ggmc.ulmodpack.race.RaceResolver;
 import baubles.api.BaubleType;
 import baubles.api.BaublesApi;
 import baubles.api.IBauble;
 import baubles.api.cap.IBaublesItemHandler;
-import mchorse.metamorph.api.MorphAPI;
 import mchorse.metamorph.api.MorphManager;
-import mchorse.metamorph.api.morphs.AbstractMorph;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
 import net.minecraft.command.CommandBase;
@@ -120,13 +118,13 @@ public class CommandUlPack extends CommandBase {
                 break;
             case "convert": {
                 String formId = args.length > 1 ? args[1] : "minecraft:husk";
-                AbstractMorph morph = MorphFactory.buildFromFormId(formId, player.world);
-                if (morph == null) {
+                // 管理员强制变身走统一收口：ADMIN = 不压栈、不打断临时形态栈/安眠药效/DNA pending，
+                // 血量按比例结算（修复：旧直调 MorphAPI 无血量策略，变身前后血量可能越界）。
+                // 注意：泰坦压栈状态下用本命令变身仍不打断栈，之后摘冠会退回栈里那个旧形态（既有语义）。
+                if (!RaceManager.transitionToForm(player, formId,
+                        RaceManager.TransitionReason.ADMIN, RaceManager.HealthPolicy.PRESERVE_RATIO)) {
                     throw new CommandException("No morph available for form id: " + formId);
                 }
-                MorphAPI.acquire(player, morph);
-                MorphAPI.morph(player, morph, true);
-                player.setHealth(player.getMaxHealth());
                 player.sendMessage(new TextComponentString("Converted to " + formId));
                 break;
             }
