@@ -41,6 +41,8 @@
     "MixinEntityIronGolem"
   ],
   "client": [
-    "MixinEntity"
+    "MixinEntity",
+    "MixinCCRenderState",
+    "MixinCCBlockRendererDispatcher"
   ]
 }
