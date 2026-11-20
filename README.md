@@ -7,8 +7,9 @@
 
 **往里加内容**：在 `src/main/java/aaaa0ggmc/ulmodpack/` 下按主题开新包；
 物品注册挂进 `ItemRegistryHandler`，事件在 `CommonProxy.preInit`、
-指令在 `UlModpack.serverStarting` 挂上；第三方模组适配只放本模组，
-morphext 核心保持通用。下面是当前已装的内容模块。
+指令在 `UlModpack.serverStarting` 挂上；第三方模组的**形态/能力适配**放
+`morphext-patch-*`，只有与 UL 内容直接相关的联动才放本模组，morphext 核心保持通用。
+下面是当前已装的内容模块。
 
 ## 当前内容
 
