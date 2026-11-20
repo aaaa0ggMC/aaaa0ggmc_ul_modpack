@@ -97,7 +97,7 @@ aaaa0ggmc_ul_modpack.nightmare.lore1=§7A dream core forged from 8 Pieces surrou
 
 # DNA Swab & DNA Recombinator
 item.aaaa0ggmc_ul_modpack.dna_swab.name=DNA Swab
-aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7Right-click a whitelisted animal to sample its DNA for the DNA Recombinator.
+aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7Right-click a whitelisted animal (or Sneak + Right-click air to sample your current whitelisted morph).
 aaaa0ggmc_ul_modpack.dna_swab.sample_line=§bSample: %s
 aaaa0ggmc_ul_modpack.dna_swab.req_line=§7Required: %s
 aaaa0ggmc_ul_modpack.dna_swab.opt_line=§eOptional: %s
@@ -120,6 +120,21 @@ ul.dna.err.missing_req=Missing required material: %s x%s.
 ul.dna.recombine_started=Recombination started! Morph completes after %ss of Weakness.
 ul.dna.recombine_complete=Recombination complete! You have taken your new form.
 ul.dna.recombine_failed=Recombination failed: unable to construct target morph.
+item.aaaa0ggmc_ul_modpack.reversal_gem.name=Reversal Gem
+aaaa0ggmc_ul_modpack.reversal_gem.lore1=§7Forged from a Diamond surrounded by Sweetener, Sweet Dream, Pieces, and a Sleeping Pill.
+aaaa0ggmc_ul_modpack.reversal_gem.lore2=§7Insert into the DNA Recombinator to regress ageable animals into baby forms.
+ul.dna.hint.baby_opt=Opt: Reversal Gem (Baby)
+ul.dna.hint.baby_ready=Reversal Gem: Baby form
+ul.dna.hint.rabbit_normal=Opt: Golden Carrot (Normal)
+ul.dna.hint.rabbit_killer=Golden Carrot: Killer Bunny
+ul.dna.hint.ocelot_wild=Opt: Raw Salmon x2 (Wild)
+ul.dna.hint.ocelot_tamed=Salmon: Cat variant
+ul.dna.hint.horse_plain=Opt: Sugar x2 (Plain)
+ul.dna.hint.horse_spotted=Sugar: Spotted variant
+ul.dna.hint.llama_plain=Opt: Carpet (Plain)
+ul.dna.hint.llama_brown=Carpet: Brown variant
+ul.dna.hint.parrot_red=Opt: Lapis (Red Parrot)
+ul.dna.hint.parrot_blue=Lapis: Blue Parrot
 
 # Horde Leadership / Village Tide
 ul.horde.fail.skill=The dead don't listen to you yet.
@@ -173,3 +188,25 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=Tide: active
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=Tide: inactive
 aaaa0ggmc_ul_modpack.status.horde.empty=(the horde is empty)
 aaaa0ggmc_ul_modpack.status.horde.follower=%s (%s/%s)
+
+# Wedding Ring & Breed Ability
+item.aaaa0ggmc_ul_modpack.wedding_ring.name=Wedding Ring
+aaaa0ggmc_ul_modpack.wedding_ring.lore1=§7Grants the temporary Breed ability while worn in a Ring slot.
+aaaa0ggmc_ul_modpack.wedding_ring.lore2=§7Morph into a matching adult species and hold its breeding item to breed whitelisted animals.
+ability.aaaa0ggmc_ul_modpack.breed=Breed
+morphext.ability.aaaa0ggmc_ul_modpack.breed.name=Breed
+morphext.ability.aaaa0ggmc_ul_modpack.breed.desc=Granted by Wedding Ring: while morphed as a matching adult species and holding the breeding item, aim at a whitelisted animal to consume the item and spawn a baby (has cooldown).
+ul.breed.no_target=Aim at an animal within reach.
+ul.breed.not_whitelisted=This creature is not in the breeding whitelist.
+ul.breed.wrong_morph=Your current morph does not match the target species.
+ul.breed.wrong_morph_need=Morph mismatch (requires: %s).
+ul.breed.not_adult=Both you and the target must be adult forms to breed.
+ul.breed.wrong_variant=Your current morph variant does not meet the breeding requirement.
+ul.breed.target_invalid=The target's current state does not allow breeding.
+ul.breed.target_cooldown=This animal bred recently and is still on cooldown.
+ul.breed.target_cooldown_sec=This animal is on breeding cooldown (%ss left).
+ul.breed.wrong_item=You are not holding the required breeding item.
+ul.breed.wrong_item_need=Missing breeding item (requires: %s).
+ul.breed.spawn_failed=Breeding failed: unable to spawn offspring.
+ul.breed.success=Breeding succeeded!
+

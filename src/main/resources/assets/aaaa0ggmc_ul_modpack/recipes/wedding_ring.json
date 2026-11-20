@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " S ",
+    "GGG",
+    "G G"
+  ],
+  "key": {
+    "S": { "item": "aaaa0ggmc_ul_modpack:sweet_dream" },
+    "G": { "item": "minecraft:gold_ingot" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:wedding_ring"
+  }
+}

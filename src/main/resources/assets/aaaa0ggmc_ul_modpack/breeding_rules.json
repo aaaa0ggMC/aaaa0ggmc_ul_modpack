@@ -1,0 +1,160 @@
+{
+  "rules": [
+    {
+      "target_entity": "minecraft:sheep",
+      "required_morph": "minecraft:sheep",
+      "require_adult": true,
+      "required_player_nbt": { "Sheared": false },
+      "items": [
+        { "item": "minecraft:wheat", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:sheep",
+      "offspring_baby": true,
+      "inherit_nbt_keys": ["Color"],
+      "cooldown_ticks": 1200,
+      "xp": 3
+    },
+    {
+      "target_entity": "minecraft:cow",
+      "required_morph": "minecraft:cow",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:wheat", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:cow",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 3
+    },
+    {
+      "target_entity": "minecraft:mooshroom",
+      "required_morph": "minecraft:mooshroom",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:wheat", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:mooshroom",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 4
+    },
+    {
+      "target_entity": "minecraft:pig",
+      "required_morph": "minecraft:pig",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:carrot", "meta": 0, "count": 1 },
+        { "item": "minecraft:potato", "meta": 0, "count": 1 },
+        { "item": "minecraft:beetroot", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:pig",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 3
+    },
+    {
+      "target_entity": "minecraft:chicken",
+      "required_morph": "minecraft:chicken",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:wheat_seeds", "meta": 0, "count": 1 },
+        { "item": "minecraft:melon_seeds", "meta": 0, "count": 1 },
+        { "item": "minecraft:pumpkin_seeds", "meta": 0, "count": 1 },
+        { "item": "minecraft:beetroot_seeds", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:chicken",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 2
+    },
+    {
+      "target_entity": "minecraft:rabbit",
+      "required_morph": "minecraft:rabbit",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:carrot", "meta": 0, "count": 1 },
+        { "item": "minecraft:golden_carrot", "meta": 0, "count": 1 },
+        { "item": "minecraft:yellow_flower", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:rabbit",
+      "offspring_baby": true,
+      "inherit_nbt_keys": ["RabbitType"],
+      "cooldown_ticks": 1200,
+      "xp": 3
+    },
+    {
+      "target_entity": "minecraft:wolf",
+      "required_morph": "minecraft:wolf",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:beef", "meta": 0, "count": 1 },
+        { "item": "minecraft:cooked_beef", "meta": 0, "count": 1 },
+        { "item": "minecraft:porkchop", "meta": 0, "count": 1 },
+        { "item": "minecraft:cooked_porkchop", "meta": 0, "count": 1 },
+        { "item": "minecraft:chicken", "meta": 0, "count": 1 },
+        { "item": "minecraft:cooked_chicken", "meta": 0, "count": 1 },
+        { "item": "minecraft:mutton", "meta": 0, "count": 1 },
+        { "item": "minecraft:cooked_mutton", "meta": 0, "count": 1 },
+        { "item": "minecraft:rabbit", "meta": 0, "count": 1 },
+        { "item": "minecraft:cooked_rabbit", "meta": 0, "count": 1 },
+        { "item": "minecraft:rotten_flesh", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:wolf",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 4
+    },
+    {
+      "target_entity": "minecraft:ocelot",
+      "required_morph": "minecraft:ocelot",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:fish", "meta": -1, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:ocelot",
+      "offspring_baby": true,
+      "inherit_nbt_keys": ["CatType"],
+      "cooldown_ticks": 1200,
+      "xp": 3
+    },
+    {
+      "target_entity": "minecraft:horse",
+      "required_morph": "minecraft:horse",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:golden_apple", "meta": 0, "count": 1 },
+        { "item": "minecraft:golden_carrot", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:horse",
+      "offspring_baby": true,
+      "inherit_nbt_keys": ["Variant"],
+      "cooldown_ticks": 1200,
+      "xp": 5
+    },
+    {
+      "target_entity": "minecraft:llama",
+      "required_morph": "minecraft:llama",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:hay_block", "meta": 0, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:llama",
+      "offspring_baby": true,
+      "inherit_nbt_keys": ["Variant"],
+      "cooldown_ticks": 1200,
+      "xp": 4
+    },
+    {
+      "target_entity": "minecraft:polar_bear",
+      "required_morph": "minecraft:polar_bear",
+      "require_adult": true,
+      "items": [
+        { "item": "minecraft:fish", "meta": -1, "count": 1 }
+      ],
+      "offspring_entity": "minecraft:polar_bear",
+      "offspring_baby": true,
+      "cooldown_ticks": 1200,
+      "xp": 5
+    }
+  ]
+}

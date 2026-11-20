@@ -2,6 +2,9 @@ package aaaa0ggmc.ulmodpack.dna;
 
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
+import mchorse.metamorph.api.morphs.AbstractMorph;
+import mchorse.metamorph.capabilities.morphing.IMorphing;
+import mchorse.metamorph.capabilities.morphing.Morphing;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityList;
@@ -11,6 +14,8 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
@@ -90,6 +95,65 @@ public class ItemDnaSwab extends Item {
                     new TextComponentTranslation("ul.dna_swab.sampled", target.getName()), true);
         }
         return true;
+    }
+
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        ItemStack stack = player.getHeldItem(hand);
+        if (!player.isSneaking()) {
+            return new ActionResult<>(EnumActionResult.PASS, stack);
+        }
+        if (hasDna(stack)) {
+            if (!world.isRemote) {
+                player.sendStatusMessage(new TextComponentTranslation("ul.dna_swab.already_sampled"), true);
+            }
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+        IMorphing morphing = Morphing.get(player);
+        AbstractMorph current = morphing != null ? morphing.getCurrentMorph() : null;
+        if (current == null || current.name == null || current.name.isEmpty()) {
+            if (!world.isRemote) {
+                player.sendStatusMessage(new TextComponentTranslation("ul.dna_swab.not_whitelisted"), true);
+            }
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+        String rawName = current.name.trim().toLowerCase(java.util.Locale.ROOT);
+        String entityId = rawName.contains(":") ? rawName : "minecraft:" + rawName;
+        if (!DnaRecipeRegistry.isWhitelisted(entityId)) {
+            if (!world.isRemote) {
+                player.sendStatusMessage(new TextComponentTranslation("ul.dna_swab.not_whitelisted"), true);
+            }
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+        if (!world.isRemote) {
+            ItemStack filled = new ItemStack(this, 1);
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString(NBT_ENTITY_ID, entityId);
+            String displayName = current.name;
+            if (current instanceof mchorse.metamorph.api.morphs.EntityMorph) {
+                net.minecraft.entity.Entity e = ((mchorse.metamorph.api.morphs.EntityMorph) current).getEntity(world);
+                if (e != null) {
+                    displayName = e.getName();
+                }
+            }
+            tag.setString(NBT_ENTITY_NAME, displayName);
+            filled.setTagCompound(tag);
+
+            if (!player.capabilities.isCreativeMode) {
+                stack.shrink(1);
+            }
+            if (stack.isEmpty()) {
+                player.setHeldItem(hand, filled);
+            } else if (!player.inventory.addItemStackToInventory(filled)) {
+                player.dropItem(filled, false);
+            }
+
+            world.playSound(null, player.posX, player.posY, player.posZ,
+                    SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.7F, 1.35F);
+            player.sendStatusMessage(
+                    new TextComponentTranslation("ul.dna_swab.sampled", displayName), true);
+        }
+        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 
     @Override

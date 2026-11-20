@@ -36,6 +36,7 @@
     },
     "abilities": [
       "faction_undead",
+      "morphext:hide_hungerbar",
       "morphext:hungering_aura",
       "morphext:rage_speed",
       "fire_proof"

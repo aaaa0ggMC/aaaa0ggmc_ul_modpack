@@ -1,8 +1,193 @@
 {
-  "parent": "block/cube_bottom_top",
+  "parent": "block/block",
   "textures": {
+    "particle": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_top",
     "top": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_top",
-    "bottom": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_top",
-    "side": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_side"
-  }
+    "side": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_side",
+    "glass": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_glass",
+    "helix": "aaaa0ggmc_ul_modpack:blocks/dna_recombinator_helix"
+  },
+  "elements": [
+    {
+      "__comment": "Base plinth",
+      "from": [0, 0, 0],
+      "to": [16, 3, 16],
+      "faces": {
+        "down":  { "texture": "#top", "cullface": "down" },
+        "up":    { "texture": "#top" },
+        "north": { "texture": "#top", "uv": [0, 0, 16, 3], "cullface": "north" },
+        "south": { "texture": "#top", "uv": [0, 0, 16, 3], "cullface": "south" },
+        "west":  { "texture": "#top", "uv": [0, 0, 16, 3], "cullface": "west" },
+        "east":  { "texture": "#top", "uv": [0, 0, 16, 3], "cullface": "east" }
+      }
+    },
+    {
+      "__comment": "Top cap",
+      "from": [0, 13, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "texture": "#top" },
+        "up":    { "texture": "#top", "cullface": "up" },
+        "north": { "texture": "#top", "uv": [0, 13, 16, 16], "cullface": "north" },
+        "south": { "texture": "#top", "uv": [0, 13, 16, 16], "cullface": "south" },
+        "west":  { "texture": "#top", "uv": [0, 13, 16, 16], "cullface": "west" },
+        "east":  { "texture": "#top", "uv": [0, 13, 16, 16], "cullface": "east" }
+      }
+    },
+    {
+      "__comment": "Pillar NW",
+      "from": [0, 3, 0],
+      "to": [2.5, 13, 2.5],
+      "faces": {
+        "north": { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "south": { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "west":  { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "east":  { "texture": "#side", "uv": [0, 3, 2.5, 13] }
+      }
+    },
+    {
+      "__comment": "Pillar NE",
+      "from": [13.5, 3, 0],
+      "to": [16, 13, 2.5],
+      "faces": {
+        "north": { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "south": { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "west":  { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "east":  { "texture": "#side", "uv": [13.5, 3, 16, 13] }
+      }
+    },
+    {
+      "__comment": "Pillar SW",
+      "from": [0, 3, 13.5],
+      "to": [2.5, 13, 16],
+      "faces": {
+        "north": { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "south": { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "west":  { "texture": "#side", "uv": [0, 3, 2.5, 13] },
+        "east":  { "texture": "#side", "uv": [0, 3, 2.5, 13] }
+      }
+    },
+    {
+      "__comment": "Pillar SE",
+      "from": [13.5, 3, 13.5],
+      "to": [16, 13, 16],
+      "faces": {
+        "north": { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "south": { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "west":  { "texture": "#side", "uv": [13.5, 3, 16, 13] },
+        "east":  { "texture": "#side", "uv": [13.5, 3, 16, 13] }
+      }
+    },
+    {
+      "__comment": "Chamber glass enclosure",
+      "from": [2, 3, 2],
+      "to": [14, 13, 14],
+      "faces": {
+        "north": { "texture": "#glass", "uv": [0, 0, 16, 16] },
+        "south": { "texture": "#glass", "uv": [0, 0, 16, 16] },
+        "west":  { "texture": "#glass", "uv": [0, 0, 16, 16] },
+        "east":  { "texture": "#glass", "uv": [0, 0, 16, 16] }
+      }
+    },
+    {
+      "__comment": "Lower diamond emitter",
+      "from": [6, 3, 6],
+      "to": [10, 4, 10],
+      "faces": {
+        "up":    { "texture": "#helix", "uv": [8, 8, 16, 16] },
+        "north": { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "south": { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "west":  { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "east":  { "texture": "#helix", "uv": [8, 8, 16, 12] }
+      }
+    },
+    {
+      "__comment": "Upper diamond emitter",
+      "from": [6, 12, 6],
+      "to": [10, 13, 10],
+      "faces": {
+        "down":  { "texture": "#helix", "uv": [8, 8, 16, 16] },
+        "north": { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "south": { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "west":  { "texture": "#helix", "uv": [8, 8, 16, 12] },
+        "east":  { "texture": "#helix", "uv": [8, 8, 16, 12] }
+      }
+    },
+    {
+      "__comment": "Helix rung 1",
+      "from": [5.5, 4.7, 7.3],
+      "to": [10.5, 5.7, 8.7],
+      "rotation": { "origin": [8, 5.2, 8], "axis": "y", "angle": 0 },
+      "faces": {
+        "down":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "up":    { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "north": { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "south": { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "west":  { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "east":  { "texture": "#helix", "uv": [8, 0, 16, 8] }
+      }
+    },
+    {
+      "__comment": "Helix rung 2",
+      "from": [5.5, 6.6, 7.3],
+      "to": [10.5, 7.6, 8.7],
+      "rotation": { "origin": [8, 7.1, 8], "axis": "y", "angle": 45 },
+      "faces": {
+        "down":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "up":    { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "north": { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "south": { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "west":  { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "east":  { "texture": "#helix", "uv": [8, 0, 16, 8] }
+      }
+    },
+    {
+      "__comment": "Helix rung 3",
+      "from": [7.3, 8.5, 5.5],
+      "to": [8.7, 9.5, 10.5],
+      "rotation": { "origin": [8, 9.0, 8], "axis": "y", "angle": 0 },
+      "faces": {
+        "down":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "up":    { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "west":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "east":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "north": { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "south": { "texture": "#helix", "uv": [8, 0, 16, 8] }
+      }
+    },
+    {
+      "__comment": "Helix rung 4",
+      "from": [7.3, 10.4, 5.5],
+      "to": [8.7, 11.4, 10.5],
+      "rotation": { "origin": [8, 10.9, 8], "axis": "y", "angle": 45 },
+      "faces": {
+        "down":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "up":    { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "west":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "east":  { "texture": "#helix", "uv": [0, 8, 8, 16] },
+        "north": { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "south": { "texture": "#helix", "uv": [8, 0, 16, 8] }
+      }
+    },
+    {
+      "__comment": "Helix cyan nodes",
+      "from": [4.8, 4.5, 7.1],
+      "to": [6.2, 6.0, 8.9],
+      "faces": {
+        "down": { "texture": "#helix", "uv": [0, 0, 8, 8] }, "up": { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "north": { "texture": "#helix", "uv": [0, 0, 8, 8] }, "south": { "texture": "#helix", "uv": [0, 0, 8, 8] },
+        "west": { "texture": "#helix", "uv": [0, 0, 8, 8] }, "east": { "texture": "#helix", "uv": [0, 0, 8, 8] }
+      }
+    },
+    {
+      "__comment": "Helix magenta nodes",
+      "from": [9.8, 4.5, 7.1],
+      "to": [11.2, 6.0, 8.9],
+      "faces": {
+        "down": { "texture": "#helix", "uv": [8, 0, 16, 8] }, "up": { "texture": "#helix", "uv": [8, 0, 16, 8] },
+        "north": { "texture": "#helix", "uv": [8, 0, 16, 8] }, "south": { "texture": "#helix", "uv": [8, 0, 16, 8] },
+        "west": { "texture": "#helix", "uv": [8, 0, 16, 8] }, "east": { "texture": "#helix", "uv": [8, 0, 16, 8] }
+      }
+    }
+  ]
 }

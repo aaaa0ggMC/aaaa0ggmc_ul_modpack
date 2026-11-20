@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PSP",
+    "MDM",
+    "PEP"
+  ],
+  "key": {
+    "P": { "item": "aaaa0ggmc_ul_modpack:pieces" },
+    "S": { "item": "aaaa0ggmc_ul_modpack:sweet_dream" },
+    "M": { "item": "aaaa0ggmc_ul_modpack:sweetener" },
+    "D": { "item": "minecraft:diamond" },
+    "E": { "item": "aaaa0ggmc_ul_modpack:sleeping_pill" }
+  },
+  "result": {
+    "item": "aaaa0ggmc_ul_modpack:reversal_gem",
+    "count": 2
+  }
+}

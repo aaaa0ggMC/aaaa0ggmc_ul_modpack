@@ -81,6 +81,7 @@ public class UlModpack {
         // 必须在任何 UlStrength 查询之前（数值兜底不受影响，但 /ulpack strength 要能立刻用）
         aaaa0ggmc.ulmodpack.strength.StrengthSets.init(event.getModConfigurationDirectory());
         aaaa0ggmc.ulmodpack.dna.DnaRecipeRegistry.load(event.getModConfigurationDirectory());
+        aaaa0ggmc.ulmodpack.breed.BreedingRuleRegistry.load(event.getModConfigurationDirectory());
         aaaa0ggmc.ulmodpack.dna.DnaNetwork.init();
         InfectionHandler.register();
         LOGGER.info("[ul-modpack] Pack content online (modules: ankh/infection/race/ftbq-morph).");
@@ -94,6 +95,7 @@ public class UlModpack {
         MinecraftForge.EVENT_BUS.register(
                 new aaaa0ggmc.ulmodpack.achievement.AchievementMigration());
         ZombieLine.register();
+        aaaa0ggmc.ulmodpack.breed.BreedAbility.registerAll();
         net.minecraftforge.fml.common.network.NetworkRegistry.INSTANCE.registerGuiHandler(
                 this, new aaaa0ggmc.ulmodpack.dna.DnaGuiHandler());
         GameRegistry.registerWorldGenerator(

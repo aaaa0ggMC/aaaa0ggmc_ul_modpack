@@ -64,6 +64,8 @@ public class ItemRegistryHandler {
         event.getRegistry().register(CommonProxy.SWEET_DREAM);
         event.getRegistry().register(CommonProxy.NIGHTMARE);
         event.getRegistry().register(CommonProxy.DNA_SWAB);
+        event.getRegistry().register(CommonProxy.REVERSAL_GEM);
+        event.getRegistry().register(CommonProxy.WEDDING_RING);
         event.getRegistry().register(CommonProxy.DNA_RECOMBINATOR_ITEM);
     }
 

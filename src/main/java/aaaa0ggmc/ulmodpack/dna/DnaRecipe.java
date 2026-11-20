@@ -95,14 +95,16 @@ public final class DnaRecipe {
     public final String entityId;
     public final int energyFe;
     public final int weaknessTicks;
+    public final boolean ageable;
     public final List<ItemRequirement> required;
     public final List<OptionalModifier> optional;
 
-    public DnaRecipe(String entityId, int energyFe, int weaknessTicks,
+    public DnaRecipe(String entityId, int energyFe, int weaknessTicks, boolean ageable,
                      List<ItemRequirement> required, List<OptionalModifier> optional) {
         this.entityId = entityId;
         this.energyFe = Math.max(0, energyFe);
         this.weaknessTicks = Math.max(20, weaknessTicks);
+        this.ageable = ageable;
         this.required = Collections.unmodifiableList(required);
         this.optional = Collections.unmodifiableList(optional);
     }

@@ -1,9 +1,7 @@
 package aaaa0ggmc.ulmodpack.dna;
 
-import aaaa0ggmc.morphext.conversion.MorphFactory;
 import aaaa0ggmc.ulmodpack.UlModpack;
 import aaaa0ggmc.ulmodpack.race.RaceManager;
-import mchorse.metamorph.api.morphs.AbstractMorph;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
@@ -82,14 +80,14 @@ public final class DnaRecombineHandler {
         if (formId.isEmpty()) {
             return;
         }
-        AbstractMorph morph = MorphFactory.buildFromFormId(formId, player.world, extraData);
-        if (morph == null) {
+        // 带变体 EntityData 的变身统一走 RaceManager 的 EntityData 重载：
+        // 造 morph 与决策（EVOLVE：不压栈、打断临时状态、按比例结算血量）在同一收口内完成。
+        if (!RaceManager.transitionToForm(player, formId, extraData,
+                RaceManager.TransitionReason.EVOLVE, RaceManager.HealthPolicy.PRESERVE_RATIO)) {
             UlModpack.LOGGER.warn("[dna] Failed to build morph '{}' for {}", formId, player.getName());
             player.sendStatusMessage(new TextComponentTranslation("ul.dna.recombine_failed"), true);
             return;
         }
-        RaceManager.transition(player, morph,
-                RaceManager.TransitionReason.EVOLVE, RaceManager.HealthPolicy.PRESERVE_RATIO);
         player.sendStatusMessage(new TextComponentTranslation("ul.dna.recombine_complete"), true);
 
         if (player.world instanceof WorldServer) {

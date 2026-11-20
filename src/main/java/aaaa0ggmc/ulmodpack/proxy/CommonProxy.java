@@ -7,6 +7,7 @@ import aaaa0ggmc.ulmodpack.block.BlockTitanStatue;
 import aaaa0ggmc.ulmodpack.config.PackConfig;
 import aaaa0ggmc.ulmodpack.dna.BlockDnaRecombinator;
 import aaaa0ggmc.ulmodpack.dna.ItemDnaSwab;
+import aaaa0ggmc.ulmodpack.dna.ItemReversalGem;
 import aaaa0ggmc.ulmodpack.fluid.BlockFluidLethe;
 import aaaa0ggmc.ulmodpack.fluid.FluidLethe;
 import aaaa0ggmc.ulmodpack.infection.UlTriggers;
@@ -82,8 +83,11 @@ public class CommonProxy {
     public static final ItemDreamMaterial SWEET_DREAM = new ItemDreamMaterial("sweet_dream");
     public static final ItemDreamMaterial NIGHTMARE = new ItemDreamMaterial("nightmare");
 
-    /** 采样棉签 & DNA 重组机（FE/RF 供电）。 */
+    /** 采样棉签、回溯宝石 & DNA 重组机（FE/RF 供电）。 */
     public static final ItemDnaSwab DNA_SWAB = new ItemDnaSwab();
+    public static final ItemReversalGem REVERSAL_GEM = new ItemReversalGem();
+    public static final aaaa0ggmc.ulmodpack.item.ItemWeddingRing WEDDING_RING =
+            new aaaa0ggmc.ulmodpack.item.ItemWeddingRing();
     public static final BlockDnaRecombinator DNA_RECOMBINATOR = new BlockDnaRecombinator();
     public static final ItemBlock DNA_RECOMBINATOR_ITEM = (ItemBlock) new ItemBlock(DNA_RECOMBINATOR)
             .setRegistryName(DNA_RECOMBINATOR.getRegistryName());

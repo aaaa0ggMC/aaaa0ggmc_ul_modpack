@@ -84,6 +84,12 @@ public class ClientProxy extends CommonProxy {
                 DNA_SWAB, 0,
                 new ModelResourceLocation(DNA_SWAB.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(
+                REVERSAL_GEM, 0,
+                new ModelResourceLocation(REVERSAL_GEM.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
+                WEDDING_RING, 0,
+                new ModelResourceLocation(WEDDING_RING.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(
                 DNA_RECOMBINATOR_ITEM, 0,
                 new ModelResourceLocation(DNA_RECOMBINATOR_ITEM.getRegistryName(), "inventory"));
 

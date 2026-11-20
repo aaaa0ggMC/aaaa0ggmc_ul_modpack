@@ -1,5 +1,6 @@
 package aaaa0ggmc.ulmodpack.dna;
 
+import aaaa0ggmc.ulmodpack.proxy.CommonProxy;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -22,7 +23,7 @@ import javax.annotation.Nullable;
  * DNA 重组机 TileEntity：
  * <ul>
  *   <li>标准 Forge Energy（FE/RF）受电缓存：{@code 100,000 FE}，最大输入 {@code 500 FE/t}；</li>
- *   <li>5 个物品槽位：槽 0 为采样棉签，槽 1–4 为必选/可选原料；</li>
+ *   <li>10 个物品槽位：槽 0 为采样棉签，槽 1–9 为 3×3 无序必选/可选原料；</li>
  *   <li>服务端权威校验原料、电量与可选修饰项（例如绵羊缺少羊毛时附加 {@code {Sheared:1b}}）。</li>
  * </ul>
  */
@@ -30,7 +31,7 @@ public class TileEntityDnaRecombinator extends TileEntity {
 
     public static final int SLOT_SWAB = 0;
     public static final int SLOT_MAT_START = 1;
-    public static final int SLOT_COUNT = 5;
+    public static final int SLOT_COUNT = 10;
 
     public static final int ENERGY_CAPACITY = 100_000;
     public static final int MAX_RECEIVE = 500;
@@ -113,6 +114,26 @@ public class TileEntityDnaRecombinator extends TileEntity {
         return -1;
     }
 
+    public boolean hasReversalGem() {
+        for (int i = SLOT_MAT_START; i < SLOT_COUNT; i++) {
+            ItemStack s = inventory.getStackInSlot(i);
+            if (!s.isEmpty() && s.getItem() == CommonProxy.REVERSAL_GEM) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void consumeOneReversalGem() {
+        for (int i = SLOT_MAT_START; i < SLOT_COUNT; i++) {
+            ItemStack s = inventory.getStackInSlot(i);
+            if (!s.isEmpty() && s.getItem() == CommonProxy.REVERSAL_GEM) {
+                inventory.extractItem(i, 1, false);
+                return;
+            }
+        }
+    }
+
     public boolean canStartRecombine() {
         DnaRecipe recipe = getActiveRecipe();
         if (recipe == null || energy.getEnergyStored() < recipe.energyFe) {
@@ -156,7 +177,7 @@ public class TileEntityDnaRecombinator extends TileEntity {
             opt.applyToNbt(extraNbt, hasOpt, meta);
         }
 
-        // 扣除必选原料、已满足的可选原料、棉签与电量
+        // 扣除必选原料、已满足的可选原料、回溯宝石（若幼年化）、棉签与电量
         for (DnaRecipe.ItemRequirement req : recipe.required) {
             consumeMatching(req);
         }
@@ -164,6 +185,10 @@ public class TileEntityDnaRecombinator extends TileEntity {
             if (optMatched[i]) {
                 consumeMatching(recipe.optional.get(i).requirement);
             }
+        }
+        if (recipe.ageable && hasReversalGem()) {
+            consumeOneReversalGem();
+            extraNbt.setInteger("Age", -24000);
         }
         inventory.extractItem(SLOT_SWAB, 1, false);
         energy.consume(recipe.energyFe);
@@ -205,6 +230,17 @@ public class TileEntityDnaRecombinator extends TileEntity {
         super.readFromNBT(compound);
         if (compound.hasKey("Inventory")) {
             inventory.deserializeNBT(compound.getCompoundTag("Inventory"));
+            if (inventory.getSlots() != SLOT_COUNT) {
+                int oldSize = inventory.getSlots();
+                ItemStack[] saved = new ItemStack[Math.min(oldSize, SLOT_COUNT)];
+                for (int i = 0; i < saved.length; i++) {
+                    saved[i] = inventory.getStackInSlot(i);
+                }
+                inventory.setSize(SLOT_COUNT);
+                for (int i = 0; i < saved.length; i++) {
+                    inventory.setStackInSlot(i, saved[i]);
+                }
+            }
         }
         energy.setEnergy(compound.getInteger("Energy"));
     }

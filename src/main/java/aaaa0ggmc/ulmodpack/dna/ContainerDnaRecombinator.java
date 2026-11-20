@@ -13,7 +13,7 @@ import net.minecraftforge.items.SlotItemHandler;
 
 /**
  * DNA 重组机容器：
- * 槽 0 = 棉签槽；槽 1–4 = 原料槽；下方为玩家背包（3×9）与快捷栏（1×9）。
+ * 槽 0 = 棉签槽；槽 1–9 = 3×3 无序原料槽；下方为标准玩家背包（3×9）与快捷栏（1×9）。
  * 通过双 16 位 windowProperty 同步 32 位 FE 电量，避免超过 32767 截断。
  */
 public class ContainerDnaRecombinator extends Container {
@@ -25,29 +25,31 @@ public class ContainerDnaRecombinator extends Container {
         this.tile = tile;
         ItemStackHandler inv = tile.getInventory();
 
-        // 棉签槽
-        addSlotToContainer(new SlotItemHandler(inv, TileEntityDnaRecombinator.SLOT_SWAB, 34, 24) {
+        // 棉签槽（位于 3×3 网格正上方居中）
+        addSlotToContainer(new SlotItemHandler(inv, TileEntityDnaRecombinator.SLOT_SWAB, 40, 20) {
             @Override
             public boolean isItemValid(ItemStack stack) {
                 return stack.getItem() instanceof ItemDnaSwab;
             }
         });
 
-        // 4 个原料槽（2×2）
-        addSlotToContainer(new SlotItemHandler(inv, 1, 25, 50));
-        addSlotToContainer(new SlotItemHandler(inv, 2, 43, 50));
-        addSlotToContainer(new SlotItemHandler(inv, 3, 25, 68));
-        addSlotToContainer(new SlotItemHandler(inv, 4, 43, 68));
+        // 9 个无序原料槽（3×3）
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                int slotIdx = TileEntityDnaRecombinator.SLOT_MAT_START + row * 3 + col;
+                addSlotToContainer(new SlotItemHandler(inv, slotIdx, 22 + col * 18, 42 + row * 18));
+            }
+        }
 
-        // 玩家背包（3×9）
+        // 玩家背包（3×9，居中于 xSize=200）
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 102 + row * 18));
+                addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 19 + col * 18, 114 + row * 18));
             }
         }
         // 玩家快捷栏（1×9）
         for (int col = 0; col < 9; col++) {
-            addSlotToContainer(new Slot(playerInv, col, 8 + col * 18, 160));
+            addSlotToContainer(new Slot(playerInv, col, 19 + col * 18, 172));
         }
     }
 

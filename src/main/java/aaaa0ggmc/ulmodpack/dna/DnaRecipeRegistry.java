@@ -76,6 +76,7 @@ public final class DnaRecipeRegistry {
             String entityId = normalize(obj.get("entity").getAsString());
             int energyFe = obj.has("energy_fe") ? obj.get("energy_fe").getAsInt() : 20000;
             int weaknessTicks = obj.has("weakness_ticks") ? obj.get("weakness_ticks").getAsInt() : 200;
+            boolean ageable = obj.has("ageable") && obj.get("ageable").getAsBoolean();
 
             List<DnaRecipe.ItemRequirement> required = new ArrayList<>();
             if (obj.has("required") && obj.get("required").isJsonArray()) {
@@ -98,7 +99,7 @@ public final class DnaRecipeRegistry {
                             req, whenMissing, whenPresent, copyMeta, missingHint, presentHint));
                 }
             }
-            RECIPES.put(entityId, new DnaRecipe(entityId, energyFe, weaknessTicks, required, optional));
+            RECIPES.put(entityId, new DnaRecipe(entityId, energyFe, weaknessTicks, ageable, required, optional));
         }
     }
 

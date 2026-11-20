@@ -97,7 +97,7 @@ aaaa0ggmc_ul_modpack.nightmare.lore1=§7由 8 个 Pieces 包裹苦味剂凝结�
 
 # 棉签 & DNA 重组机
 item.aaaa0ggmc_ul_modpack.dna_swab.name=采样棉签
-aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7右键白名单动物即可采集其 DNA，供 DNA 重组机使用。
+aaaa0ggmc_ul_modpack.dna_swab.empty_lore=§7右键白名单动物（或潜行对空气右键采集当前白名单变身形态）即可采集 DNA。
 aaaa0ggmc_ul_modpack.dna_swab.sample_line=§b样本：%s
 aaaa0ggmc_ul_modpack.dna_swab.req_line=§7必选原料：%s
 aaaa0ggmc_ul_modpack.dna_swab.opt_line=§e可选原料：%s
@@ -120,6 +120,21 @@ ul.dna.err.missing_req=缺少必选原料：%s x%s。
 ul.dna.recombine_started=基因重组已启动！%s 秒虚弱结束后将完成变身。
 ul.dna.recombine_complete=基因重组完成，你已蜕变为新的形态！
 ul.dna.recombine_failed=基因重组失败：无法构建目标生物形态。
+item.aaaa0ggmc_ul_modpack.reversal_gem.name=回溯宝石
+aaaa0ggmc_ul_modpack.reversal_gem.lore1=§7以钻石为核心，凝聚甜蜜素、美梦、Pieces 与安眠药制成。
+aaaa0ggmc_ul_modpack.reversal_gem.lore2=§7放入 DNA 重组机即可将可成长动物回溯为幼年形态。
+ul.dna.hint.baby_opt=可选：回溯宝石（幼年体）
+ul.dna.hint.baby_ready=已放回溯宝石：幼年体
+ul.dna.hint.rabbit_normal=可选：金胡萝卜（普通兔）
+ul.dna.hint.rabbit_killer=已放金胡萝卜：杀手兔
+ul.dna.hint.ocelot_wild=可选：生鲑鱼x2（野生豹猫）
+ul.dna.hint.ocelot_tamed=已放生鲑鱼：家猫变种
+ul.dna.hint.horse_plain=可选：糖x2（普通马）
+ul.dna.hint.horse_spotted=已放糖：斑纹变种
+ul.dna.hint.llama_plain=可选：地毯（普通羊驼）
+ul.dna.hint.llama_brown=已放地毯：棕色变种
+ul.dna.hint.parrot_red=可选：青金石（红色鹦鹉）
+ul.dna.hint.parrot_blue=已放青金石：蓝色鹦鹉
 
 # 尸群领导 / 尸潮
 ul.horde.fail.skill=死者还不想听你的。
@@ -173,3 +188,25 @@ aaaa0ggmc_ul_modpack.status.horde.tide.active=尸潮：进行中
 aaaa0ggmc_ul_modpack.status.horde.tide.idle=尸潮：未发动
 aaaa0ggmc_ul_modpack.status.horde.empty=（队伍是空的）
 aaaa0ggmc_ul_modpack.status.horde.follower=%s（%s/%s）
+
+# 结婚戒指 & 繁殖技能
+item.aaaa0ggmc_ul_modpack.wedding_ring.name=结婚戒指
+aaaa0ggmc_ul_modpack.wedding_ring.lore1=§7佩戴在戒指栏位时，临时获得「繁殖」技能。
+aaaa0ggmc_ul_modpack.wedding_ring.lore2=§7变身为对应成年种族并手持繁殖物品，即可与白名单生物繁殖。
+ability.aaaa0ggmc_ul_modpack.breed=繁殖
+morphext.ability.aaaa0ggmc_ul_modpack.breed.name=繁殖
+morphext.ability.aaaa0ggmc_ul_modpack.breed.desc=佩戴结婚戒指时获得：变身为对应成年生物并手持繁殖物品，对准白名单动物释放即可消耗物品并产生幼年个体（有冷却）。
+ul.breed.no_target=需要靠近并瞄准一只动物。
+ul.breed.not_whitelisted=该生物不在繁殖白名单内。
+ul.breed.wrong_morph=你当前的变身形态与目标物种不匹配。
+ul.breed.wrong_morph_need=形态不匹配（需要变身为：%s）
+ul.breed.not_adult=你和目标生物都必须处于成年形态才能繁殖。
+ul.breed.wrong_variant=当前形态变种不满足该生物的繁殖条件（如未剪毛的羊）。
+ul.breed.target_invalid=目标生物当前状态不满足繁殖条件。
+ul.breed.target_cooldown=目标生物刚刚繁殖过，还在休息中。
+ul.breed.target_cooldown_sec=目标生物还在休息中（剩余 %s 秒）。
+ul.breed.wrong_item=手里没有持有该物种对应的繁殖物品。
+ul.breed.wrong_item_need=繁殖物品不足（需要：%s）。
+ul.breed.spawn_failed=繁殖失败：无法生成后代实体。
+ul.breed.success=繁殖成功！
+
